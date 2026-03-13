@@ -56,6 +56,18 @@
           "optimization": false,
           "extractLicenses": false,
           "sourceMap": true
+        },
+        "local": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "serviceWorker": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/mobile-app/src/environments/environment.ts",
+              "with":    "apps/mobile-app/src/environments/environment.local.ts"
+            }
+          ]
         }
       },
       "defaultConfiguration": "production"
@@ -63,8 +75,9 @@
     "serve": {
       "executor": "@angular-devkit/build-angular:dev-server",
       "configurations": {
-        "production": { "buildTarget": "mobile-app:build:production" },
-        "development": { "buildTarget": "mobile-app:build:development" }
+        "production":  { "buildTarget": "mobile-app:build:production" },
+        "development": { "buildTarget": "mobile-app:build:development" },
+        "local":       { "buildTarget": "mobile-app:build:local" }
       },
       "defaultConfiguration": "development"
     },
