@@ -1,0 +1,44 @@
+{
+  "name": "infra",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/infra",
+  "tags": ["scope:infra"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx tsc --project apps/infra/tsconfig.json",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "diff": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx cdk diff",
+        "cwd": "apps/infra"
+      }
+    },
+    "deploy-dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx cdk deploy SrutiStackDev --require-approval never --ci",
+        "cwd": "apps/infra"
+      }
+    },
+    "deploy-prod": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "DEPLOY_PROD=1 npx cdk deploy SrutiStackProd --require-approval never --ci",
+        "cwd": "apps/infra"
+      }
+    },
+    "destroy-dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx cdk destroy SrutiStackDev --force",
+        "cwd": "apps/infra"
+      }
+    }
+  }
+}

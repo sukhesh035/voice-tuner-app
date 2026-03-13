@@ -1,0 +1,28 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "lib": ["ES2022", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@voice-tuner/audio-engine": ["libs/audio-engine/src/index.ts"],
+      "@voice-tuner/tanpura-player": ["libs/tanpura-player/src/index.ts"],
+      "@voice-tuner/pitch-detection": ["libs/pitch-detection/src/index.ts"],
+      "@voice-tuner/training-engine": ["libs/training-engine/src/index.ts"],
+      "@voice-tuner/ui-components": ["libs/ui-components/src/index.ts"],
+      "@voice-tuner/auth": ["libs/auth/src/index.ts"],
+      "@voice-tuner/shared-utils": ["libs/shared-utils/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

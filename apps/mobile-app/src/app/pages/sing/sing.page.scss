@@ -1,0 +1,212 @@
+@use '../../../styles/variables' as *;
+
+.sing-page {
+  padding: $spacing-4;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-5;
+}
+
+// ── Pitch Meter ───────────────────────────────────────────
+.pitch-meter-container {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 0 auto;
+}
+
+.pitch-meter-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pitch-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+
+  .note-name {
+    font-size: 56px;
+    font-weight: 800;
+    font-family: var(--sruti-font-display);
+    line-height: 1;
+    transition: color 0.15s ease;
+  }
+
+  .hz-value {
+    font-size: 13px;
+    font-family: var(--sruti-font-mono);
+    color: var(--sruti-text-secondary);
+    letter-spacing: 0.04em;
+  }
+
+  .cents-badge {
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--sruti-font-mono);
+    padding: 2px 10px;
+    border-radius: $radius-full;
+    background: var(--sruti-bg-card);
+    transition: all 0.15s ease;
+
+    &.in-tune  { color: var(--sruti-pitch-perfect); background: rgba(0, 230, 118, 0.12); }
+    &.sharp    { color: var(--sruti-pitch-off); }
+    &.flat     { color: #5E81F4; }
+  }
+
+  .no-pitch {
+    font-size: 18px;
+    color: var(--sruti-text-tertiary);
+    font-weight: 500;
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+}
+
+// ── Tuner ─────────────────────────────────────────────────
+.tuner-section {
+  width: 100%;
+}
+
+.tuner-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8px;
+  margin-bottom: 4px;
+
+  span {
+    font-size: 10px;
+    color: var(--sruti-text-tertiary);
+    font-family: var(--sruti-font-mono);
+  }
+}
+
+.tuner-gauge {
+  position: relative;
+  height: 56px;
+  background: var(--sruti-bg-card);
+  border-radius: $radius-md;
+  border: 1px solid var(--sruti-border);
+  overflow: hidden;
+
+  .tuner-center-mark {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 2px;
+    background: rgba(255,255,255,0.15);
+    transform: translateX(-50%);
+  }
+
+  .tuner-needle {
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    width: 3px;
+    height: 42px;
+    background: var(--sruti-primary);
+    border-radius: $radius-full;
+    transform-origin: bottom center;
+    transform: translateX(-50%) rotate(0deg);
+    transition: transform 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 0 8px rgba(var(--sruti-primary-rgb), 0.8);
+
+    &.in-tune {
+      background: var(--sruti-pitch-perfect);
+      box-shadow: 0 0 12px rgba(0, 230, 118, 0.9);
+    }
+  }
+}
+
+// ── Accuracy ──────────────────────────────────────────────
+.accuracy-section {
+  width: 100%;
+}
+
+.accuracy-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $spacing-2;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sruti-text-secondary);
+
+  .accuracy-value {
+    font-family: var(--sruti-font-mono);
+    font-weight: 700;
+    font-size: 15px;
+    transition: color 0.15s ease;
+  }
+}
+
+// ── Note Grid ─────────────────────────────────────────────
+.note-grid-section {
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sruti-text-secondary);
+    margin-bottom: $spacing-3;
+  }
+
+  .note-chip {
+    height: 48px;
+    font-size: 13px;
+
+    &.current {
+      animation: bounce-in 0.3s ease forwards;
+      box-shadow: 0 0 20px rgba(var(--sruti-primary-rgb), 0.5);
+    }
+  }
+}
+
+// ── Mic Button ────────────────────────────────────────────
+.mic-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-4;
+}
+
+.mic-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-2;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: none;
+  background: var(--sruti-bg-card);
+  border: 2px solid var(--sruti-border);
+  color: var(--sruti-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+
+  ion-icon { font-size: 28px; }
+  span { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; }
+
+  &.is-active {
+    background: var(--sruti-gradient-primary);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 8px 32px rgba(var(--sruti-primary-rgb), 0.55);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  &:active { transform: scale(0.92); }
+}
+
+// ── Stats Row ─────────────────────────────────────────────
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-3;
+}

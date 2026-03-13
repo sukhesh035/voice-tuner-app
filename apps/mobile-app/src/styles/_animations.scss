@@ -1,0 +1,128 @@
+// ============================================================
+// SRUTI - Animations & Keyframes
+// ============================================================
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(var(--sruti-primary-rgb), 0.4); }
+  50%       { box-shadow: 0 0 40px rgba(var(--sruti-primary-rgb), 0.8); }
+}
+
+@keyframes pitch-ring {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0;   }
+}
+
+@keyframes needle-settle {
+  0%   { transform: translateX(-50%) rotate(var(--from, -45deg)); }
+  60%  { transform: translateX(-50%) rotate(calc(var(--to, 0deg) + 5deg)); }
+  100% { transform: translateX(-50%) rotate(var(--to, 0deg)); }
+}
+
+@keyframes float-up {
+  0%   { transform: translateY(0px);  opacity: 1; }
+  100% { transform: translateY(-24px); opacity: 0; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.3); }
+  50%       { transform: scaleY(1);   }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes bounce-in {
+  0%   { transform: scale(0);    opacity: 0; }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+@keyframes slide-up {
+  0%   { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+// ── Utility Animation Classes ─────────────────────────────
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-pitch-ring {
+  animation: pitch-ring 0.8s ease-out forwards;
+}
+
+.animate-float-up {
+  animation: float-up 1s ease-out forwards;
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.35s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+// ── Loading Skeleton ──────────────────────────────────────
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--sruti-bg-card) 25%,
+    var(--sruti-bg-card-hover) 50%,
+    var(--sruti-bg-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+// ── Audio Waveform Bars ───────────────────────────────────
+.waveform-bars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 32px;
+
+  .bar {
+    width: 4px;
+    background: var(--sruti-primary);
+    border-radius: 2px;
+    transform-origin: bottom;
+    animation: wave 1.2s ease-in-out infinite;
+
+    @for $i from 1 through 8 {
+      &:nth-child(#{$i}) {
+        animation-delay: #{($i - 1) * 0.1}s;
+      }
+    }
+  }
+
+  &.silent .bar {
+    animation: none;
+    transform: scaleY(0.2);
+  }
+}
+
+// ── Page Transitions ──────────────────────────────────────
+ion-router-outlet {
+  .ion-page {
+    animation: fade-in 0.2s ease-out;
+  }
+}

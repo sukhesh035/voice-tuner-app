@@ -1,0 +1,41 @@
+{
+  "name": "backend-api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/backend-api/src",
+  "projectType": "application",
+  "tags": ["scope:backend", "type:app"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/backend-api",
+        "main": "apps/backend-api/src/handlers/sessions.handler.ts",
+        "tsConfig": "apps/backend-api/tsconfig.app.json",
+        "platform": "node",
+        "bundle": true,
+        "minify": true,
+        "sourcemap": false,
+        "target": "node22",
+        "external": ["@aws-sdk/client-dynamodb", "@aws-sdk/lib-dynamodb"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": { "lintFilePatterns": ["apps/backend-api/**/*.ts"] }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": { "jestConfig": "apps/backend-api/jest.config.ts" }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cd apps/infra && npx cdk deploy --require-approval never",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}

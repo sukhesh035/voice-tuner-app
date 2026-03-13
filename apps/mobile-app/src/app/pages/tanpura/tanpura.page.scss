@@ -1,0 +1,327 @@
+@use '../../../styles/variables' as *;
+
+.tanpura-page {
+  padding: $spacing-4;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  min-height: 100%;
+  background: var(--sruti-gradient-tanpura);
+}
+
+// ── Hero Section ─────────────────────────────────────────
+.tanpura-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-12 0 $spacing-8;
+  margin-bottom: $spacing-6;
+
+  &.is-playing .resonance-rings .ring {
+    opacity: 1;
+  }
+}
+
+.resonance-rings {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(var(--sruti-primary-rgb), 0.3);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+
+    &.active {
+      animation: pitch-ring 2s ease-out infinite;
+    }
+
+    &-1 { width: 160px; height: 160px; animation-delay: 0s; }
+    &-2 { width: 240px; height: 240px; animation-delay: 0.5s; }
+    &-3 { width: 320px; height: 320px; animation-delay: 1s; }
+  }
+}
+
+// ── Play Button ───────────────────────────────────────────
+.play-btn {
+  position: relative;
+  z-index: 2;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: none;
+  background: var(--sruti-gradient-primary);
+  box-shadow: 0 8px 40px rgba(var(--sruti-primary-rgb), 0.55);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+
+  &:active { transform: scale(0.92); }
+
+  &.is-playing {
+    background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+    box-shadow: 0 8px 40px rgba(255, 107, 107, 0.55);
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  &__icon {
+    font-size: 28px;
+    color: white;
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+
+// ── String Indicators ─────────────────────────────────────
+.string-indicators {
+  display: flex;
+  gap: $spacing-3;
+  margin-top: $spacing-6;
+}
+
+.string-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--sruti-bg-card);
+  border: 1px solid var(--sruti-border);
+  color: var(--sruti-text-secondary);
+  transition: all 0.1s ease;
+
+  &.active {
+    background: var(--sruti-primary);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 16px rgba(var(--sruti-primary-rgb), 0.6);
+    transform: scale(1.12);
+  }
+}
+
+// ── Key Badge ─────────────────────────────────────────────
+.key-badge {
+  margin-top: $spacing-4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &__note {
+    font-size: 42px;
+    font-weight: 800;
+    font-family: var(--sruti-font-display);
+    color: var(--sruti-text-primary);
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: 12px;
+    color: var(--sruti-text-secondary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+
+// ── Section ───────────────────────────────────────────────
+.section {
+  margin-bottom: $spacing-6;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-3;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sruti-text-secondary);
+}
+
+.section-value {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--sruti-font-mono);
+  color: var(--sruti-primary);
+}
+
+// ── Key Grid ──────────────────────────────────────────────
+.key-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: $spacing-2;
+}
+
+.key-btn {
+  height: 44px;
+  border-radius: $radius-md;
+  border: 1px solid var(--sruti-border);
+  background: var(--sruti-bg-card);
+  color: var(--sruti-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &.selected {
+    background: var(--sruti-primary);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 16px rgba(var(--sruti-primary-rgb), 0.5);
+  }
+
+  &:active:not(.selected) {
+    background: var(--sruti-bg-card-hover);
+    transform: scale(0.95);
+  }
+}
+
+// ── Controls Grid ─────────────────────────────────────────
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-3;
+  margin-bottom: $spacing-6;
+}
+
+.control-card {
+  padding: $spacing-4 !important;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $spacing-2;
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sruti-text-secondary);
+  }
+
+  &__value {
+    font-size: 18px;
+    font-weight: 800;
+    font-family: var(--sruti-font-mono);
+    color: var(--sruti-text-primary);
+
+    small {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--sruti-text-secondary);
+    }
+
+    &.positive { color: var(--sruti-pitch-close); }
+    &.negative { color: var(--sruti-pitch-flat, #5E81F4); }
+  }
+}
+
+// ── Range Slider ─────────────────────────────────────────
+.sruti-range {
+  --bar-background: var(--sruti-border);
+  --bar-background-active: var(--sruti-primary);
+  --bar-height: 4px;
+  --bar-border-radius: 4px;
+  --knob-background: var(--sruti-primary);
+  --knob-size: 18px;
+  --knob-box-shadow: 0 2px 8px rgba(var(--sruti-primary-rgb), 0.7);
+  padding: 8px 0;
+
+  &--bipolar {
+    --bar-background-active: var(--sruti-secondary);
+    --knob-background: var(--sruti-secondary);
+    --knob-box-shadow: 0 2px 8px rgba(var(--sruti-secondary-rgb), 0.7);
+  }
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--sruti-text-tertiary);
+  font-family: var(--sruti-font-mono);
+  margin-top: -4px;
+}
+
+// ── Octave Buttons ────────────────────────────────────────
+.octave-btns {
+  display: flex;
+  gap: $spacing-2;
+  margin-top: $spacing-2;
+}
+
+.octave-btn {
+  flex: 1;
+  height: 40px;
+  border-radius: $radius-md;
+  border: 1px solid var(--sruti-border);
+  background: var(--sruti-bg-card);
+  color: var(--sruti-text-secondary);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &.selected {
+    background: var(--sruti-primary);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 12px rgba(var(--sruti-primary-rgb), 0.5);
+  }
+}
+
+// ── String Config Buttons ─────────────────────────────────
+.string-config-btns {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+}
+
+.string-config-btn {
+  width: 100%;
+  padding: $spacing-3 $spacing-4;
+  border-radius: $radius-md;
+  border: 1px solid var(--sruti-border);
+  background: var(--sruti-bg-card);
+  color: var(--sruti-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--sruti-font-mono);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &.selected {
+    background: var(--sruti-gradient-card);
+    border-color: rgba(var(--sruti-primary-rgb), 0.4);
+    color: var(--sruti-primary);
+  }
+}

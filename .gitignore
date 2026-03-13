@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Nx
+.nx/cache
+.nx/workspace-data
+.nx/polygraph
+tmp/
+out-tsc/
+
+# Angular
+.angular/
+
+# Build outputs
+dist/
+build/
+
+# Capacitor native projects (generated — commit only if you own the native layer)
+ios/
+android/
+.capacitor/
+
+# CDK synthesis output
+apps/infra/cdk.out/
+
+# Local environment overrides (keep the committed environment.ts templates)
+apps/mobile-app/src/environments/environment.local.ts
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
+
+# Secrets / certs
+*.pem
+*.p12
+*.key

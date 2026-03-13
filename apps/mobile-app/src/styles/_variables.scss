@@ -1,0 +1,65 @@
+// ============================================================
+// SRUTI Design System - Variables
+// ============================================================
+
+// --- Typography ---
+$font-sans:     'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+$font-mono:     'SF Mono', 'Fira Code', monospace;
+$font-display:  'SF Pro Rounded', $font-sans;
+
+// --- Spacing Scale ---
+$spacing-1:   4px;
+$spacing-2:   8px;
+$spacing-3:   12px;
+$spacing-4:   16px;
+$spacing-5:   20px;
+$spacing-6:   24px;
+$spacing-8:   32px;
+$spacing-10:  40px;
+$spacing-12:  48px;
+$spacing-16:  64px;
+
+// --- Border Radius ---
+$radius-sm:   8px;
+$radius-md:   12px;
+$radius-lg:   16px;
+$radius-xl:   24px;
+$radius-2xl:  32px;
+$radius-full: 9999px;
+
+// --- Shadows ---
+$shadow-glow-primary: 0 0 20px rgba(124, 77, 255, 0.4);
+$shadow-glow-accent:  0 0 20px rgba(0, 229, 194, 0.4);
+$shadow-card:         0 8px 32px rgba(0, 0, 0, 0.35);
+$shadow-elevated:     0 20px 60px rgba(0, 0, 0, 0.5);
+
+// --- Music Colors ---
+$color-sa:    #FF6B6B;   // Root note - warm red
+$color-re:    #FF8E53;
+$color-ga:    #FFC300;
+$color-ma:    #4CAF50;
+$color-pa:    #2196F3;
+$color-dha:   #9C27B0;
+$color-ni:    #E91E63;
+
+// --- Status Colors ---
+$color-in-tune:     #00E5C2;
+$color-sharp:       #FF6B6B;
+$color-flat:        #5E81F4;
+$color-perfect:     #00E676;
+$color-warning:     #FFB300;
+$color-error:       #FF1744;
+
+// --- Raga Palette ---
+$color-yaman:       #7C4DFF;
+$color-bhairav:     #FF6D00;
+$color-kalyani:     #00BCD4;
+$color-hamsadhwani: #E91E63;
+$color-todi:        #4CAF50;
+
+// --- Z-Index Scale ---
+$z-base:    1;
+$z-header:  100;
+$z-modal:   200;
+$z-overlay: 300;
+$z-toast:   400;

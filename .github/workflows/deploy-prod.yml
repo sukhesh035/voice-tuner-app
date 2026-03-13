@@ -1,0 +1,140 @@
+name: Deploy — Prod
+
+# Triggers ONLY on direct pushes/merges to the `main` branch.
+# Opening or updating a PR does NOT trigger this workflow.
+on:
+  push:
+    branches: [main]
+
+# Never run two prod deployments at the same time — queue instead of cancel
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy to Prod
+    runs-on: ubuntu-latest
+    environment: prod         # ← GitHub Environment; secrets are scoped here
+
+    permissions:
+      contents: read
+
+    env:
+      AWS_REGION: ap-south-1
+      STAGE:      prod
+      STACK_NAME: sruti-prod
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Node + pnpm ───────────────────────────────────────────────────────
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # ── 3. Install dependencies ───────────────────────────────────────────────
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── 4. AWS credentials ───────────────────────────────────────────────────
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      # ── 5. CDK bootstrap (idempotent — safe to run every time) ───────────────
+      - name: Bootstrap CDK
+        working-directory: apps/infra
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          pnpm exec cdk bootstrap aws://${ACCOUNT_ID}/${{ env.AWS_REGION }} --ci
+
+      # ── 6. Build Lambda bundle ────────────────────────────────────────────────
+      - name: Build Lambda bundle
+        run: pnpm build:api
+
+      # ── 7. Deploy infra (CloudFormation create-or-update — idempotent) ────────
+      - name: Deploy AWS infrastructure
+        run: pnpm nx run infra:deploy-prod
+        env:
+          DEPLOY_PROD: "1"
+
+      # ── 8. Generate environment.prod.ts from live stack outputs ───────────────
+      - name: Generate environment.prod.ts
+        run: pnpm generate-env:prod
+
+      # ── 9. Build PWA ──────────────────────────────────────────────────────────
+      - name: Build mobile PWA
+        run: pnpm build:mobile
+
+      # ── 10. Read stack outputs ────────────────────────────────────────────────
+      - name: Read stack outputs
+        id: stack
+        run: |
+          BUCKET=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.STACK_NAME }} \
+            --query "Stacks[0].Outputs[?OutputKey=='WebBucketName'].OutputValue" \
+            --output text)
+          DIST_ID=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.STACK_NAME }} \
+            --query "Stacks[0].Outputs[?OutputKey=='WebDistributionId'].OutputValue" \
+            --output text)
+          WEB_URL=$(aws cloudformation describe-stacks \
+            --stack-name ${{ env.STACK_NAME }} \
+            --query "Stacks[0].Outputs[?OutputKey=='WebUrl'].OutputValue" \
+            --output text)
+          echo "bucket=${BUCKET}"            >> $GITHUB_OUTPUT
+          echo "distribution_id=${DIST_ID}" >> $GITHUB_OUTPUT
+          echo "web_url=${WEB_URL}"         >> $GITHUB_OUTPUT
+
+      # ── 11. Sync PWA to S3 ────────────────────────────────────────────────────
+      - name: Sync to S3
+        run: |
+          BUILD_DIR=$([ -d dist/apps/mobile-app/browser ] \
+            && echo dist/apps/mobile-app/browser \
+            || echo dist/apps/mobile-app)
+
+          # Hashed assets — cache forever
+          aws s3 sync "${BUILD_DIR}" s3://${{ steps.stack.outputs.bucket }} \
+            --delete \
+            --cache-control "public,max-age=31536000,immutable" \
+            --exclude "index.html" \
+            --exclude "ngsw.json" \
+            --exclude "ngsw-worker.js" \
+            --exclude "manifest.webmanifest"
+
+          # Entry points — never cache
+          aws s3 sync "${BUILD_DIR}" s3://${{ steps.stack.outputs.bucket }} \
+            --exclude "*" \
+            --include "index.html" \
+            --include "ngsw.json" \
+            --include "ngsw-worker.js" \
+            --include "manifest.webmanifest" \
+            --cache-control "no-cache,no-store,must-revalidate"
+
+      # ── 12. Invalidate CloudFront ─────────────────────────────────────────────
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.stack.outputs.distribution_id }} \
+            --paths "/*"
+
+      # ── 13. Summary ───────────────────────────────────────────────────────────
+      - name: Deployment summary
+        run: |
+          echo "## 🚀 Prod Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo ""                               >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **URL**: ${{ steps.stack.outputs.web_url }}"  >> $GITHUB_STEP_SUMMARY
+          echo "🔀 **Commit**: \`${{ github.sha }}\`"            >> $GITHUB_STEP_SUMMARY

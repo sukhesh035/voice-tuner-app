@@ -1,0 +1,47 @@
+// ============================================================
+// SRUTI - Global Styles Entry Point
+// ============================================================
+
+@use 'variables' as *;
+@use 'themes';
+@use 'components';
+@use 'animations';
+
+// Tailwind CSS
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// Ionic CSS Variables
+@import "@ionic/angular/css/core.css";
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+
+// Base Reset
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--sruti-font-sans);
+  background: var(--sruti-bg-primary);
+  color: var(--sruti-text-primary);
+  overflow: hidden;
+}
+
+ion-content {
+  --background: var(--sruti-bg-primary);
+}
+
+ion-page {
+  background: var(--sruti-bg-primary);
+}

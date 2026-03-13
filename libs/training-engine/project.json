@@ -1,0 +1,19 @@
+{
+  "name": "training-engine",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/training-engine/src",
+  "projectType": "library",
+  "tags": ["scope:mobile", "type:feature"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": { "lintFilePatterns": ["libs/training-engine/**/*.ts"] }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": { "jestConfig": "libs/training-engine/jest.config.ts" }
+    }
+  }
+}
