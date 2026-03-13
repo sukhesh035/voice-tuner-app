@@ -275,15 +275,15 @@ export class SrutiStack extends cdk.Stack {
       });
     };
 
-    addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], '/api/sessions',          sessionsLambda);
-    addRoute([apigwv2.HttpMethod.GET],                          '/api/sessions/{id}',     sessionsLambda);
-    addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT],  '/api/users/me',          usersLambda);
-    addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], '/api/streaks',            streaksLambda);
-    addRoute([apigwv2.HttpMethod.POST],                         '/api/streaks/checkin',   streaksLambda);
-    addRoute([apigwv2.HttpMethod.POST],                         '/api/classroom/sessions',      classroomLambda);
-    addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.DELETE], '/api/classroom/sessions/{code}', classroomLambda);
-    addRoute([apigwv2.HttpMethod.POST],                         '/api/classroom/join',    classroomLambda);
-    addRoute([apigwv2.HttpMethod.PUT],                          '/api/classroom/sessions/{code}/result', classroomLambda);
+    addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], '/v1/api/sessions',          sessionsLambda);
+    addRoute([apigwv2.HttpMethod.GET],                          '/v1/api/sessions/{id}',     sessionsLambda);
+    addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT],  '/v1/api/users/me',          usersLambda);
+    addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], '/v1/api/streaks',            streaksLambda);
+    addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/streaks/checkin',   streaksLambda);
+    addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/classroom/sessions',      classroomLambda);
+    addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.DELETE], '/v1/api/classroom/sessions/{code}', classroomLambda);
+    addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/classroom/join',    classroomLambda);
+    addRoute([apigwv2.HttpMethod.PUT],                          '/v1/api/classroom/sessions/{code}/result', classroomLambda);
 
     // ─── Outputs (read by CI to generate environment.ts) ─────────────────────
     new cdk.CfnOutput(this, 'ApiUrl',              { value: api.apiEndpoint });
