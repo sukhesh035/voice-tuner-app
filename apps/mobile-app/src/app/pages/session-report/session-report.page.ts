@@ -5,7 +5,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
-import { RAGAS } from '@voice-tuner/training-engine';
+import { RAGAS, RagaDefinition } from '@voice-tuner/training-engine';
 import { formatDuration } from '@voice-tuner/shared-utils';
 
 export interface SessionReportData {
@@ -163,7 +163,7 @@ export class SessionReportPage implements OnInit {
 
   report: SessionReportData | null = null;
   grade: Grade = { label: 'C', color: '#FFC107' };
-  raga: typeof RAGAS[0] | null = null;
+  raga: RagaDefinition | null = null;
   noteList: { name: string; value: number }[] = [];
   formattedDuration = '';
 
@@ -195,7 +195,7 @@ export class SessionReportPage implements OnInit {
     this.report         = report;
     this.grade          = getGrade(report.score);
     this.formattedDuration = formatDuration(report.duration);
-    this.raga           = RAGAS.find((r) => r.id === report.raagaId) ?? null;
+    this.raga           = (report.raagaId ? RAGAS[report.raagaId] : undefined) ?? null;
     this.noteList       = Object.entries(report.noteAccuracies)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
