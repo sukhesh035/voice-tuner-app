@@ -110,9 +110,14 @@ jobs:
           /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST" \
             || /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
 
-      # ── 9. Set build number to GitHub run number (unique + always increasing) ─
-      - name: Set build number
+      # ── 9. Set version + build number ─────────────────────────────────────
+      #   Marketing version is always 1.1 (cap add ios regenerates ios/ with 1.0
+      #   each run so we must set it explicitly — Apple rejects builds lower than
+      #   a previously uploaded version).
+      #   Build number = github.run_number (unique, always increasing).
+      - name: Set version and build number
         run: |
+          agvtool new-marketing-version 1.1
           agvtool new-version -all ${{ github.run_number }}
         working-directory: apps/mobile-app/ios/App
 
@@ -240,7 +245,7 @@ jobs:
         run: |
           echo "## TestFlight Build Uploaded" >> $GITHUB_STEP_SUMMARY
           echo ""                             >> $GITHUB_STEP_SUMMARY
-          echo "**Version**: 1.0 (build ${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: 1.1 (build ${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
           echo "**Commit**: \`${{ github.sha }}\`"                 >> $GITHUB_STEP_SUMMARY
           echo ""                             >> $GITHUB_STEP_SUMMARY
           echo "Apple takes ~5–15 min to process. Check [App Store Connect](https://appstoreconnect.apple.com)." >> $GITHUB_STEP_SUMMARY
