@@ -74,7 +74,15 @@ jobs:
           ../../node_modules/.bin/cap add ios
           ../../node_modules/.bin/cap sync ios
 
-      # ── 8. Restore Info.plist customisations (gitignored with ios/) ────────
+      # ── 8. Copy app icon into freshly-generated iOS project ───────────────
+      #   cap add ios regenerates the xcassets with the default Capacitor icon.
+      #   We overwrite AppIcon-512@2x.png with our own 1024×1024 resource.
+      - name: Copy app icon into iOS xcassets
+        run: |
+          ICONSET="apps/mobile-app/ios/App/App/Assets.xcassets/AppIcon.appiconset"
+          cp apps/mobile-app/resources/icon.png "$ICONSET/AppIcon-512@2x.png"
+
+      # ── 9. Restore Info.plist customisations (gitignored with ios/) ────────
       #   • CFBundleDisplayName = Swara AI
       #   • NSMicrophoneUsageDescription
       #   • UISupportedInterfaceOrientations~ipad (all 4 — App Store requirement)
