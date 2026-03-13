@@ -9,8 +9,8 @@
  * Outputs:
  *   iOS    → ios/App/App/Assets.xcassets/AppIcon.appiconset/
  *            ios/App/App/Assets.xcassets/Splash.imageset/
- *   Android→ android/app/src/main/res/mipmap-*/  (ic_launcher + ic_launcher_round)
- *            android/app/src/main/res/drawable-*/  (splash.png)
+ *   Android→ android/app/src/main/res/mipmap-{mdpi,hdpi,xhdpi,xxhdpi,xxxhdpi}/
+ *            android/app/src/main/res/drawable-{port,land}-{mdpi,...}/
  *   PWA    → apps/mobile-app/src/assets/icons/
  *
  * Usage:
