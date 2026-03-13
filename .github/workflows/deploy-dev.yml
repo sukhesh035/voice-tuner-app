@@ -33,8 +33,6 @@ jobs:
       # ── 2. Node + pnpm ───────────────────────────────────────────────────────
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node 22
         uses: actions/setup-node@v4
