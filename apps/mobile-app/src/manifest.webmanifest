@@ -1,7 +1,7 @@
 {
-  "name": "Sruti - Indian Classical Music Companion",
-  "short_name": "Sruti",
-  "description": "Practice Indian classical music with real-time pitch detection and tanpura accompaniment.",
+  "name": "Swara AI - Indian Classical Music Tuner",
+  "short_name": "Swara AI",
+  "description": "Practice Indian classical music with AI-powered real-time pitch detection and tanpura accompaniment.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f23",
