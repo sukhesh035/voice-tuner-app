@@ -61,6 +61,7 @@
     "aws-amplify": "^6.0.0",
     "aws-jwt-verify": "^5.1.1",
     "chart.js": "^4.4.0",
+    "ionicons": "^8.0.13",
     "ng2-charts": "^6.0.0",
     "pitchy": "^4.1.0",
     "rxjs": "~7.8.0",
