@@ -71,6 +71,7 @@
     "@angular/cli": "~21.0.0",
     "@angular/compiler-cli": "~21.0.0",
     "@nx/angular": "^22.0.0",
+    "@nx/esbuild": "^22.0.0",
     "@nx/eslint-plugin": "^22.0.0",
     "@nx/jest": "^22.0.0",
     "@nx/js": "^22.0.0",
