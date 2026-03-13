@@ -16,6 +16,9 @@ export class ThemeService {
   setTheme(theme: AppTheme): void {
     this.currentTheme = theme;
     document.documentElement.setAttribute('data-theme', theme);
+    // Keep Ionic's own dark-palette class in sync so Ionic components
+    // (which use shadow DOM and ignore data-theme) also render correctly.
+    document.documentElement.classList.toggle('ion-palette-dark', theme === 'dark');
     localStorage.setItem('sruti-theme', theme);
   }
 
