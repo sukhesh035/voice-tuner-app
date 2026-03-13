@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.sruti.voicetuner',
   appName: 'Sruti',
-  webDir: '../../dist/apps/mobile-app',
+  webDir: '../../dist/apps/mobile-app/browser',
   server: {
     // For local dev with live reload: uncomment and set to your machine IP
     // url: 'http://192.168.1.x:4200',
