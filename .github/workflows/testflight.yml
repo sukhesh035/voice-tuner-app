@@ -15,13 +15,10 @@ jobs:
     name: Build & Upload to TestFlight
     runs-on: macos-latest        # Xcode is macOS-only
 
-    # Skip if this push is the automated version-bump commit (avoids infinite loop)
-    if: "!startsWith(github.event.head_commit.message, 'chore: bump version')"
-
     environment: prod            # same environment as deploy-prod (secrets scoped here)
 
     permissions:
-      contents: write            # needed to commit the version bump back to main
+      contents: read
 
     env:
       # ── App identity ──────────────────────────────────────────────────────
@@ -39,21 +36,6 @@ jobs:
       # ── 1. Checkout ────────────────────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4.2.2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      # ── 2. Read & compute next version ────────────────────────────────────
-      - name: Compute version
-        id: version
-        run: |
-          CURRENT=$(cat apps/mobile-app/version.txt)
-          MAJOR=$(echo "$CURRENT" | cut -d. -f1)
-          MINOR=$(echo "$CURRENT" | cut -d. -f2)
-          NEXT_MINOR=$((MINOR + 1))
-          NEXT="${MAJOR}.${NEXT_MINOR}"
-          echo "current=$CURRENT"  >> $GITHUB_OUTPUT
-          echo "next=$NEXT"        >> $GITHUB_OUTPUT
-          echo "Current: $CURRENT → Next: $NEXT"
 
       # ── 2. Node + pnpm ─────────────────────────────────────────────────────
       - name: Setup pnpm
@@ -120,12 +102,9 @@ jobs:
           /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST" \
             || /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
 
-      # ── 9. Set version + build number ─────────────────────────────────────
-      #   Marketing version = next minor from version.txt (e.g. 1.0 → 1.1)
-      #   Build number      = github.run_number (always increasing)
-      - name: Set version and build number
+      # ── 9. Set build number to GitHub run number (unique + always increasing) ─
+      - name: Set build number
         run: |
-          agvtool new-marketing-version ${{ steps.version.outputs.next }}
           agvtool new-version -all ${{ github.run_number }}
         working-directory: apps/mobile-app/ios/App
 
@@ -247,24 +226,13 @@ jobs:
             --verbose \
             2>&1
 
-      # ── 16. Bump version.txt and commit back to main ──────────────────────
-      - name: Commit version bump
-        if: success()
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          echo "${{ steps.version.outputs.next }}" > apps/mobile-app/version.txt
-          git add apps/mobile-app/version.txt
-          git commit -m "chore: bump version to ${{ steps.version.outputs.next }}"
-          git push origin main
-
-      # ── 17. Summary ────────────────────────────────────────────────────────
+      # ── 16. Summary ────────────────────────────────────────────────────────
       - name: Summary
         if: success()
         run: |
           echo "## TestFlight Build Uploaded" >> $GITHUB_STEP_SUMMARY
           echo ""                             >> $GITHUB_STEP_SUMMARY
-          echo "**Version**: ${{ steps.version.outputs.next }} (build ${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: 1.0 (build ${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
           echo "**Commit**: \`${{ github.sha }}\`"                 >> $GITHUB_STEP_SUMMARY
           echo ""                             >> $GITHUB_STEP_SUMMARY
           echo "Apple takes ~5–15 min to process. Check [App Store Connect](https://appstoreconnect.apple.com)." >> $GITHUB_STEP_SUMMARY
