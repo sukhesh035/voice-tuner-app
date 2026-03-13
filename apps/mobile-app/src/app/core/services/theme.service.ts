@@ -8,8 +8,9 @@ export class ThemeService {
 
   initialize(): void {
     const saved = localStorage.getItem('sruti-theme') as AppTheme | null;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    this.setTheme(saved ?? (prefersDark ? 'dark' : 'light'));
+    // Default to dark — the app is designed dark-first.
+    // Only respect a saved preference, not the system setting.
+    this.setTheme(saved ?? 'dark');
   }
 
   setTheme(theme: AppTheme): void {
