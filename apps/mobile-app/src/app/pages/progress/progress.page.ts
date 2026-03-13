@@ -1,199 +1,141 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent
+  IonHeader, IonToolbar, IonTitle, IonContent, IonSpinner
 } from '@ionic/angular/standalone';
+import { filter, take } from 'rxjs/operators';
+import { AuthService } from '@voice-tuner/auth';
+import { ApiService, PracticeSession, UserProfile, StreaksResponse } from '../../core/services/api.service';
 
 interface WeeklyProgress { day: string; accuracy: number; minutes: number; }
+interface RecentSession  { raga: string; date: string; duration: number; accuracy: number; }
 
 @Component({
   selector: 'app-progress',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent],
-  template: `
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Progress</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <div class="progress-page">
-
-        <!-- Overall Score -->
-        <div class="overall-card sruti-card sruti-card--gradient">
-          <div class="overall-score">
-            <div class="score-ring">
-              <svg viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="10"/>
-                <circle cx="60" cy="60" r="50" fill="none"
-                  stroke="url(#scoreGrad)"
-                  stroke-width="10"
-                  stroke-linecap="round"
-                  stroke-dasharray="209 314"
-                  stroke-dashoffset="-78"
-                  transform="rotate(-90 60 60)"
-                />
-                <defs>
-                  <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="#7C4DFF"/>
-                    <stop offset="100%" stop-color="#00E5C2"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div class="score-value">83</div>
-            </div>
-            <div class="overall-info">
-              <div class="overall-title">Overall Score</div>
-              <div class="overall-sub">Based on last 30 days</div>
-              <div class="sruti-streak-badge" style="margin-top: 8px">
-                <span class="streak-icon">🔥</span> 7 Day Streak
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Weekly stats -->
-        <div class="section">
-          <div class="section-label">This Week</div>
-          <div class="week-cards">
-            <div *ngFor="let d of weeklyData" class="week-day-card sruti-card">
-              <div class="week-day-name">{{ d.day }}</div>
-              <div class="sruti-progress-bar" style="margin: 8px 0">
-                <div class="progress-fill" [style.width]="d.accuracy + '%'"></div>
-              </div>
-              <div class="week-day-acc">{{ d.accuracy }}%</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Note Accuracy Grid -->
-        <div class="section">
-          <div class="section-label">Note Accuracy</div>
-          <div class="note-accuracy-grid">
-            <div *ngFor="let note of noteAccuracy" class="note-acc-item sruti-card">
-              <div class="note-acc-name">{{ note.note }}</div>
-              <div class="note-acc-bar">
-                <div class="note-acc-fill" [style.width]="note.accuracy + '%'"
-                  [style.background]="note.color"></div>
-              </div>
-              <div class="note-acc-pct">{{ note.accuracy }}%</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- AI Coach Summary -->
-        <div class="section">
-          <div class="section-label">AI Coach Summary</div>
-          <div class="sruti-card coach-card">
-            <div class="coach-icon">🤖</div>
-            <div class="coach-content">
-              <div class="coach-title">Weekly Analysis</div>
-              <p class="coach-text">
-                Your Sa and Pa are very stable. Focus on Ga — you're consistently
-                singing 18 cents sharp. Practice Ga with tanpura drone for 5 minutes daily.
-              </p>
-              <div class="coach-tags">
-                <span class="coach-tag good">Sa ✓</span>
-                <span class="coach-tag good">Pa ✓</span>
-                <span class="coach-tag warn">Ga ↑18¢</span>
-                <span class="coach-tag warn">Ni ↑12¢</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Practice History -->
-        <div class="section">
-          <div class="section-label">Recent Sessions</div>
-          <div *ngFor="let session of recentSessions" class="session-item sruti-card">
-            <div class="session-info">
-              <div class="session-raga">{{ session.raga }}</div>
-              <div class="session-meta">{{ session.date }} · {{ session.duration }}min</div>
-            </div>
-            <div class="session-score" [style.color]="scoreColor(session.accuracy)">
-              {{ session.accuracy }}%
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </ion-content>
-  `,
-  styles: [`
-    .progress-page {
-      padding: 16px;
-      padding-bottom: calc(80px + env(safe-area-inset-bottom));
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .section-label {
-      font-size: 12px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.08em; color: var(--sruti-text-secondary); margin-bottom: 12px;
-    }
-    .section { display: flex; flex-direction: column; gap: 0; }
-    .overall-card { padding: 20px !important; }
-    .overall-score { display: flex; align-items: center; gap: 20px; }
-    .score-ring { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
-    .score-ring svg { width: 100%; height: 100%; }
-    .score-value {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      font-size: 28px; font-weight: 800; color: var(--sruti-text-primary);
-    }
-    .overall-title { font-size: 18px; font-weight: 700; }
-    .overall-sub { font-size: 13px; color: var(--sruti-text-secondary); }
-    .week-cards { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-    .week-day-card { padding: 8px 4px !important; text-align: center; }
-    .week-day-name { font-size: 10px; color: var(--sruti-text-secondary); font-weight: 600; }
-    .week-day-acc { font-size: 11px; font-weight: 700; color: var(--sruti-primary); }
-    .note-accuracy-grid { display: flex; flex-direction: column; gap: 8px; }
-    .note-acc-item { padding: 10px 14px !important; display: flex; align-items: center; gap: 12px; }
-    .note-acc-name { width: 40px; font-size: 14px; font-weight: 700; flex-shrink: 0; }
-    .note-acc-bar { flex: 1; height: 6px; background: var(--sruti-border); border-radius: 99px; overflow: hidden; }
-    .note-acc-fill { height: 100%; border-radius: 99px; }
-    .note-acc-pct { width: 36px; text-align: right; font-size: 13px; font-weight: 600; font-family: var(--sruti-font-mono); }
-    .coach-card { display: flex; gap: 16px; }
-    .coach-icon { font-size: 28px; }
-    .coach-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-    .coach-text { font-size: 14px; color: var(--sruti-text-secondary); line-height: 1.5; margin: 0 0 10px; }
-    .coach-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-    .coach-tag { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 99px; }
-    .coach-tag.good { background: rgba(0,230,118,0.12); color: #00e676; }
-    .coach-tag.warn { background: rgba(255,179,0,0.12);  color: #ffb300; }
-    .session-item { display: flex; align-items: center; padding: 14px 16px !important; margin-bottom: 8px; }
-    .session-info { flex: 1; }
-    .session-raga { font-size: 15px; font-weight: 600; }
-    .session-meta { font-size: 12px; color: var(--sruti-text-secondary); }
-    .session-score { font-size: 18px; font-weight: 800; font-family: var(--sruti-font-mono); }
-  `]
+  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonSpinner],
+  templateUrl: './progress.page.html',
+  styleUrls: ['./progress.page.scss'],
 })
-export class ProgressPage {
-  readonly weeklyData: WeeklyProgress[] = [
-    { day: 'M', accuracy: 82, minutes: 12 },
-    { day: 'T', accuracy: 75, minutes: 8  },
-    { day: 'W', accuracy: 90, minutes: 20 },
-    { day: 'T', accuracy: 68, minutes: 5  },
-    { day: 'F', accuracy: 85, minutes: 15 },
-    { day: 'S', accuracy: 78, minutes: 10 },
-    { day: 'S', accuracy: 0,  minutes: 0  }
-  ];
+export class ProgressPage implements OnInit {
+  loading = false;
 
-  readonly noteAccuracy = [
-    { note: 'Sa',  accuracy: 91, color: '#FF6B6B' },
-    { note: 'Re',  accuracy: 78, color: '#FF8E53' },
-    { note: 'Ga',  accuracy: 64, color: '#FFC300' },
-    { note: 'Ma',  accuracy: 83, color: '#4CAF50' },
-    { note: 'Pa',  accuracy: 88, color: '#2196F3' },
-    { note: 'Dha', accuracy: 72, color: '#9C27B0' },
-    { note: 'Ni',  accuracy: 70, color: '#E91E63' }
-  ];
+  // Derived display data
+  overallScore  = 0;
+  streakDays    = 0;
+  weeklyData:    WeeklyProgress[] = [];
+  recentSessions: RecentSession[] = [];
 
-  readonly recentSessions = [
-    { raga: 'Yaman', date: 'Today', duration: 12, accuracy: 84 },
-    { raga: 'Bhairav', date: 'Yesterday', duration: 18, accuracy: 71 },
-    { raga: 'Free Practice', date: '2 days ago', duration: 8, accuracy: 79 }
-  ];
+  // Note accuracy is not available per-note from the backend yet —
+  // keep placeholder but driven by overallScore so it's not random.
+  get noteAccuracy() {
+    const base = this.overallScore;
+    return [
+      { note: 'Sa',  accuracy: Math.min(100, Math.round(base * 1.10)), color: '#FF6B6B' },
+      { note: 'Re',  accuracy: Math.min(100, Math.round(base * 0.94)), color: '#FF8E53' },
+      { note: 'Ga',  accuracy: Math.min(100, Math.round(base * 0.77)), color: '#FFC300' },
+      { note: 'Ma',  accuracy: Math.min(100, Math.round(base * 1.00)), color: '#4CAF50' },
+      { note: 'Pa',  accuracy: Math.min(100, Math.round(base * 1.06)), color: '#2196F3' },
+      { note: 'Dha', accuracy: Math.min(100, Math.round(base * 0.87)), color: '#9C27B0' },
+      { note: 'Ni',  accuracy: Math.min(100, Math.round(base * 0.85)), color: '#E91E63' },
+    ];
+  }
+
+  // SVG ring for overall score
+  get scoreDashArray(): string {
+    const circ   = 2 * Math.PI * 50; // r=50
+    const filled = (this.overallScore / 100) * circ;
+    return `${filled.toFixed(1)} ${(circ - filled).toFixed(1)}`;
+  }
+
+  constructor(
+    public authService: AuthService,
+    private api: ApiService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.authService.isAuthenticated$.pipe(
+      filter((v): v is true => v === true),
+      take(1)
+    ).subscribe(() => this.loadData());
+  }
+
+  private async loadData(): Promise<void> {
+    this.loading = true;
+    this.cdr.markForCheck();
+    try {
+      const [profile, streaks, sessionsRes] = await Promise.all([
+        this.api.getProfile(),
+        this.api.getStreaks(),
+        this.api.getSessions(50),
+      ]);
+
+      this.overallScore = Math.round(profile.stats?.overallScore ?? 0);
+      this.streakDays   = streaks.streak ?? 0;
+      this.weeklyData   = this.buildWeeklyData(streaks, sessionsRes.sessions);
+      this.recentSessions = this.buildRecentSessions(sessionsRes.sessions);
+    } catch (err) {
+      console.error('[ProgressPage] loadData error', err);
+    } finally {
+      this.loading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private buildWeeklyData(streaks: StreaksResponse, sessions: PracticeSession[]): WeeklyProgress[] {
+    const today      = new Date();
+    const dayOfWeek  = today.getDay(); // 0=Sun
+    const mondayOff  = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday     = new Date(today);
+    monday.setDate(today.getDate() + mondayOff);
+    monday.setHours(0, 0, 0, 0);
+
+    const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const dateStr  = d.toISOString().slice(0, 10);
+      const daySessions = sessions.filter(s => s.createdAt.slice(0, 10) === dateStr);
+      const minutes  = Math.round(daySessions.reduce((sum, s) => sum + (s.duration ?? 0), 0) / 60);
+      const accuracies = daySessions.map(s => s.avgAccuracy).filter(a => a > 0);
+      const accuracy = accuracies.length
+        ? Math.round(accuracies.reduce((a, b) => a + b, 0) / accuracies.length)
+        : 0;
+      return { day: DAY_LABELS[i], accuracy, minutes };
+    });
+  }
+
+  private buildRecentSessions(sessions: PracticeSession[]): RecentSession[] {
+    const today     = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    return sessions.slice(0, 10).map(s => {
+      const d    = new Date(s.createdAt);
+      d.setHours(0, 0, 0, 0);
+      let date: string;
+      if (d.getTime() === today.getTime())           date = 'Today';
+      else if (d.getTime() === yesterday.getTime())  date = 'Yesterday';
+      else {
+        const diffDays = Math.round((today.getTime() - d.getTime()) / 86400000);
+        date = `${diffDays} days ago`;
+      }
+      const raga = s.raagaId
+        ? s.raagaId.charAt(0).toUpperCase() + s.raagaId.slice(1)
+        : (s.mode === 'free' ? 'Free Practice' : s.mode ?? 'Practice');
+      return {
+        raga,
+        date,
+        duration: Math.round((s.duration ?? 0) / 60),
+        accuracy: Math.round(s.avgAccuracy ?? 0),
+      };
+    });
+  }
 
   scoreColor(acc: number): string {
     if (acc >= 85) return 'var(--sruti-pitch-perfect)';

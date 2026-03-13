@@ -1,78 +1,359 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonButton } from '@ionic/angular/standalone';
+import {
+  IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  personCircle, trendingUp, flame, musicalNote,
+  settingsOutline, chevronForward, logOutOutline,
+  checkmarkCircle, school, mic
+} from 'ionicons/icons';
+import { filter, take } from 'rxjs/operators';
 import { AuthService } from '@voice-tuner/auth';
+import { ApiService, UserProfile, StreaksResponse } from '../../core/services/api.service';
+
+interface Achievement {
+  icon: string;
+  label: string;
+  desc: string;
+  unlocked: boolean;
+}
 
 @Component({
   selector: 'app-profile',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonButton],
+  imports: [
+    CommonModule, RouterLink,
+    IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner
+  ],
   template: `
     <ion-header>
       <ion-toolbar>
         <ion-title>Profile</ion-title>
       </ion-toolbar>
     </ion-header>
+
     <ion-content>
       <div class="profile-page">
 
-        <ng-container *ngIf="authService.isAuthenticated$ | async; else loginPrompt">
-          <!-- Authenticated View -->
-          <div class="profile-header sruti-card">
-            <div class="avatar">{{ (authService.user$ | async)?.name?.[0] ?? 'U' }}</div>
-            <div class="profile-info">
-              <div class="profile-name">{{ (authService.user$ | async)?.name }}</div>
-              <div class="profile-email">{{ (authService.user$ | async)?.email }}</div>
+        <!-- ── Authenticated View ──────────────────────────── -->
+        <ng-container *ngIf="authService.user$ | async as user; else guestView">
+
+          <!-- Loading state -->
+          <ng-container *ngIf="loading; else profileLoaded">
+            <div class="profile-loading">
+              <ion-spinner name="crescent"></ion-spinner>
+            </div>
+          </ng-container>
+
+          <ng-template #profileLoaded>
+
+            <!-- Avatar + Name -->
+            <div class="profile-hero">
+              <div class="avatar">{{ user.name?.[0]?.toUpperCase() ?? 'U' }}</div>
+              <div class="profile-info">
+                <div class="profile-name">{{ user.name }}</div>
+                <div class="profile-email">{{ user.email }}</div>
+                <div class="profile-since">{{ practicingSince }}</div>
+              </div>
+            </div>
+
+            <!-- Key Stats -->
+            <div class="stats-row">
+              <div class="sruti-stat-card">
+                <div class="stat-value">{{ profile?.stats?.totalSessions ?? 0 }}</div>
+                <div class="stat-label">Sessions</div>
+              </div>
+              <div class="sruti-stat-card">
+                <div class="stat-value">{{ (profile?.stats?.currentStreak ?? 0) }}🔥</div>
+                <div class="stat-label">Day Streak</div>
+              </div>
+              <div class="sruti-stat-card">
+                <div class="stat-value">{{ avgScoreLabel }}</div>
+                <div class="stat-label">Avg Score</div>
+              </div>
+            </div>
+
+            <!-- Total Practice Time -->
+            <div class="sruti-card time-card">
+              <div class="time-card__left">
+                <div class="time-card__value">{{ practiceTimeLabel }}</div>
+                <div class="time-card__label">Total practice time</div>
+                <div class="time-card__goal">Goal: {{ dailyGoalLabel }}</div>
+              </div>
+              <div class="time-card__right">
+                <div class="time-ring">
+                  <svg viewBox="0 0 60 60">
+                    <circle cx="30" cy="30" r="24" fill="none"
+                      stroke="var(--sruti-border)" stroke-width="5"/>
+                    <circle cx="30" cy="30" r="24" fill="none"
+                      stroke="url(#tGrad)" stroke-width="5"
+                      stroke-linecap="round"
+                      [attr.stroke-dasharray]="ringDash"
+                      stroke-dashoffset="-38"
+                      transform="rotate(-90 30 30)"/>
+                    <defs>
+                      <linearGradient id="tGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#7C4DFF"/>
+                        <stop offset="100%" stop-color="#00E5C2"/>
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <span class="time-ring__label">{{ monthlyGoalPct }}%</span>
+                </div>
+                <div class="time-ring-sub">Monthly goal</div>
+              </div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="section">
+              <div class="section-label">Achievements</div>
+              <div class="achievements-grid">
+                <div
+                  *ngFor="let a of achievements"
+                  class="achievement-chip"
+                  [class.unlocked]="a.unlocked"
+                >
+                  <span class="achievement-icon">{{ a.icon }}</span>
+                  <span class="achievement-label">{{ a.label }}</span>
+                  <ion-icon *ngIf="a.unlocked" name="checkmark-circle" class="achievement-check"></ion-icon>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="section">
+              <div class="section-label">Account</div>
+              <div class="menu-list">
+                <a class="menu-row sruti-card" [routerLink]="['/progress']">
+                  <ion-icon name="trending-up" class="menu-icon menu-icon--purple"></ion-icon>
+                  <div class="menu-text">
+                    <div class="menu-title">My Progress</div>
+                    <div class="menu-sub">Full practice history &amp; analytics</div>
+                  </div>
+                  <ion-icon name="chevron-forward" class="menu-chevron"></ion-icon>
+                </a>
+                <a class="menu-row sruti-card" [routerLink]="['/settings']">
+                  <ion-icon name="settings-outline" class="menu-icon menu-icon--gray"></ion-icon>
+                  <div class="menu-text">
+                    <div class="menu-title">Settings</div>
+                    <div class="menu-sub">Audio, notifications, appearance</div>
+                  </div>
+                  <ion-icon name="chevron-forward" class="menu-chevron"></ion-icon>
+                </a>
+              </div>
+            </div>
+
+            <!-- Sign Out -->
+            <button class="signout-btn" (click)="signOut()">
+              <ion-icon name="log-out-outline"></ion-icon>
+              Sign Out
+            </button>
+
+          </ng-template>
+
+        </ng-container>
+
+        <!-- ── Guest View ───────────────────────────────────── -->
+        <ng-template #guestView>
+
+          <!-- Verify email banner (shown after sign up before confirmation) -->
+          <div *ngIf="authService.pendingConfirmationEmail as pendingEmail" class="verify-banner sruti-card">
+            <div class="verify-banner__icon">✉️</div>
+            <div class="verify-banner__body">
+              <div class="verify-banner__title">Check your email</div>
+              <div class="verify-banner__desc">
+                We sent a confirmation link to <strong>{{ pendingEmail }}</strong>.
+                Click it to activate your account, then sign in.
+              </div>
+            </div>
+            <button class="verify-banner__resend link-btn" (click)="resendConfirmation()" [disabled]="resendLoading">
+              {{ resendLoading ? 'Sending…' : 'Resend' }}
+            </button>
+          </div>
+
+          <div class="guest-hero">
+            <div class="guest-avatar-wrap">
+              <ion-icon name="person-circle" class="guest-avatar-icon"></ion-icon>
+            </div>
+            <div class="guest-title">Guest Practitioner</div>
+            <div class="guest-sub">Your progress isn't being saved</div>
+          </div>
+
+          <div class="sruti-card upsell-card">
+            <div class="upsell-headline">Unlock Your Full Journey</div>
+            <p class="upsell-desc">
+              Sign in to save sessions, track streaks, analyse note accuracy,
+              and get AI-powered weekly feedback — synced across all your devices.
+            </p>
+
+            <div class="upsell-features">
+              <div class="upsell-feature"><span>🔥</span><span>Daily streak tracking</span></div>
+              <div class="upsell-feature"><span>📊</span><span>Note-by-note accuracy history</span></div>
+              <div class="upsell-feature"><span>🤖</span><span>AI coach weekly summary</span></div>
+              <div class="upsell-feature"><span>🏆</span><span>Achievements &amp; milestones</span></div>
+              <div class="upsell-feature"><span>📱</span><span>Sync across all your devices</span></div>
+            </div>
+
+            <a [routerLink]="['/login']" class="sruti-btn sruti-btn--primary upsell-cta">
+              Sign In — It's Free
+            </a>
+            <div class="upsell-fine">No credit card required · Practice offline anytime</div>
+          </div>
+
+          <!-- Blurred preview of what they'd see -->
+          <div class="section">
+            <div class="section-label">Your stats (sign in to unlock)</div>
+            <div class="preview-stats">
+              <div class="preview-stat sruti-card">
+                <div class="preview-val">?</div>
+                <div class="preview-label">Day Streak</div>
+              </div>
+              <div class="preview-stat sruti-card">
+                <div class="preview-val">?</div>
+                <div class="preview-label">Sessions</div>
+              </div>
+              <div class="preview-stat sruti-card">
+                <div class="preview-val">?</div>
+                <div class="preview-label">Avg Score</div>
+              </div>
             </div>
           </div>
 
-          <div class="profile-stats">
-            <div class="sruti-stat-card"><div class="stat-value">42</div><div class="stat-label">Sessions</div></div>
-            <div class="sruti-stat-card"><div class="stat-value">7🔥</div><div class="stat-label">Streak</div></div>
-            <div class="sruti-stat-card"><div class="stat-value">83%</div><div class="stat-label">Avg Score</div></div>
-          </div>
-
-          <div class="profile-actions">
-            <button class="sruti-btn sruti-btn--secondary logout-btn" (click)="authService.signOut()">
-              Sign Out
-            </button>
-          </div>
-        </ng-container>
-
-        <ng-template #loginPrompt>
-          <div class="login-prompt sruti-card">
-            <div class="login-prompt-icon">🎵</div>
-            <div class="login-prompt-title">Sync Your Progress</div>
-            <p class="login-prompt-desc">
-              Sign in to save practice history, streaks, and settings across devices.
-            </p>
-            <a [routerLink]="['/login']" class="sruti-btn sruti-btn--primary">Sign In</a>
-            <div class="login-prompt-guest">Continue as guest — practice offline without syncing</div>
-          </div>
         </ng-template>
-
       </div>
     </ion-content>
   `,
-  styles: [`
-    .profile-page { padding: 16px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 20px; }
-    .profile-header { display: flex; align-items: center; gap: 16px; }
-    .avatar { width: 60px; height: 60px; border-radius: 50%; background: var(--sruti-gradient-primary); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: white; flex-shrink: 0; }
-    .profile-name  { font-size: 20px; font-weight: 700; }
-    .profile-email { font-size: 13px; color: var(--sruti-text-secondary); }
-    .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .profile-actions { display: flex; justify-content: center; }
-    .logout-btn { width: 100%; max-width: 200px; }
-    .login-prompt { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; padding: 32px 24px !important; }
-    .login-prompt-icon { font-size: 48px; }
-    .login-prompt-title { font-size: 22px; font-weight: 800; }
-    .login-prompt-desc { font-size: 15px; color: var(--sruti-text-secondary); line-height: 1.5; margin: 0; }
-    .login-prompt-guest { font-size: 12px; color: var(--sruti-text-tertiary); }
-    .sruti-btn { text-decoration: none; white-space: nowrap; }
-  `]
+  styleUrls: ['./profile.page.scss']
 })
-export class ProfilePage {
-  constructor(public authService: AuthService) {}
+export class ProfilePage implements OnInit {
+  resendLoading = false;
+  loading = false;
+
+  profile: UserProfile | null = null;
+  streaks: StreaksResponse | null = null;
+
+  // ── Derived display values ────────────────────────────────────────────────
+
+  get practicingSince(): string {
+    if (!this.profile?.createdAt) return '';
+    const d = new Date(this.profile.createdAt);
+    return 'Practicing since ' + d.toLocaleString('en-IN', { month: 'short', year: 'numeric' });
+  }
+
+  get avgScoreLabel(): string {
+    const score = this.profile?.stats?.overallScore;
+    return score != null && score > 0 ? Math.round(score) + '%' : '–%';
+  }
+
+  get practiceTimeLabel(): string {
+    const mins = this.profile?.stats?.totalMinutes ?? 0;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (h === 0) return `${m}m`;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+
+  get dailyGoalLabel(): string {
+    const goal = this.profile?.preferences?.dailyGoalMinutes ?? 30;
+    const monthlyGoalMins = goal * 30;
+    const h = Math.floor(monthlyGoalMins / 60);
+    return `${h}h / month`;
+  }
+
+  /** Percentage of monthly goal achieved (0–100, capped at 100) */
+  get monthlyGoalPct(): number {
+    const totalMins = this.profile?.stats?.totalMinutes ?? 0;
+    const dailyGoal = this.profile?.preferences?.dailyGoalMinutes ?? 30;
+    const monthlyGoalMins = dailyGoal * 30;
+    // Only count current month minutes (approximation: use totalMinutes for now)
+    return Math.min(100, Math.round((totalMins / monthlyGoalMins) * 100));
+  }
+
+  /**
+   * SVG stroke-dasharray for the ring.
+   * Circumference of r=24 circle ≈ 150.8. We map pct → filled arc length.
+   */
+  get ringDash(): string {
+    const circ = 2 * Math.PI * 24; // ≈ 150.8
+    const filled = (this.monthlyGoalPct / 100) * circ;
+    const empty = circ - filled;
+    return `${filled.toFixed(1)} ${empty.toFixed(1)}`;
+  }
+
+  get achievements(): Achievement[] {
+    const totalSessions = this.profile?.stats?.totalSessions ?? 0;
+    const streak        = this.profile?.stats?.currentStreak ?? 0;
+    const longestStreak = this.profile?.stats?.longestStreak ?? 0;
+    const overallScore  = this.profile?.stats?.overallScore  ?? 0;
+
+    return [
+      { icon: '🎵', label: 'First Note',    desc: 'Completed first pitch detection session', unlocked: totalSessions >= 1      },
+      { icon: '🔥', label: '7-Day Streak',  desc: 'Practiced 7 days in a row',               unlocked: longestStreak >= 7      },
+      { icon: '🎯', label: 'In Tune',       desc: 'Avg accuracy above 75%',                  unlocked: overallScore >= 75      },
+      { icon: '🏆', label: 'Yaman Master',  desc: 'Scored 90%+ on Yaman three times',        unlocked: overallScore >= 90      },
+      { icon: '⭐', label: '30-Day Streak', desc: 'Practiced 30 days in a row',              unlocked: longestStreak >= 30     },
+      { icon: '🎓', label: 'Guru Student',  desc: 'Completed 10 sessions',                   unlocked: totalSessions >= 10     },
+    ];
+  }
+
+  constructor(
+    public authService: AuthService,
+    private api: ApiService,
+    private cdr: ChangeDetectorRef
+  ) {
+    addIcons({
+      personCircle, trendingUp, flame, musicalNote,
+      settingsOutline, chevronForward, logOutOutline,
+      checkmarkCircle, school, mic
+    });
+  }
+
+  ngOnInit(): void {
+    // Wait for the first truthy auth state, then load once.
+    // Using filter+take(1) prevents re-fetching on every Cognito token refresh emission.
+    this.authService.isAuthenticated$.pipe(
+      filter((isAuth): isAuth is true => isAuth === true),
+      take(1)
+    ).subscribe(() => this.loadData());
+  }
+
+  private async loadData(): Promise<void> {
+    this.loading = true;
+    this.cdr.markForCheck();
+    try {
+      const [profile, streaks] = await Promise.all([
+        this.api.getProfile(),
+        this.api.getStreaks(),
+      ]);
+      this.profile = profile;
+      this.streaks = streaks;
+    } catch (err) {
+      console.error('[ProfilePage] loadData error', err);
+    } finally {
+      this.loading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async signOut(): Promise<void> {
+    await this.authService.signOut();
+    this.cdr.markForCheck();
+  }
+
+  async resendConfirmation(): Promise<void> {
+    const email = this.authService.pendingConfirmationEmail;
+    if (!email) return;
+    this.resendLoading = true;
+    this.cdr.markForCheck();
+    try {
+      await this.authService.resendConfirmation(email);
+    } finally {
+      this.resendLoading = false;
+      this.cdr.markForCheck();
+    }
+  }
 }

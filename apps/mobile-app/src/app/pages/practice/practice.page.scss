@@ -13,13 +13,29 @@
   border-radius: $radius-lg;
   border: 1px solid var(--sruti-border);
   margin-bottom: $spacing-2;
+  overflow: hidden;
 
   ion-segment-button {
     --color: var(--sruti-text-secondary);
     --color-checked: var(--sruti-primary);
+    --background: transparent;
+    --background-checked: transparent;
     --indicator-color: rgba(var(--sruti-primary-rgb), 0.15);
-    font-weight: 600;
-    font-size: 13px;
+    --indicator-height: 100%;
+    --indicator-border-radius: #{$radius-md};
+    --indicator-box-shadow: none;
+    --border-radius: #{$radius-md};
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+    --font-size: 13px;
+    --font-weight: 600;
+    min-height: 40px;
+
+    &::part(native) {
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--sruti-font-sans);
+    }
   }
 }
 
@@ -78,10 +94,16 @@
   display: flex;
   gap: $spacing-3;
   align-items: center;
-  border: none;
+  background: var(--sruti-bg-card);
+  border: 1px solid var(--sruti-glass-border);
+  border-radius: $radius-xl;
+  color: var(--sruti-text-primary);
+  font-family: var(--sruti-font-sans);
+  width: 100%;
   text-align: left;
   -webkit-tap-highlight-color: transparent;
   transition: all 0.15s ease;
+  box-shadow: $shadow-card;
 
   &:active { transform: scale(0.97); }
 
@@ -123,6 +145,11 @@
     border: none;
     cursor: pointer;
     font-weight: 600;
+    font-family: var(--sruti-font-sans);
+    padding: $spacing-1 $spacing-2;
+    border-radius: $radius-md;
+    -webkit-tap-highlight-color: transparent;
+    &:active { opacity: 0.7; }
   }
 
   .raga-info-desc {

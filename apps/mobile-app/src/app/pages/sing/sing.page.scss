@@ -44,6 +44,7 @@
     font-family: var(--sruti-font-mono);
     color: var(--sruti-text-secondary);
     letter-spacing: 0.04em;
+    &.hidden { visibility: hidden; }
   }
 
   .cents-badge {
@@ -55,6 +56,7 @@
     background: var(--sruti-bg-card);
     transition: all 0.15s ease;
 
+    &.hidden { visibility: hidden; }
     &.in-tune  { color: var(--sruti-pitch-perfect); background: rgba(0, 230, 118, 0.12); }
     &.sharp    { color: var(--sruti-pitch-off); }
     &.flat     { color: #5E81F4; }
@@ -72,7 +74,6 @@
 .tuner-section {
   width: 100%;
 }
-
 .tuner-labels {
   display: flex;
   justify-content: space-between;
@@ -119,6 +120,12 @@
     &.in-tune {
       background: var(--sruti-pitch-perfect);
       box-shadow: 0 0 12px rgba(0, 230, 118, 0.9);
+    }
+
+    &.idle {
+      background: var(--sruti-border);
+      box-shadow: none;
+      opacity: 0.4;
     }
   }
 }
@@ -174,24 +181,33 @@
   gap: $spacing-4;
 }
 
+.mic-error {
+  font-size: 13px;
+  color: #FF5252;
+  text-align: center;
+  background: rgba(255, 23, 68, 0.1);
+  border: 1px solid rgba(255, 23, 68, 0.25);
+  border-radius: $radius-md;
+  padding: $spacing-2 $spacing-4;
+  max-width: 280px;
+}
+
 .mic-btn {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: $spacing-2;
+  justify-content: center;
   width: 88px;
   height: 88px;
   border-radius: 50%;
-  border: none;
-  background: var(--sruti-bg-card);
   border: 2px solid var(--sruti-border);
+  background: var(--sruti-bg-card);
   color: var(--sruti-text-secondary);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   -webkit-tap-highlight-color: transparent;
+  padding: 0;
 
-  ion-icon { font-size: 28px; }
-  span { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; }
+  ion-icon { font-size: 32px; }
 
   &.is-active {
     background: var(--sruti-gradient-primary);
@@ -209,4 +225,9 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: $spacing-3;
+
+  &.stats-hidden {
+    visibility: hidden;
+    pointer-events: none;
+  }
 }

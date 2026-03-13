@@ -4,24 +4,27 @@
  * YIN pitch detection off the main thread for minimal latency.
  *
  * Loaded via: audioContext.audioWorklet.addModule('/assets/worklets/pitch-processor.worklet.js')
+ *
+ * NOTE: This file must remain plain JavaScript — it is loaded directly by the
+ * browser as an AudioWorklet module and is NOT processed by the Angular/TypeScript
+ * compiler. TypeScript syntax (private, type annotations, etc.) will cause a
+ * SyntaxError at runtime.
  */
 class PitchProcessorWorklet extends AudioWorkletProcessor {
-  private buffer: Float32Array;
-  private bufferIndex = 0;
-  private readonly BUFFER_SIZE = 2048;
-  private readonly YIN_THRESHOLD = 0.15;
-
   constructor() {
     super();
+    this.BUFFER_SIZE = 2048;
+    this.YIN_THRESHOLD = 0.15;
     this.buffer = new Float32Array(this.BUFFER_SIZE);
+    this.bufferIndex = 0;
   }
 
   /**
    * Called per render quantum (128 frames at 44100 Hz = ~2.9ms).
    * Accumulates frames into buffer, runs YIN when full.
    */
-  process(inputs: Float32Array[][]): boolean {
-    const channel = inputs[0]?.[0];
+  process(inputs) {
+    const channel = inputs[0] && inputs[0][0];
     if (!channel || channel.length === 0) return true;
 
     for (let i = 0; i < channel.length; i++) {
@@ -39,7 +42,7 @@ class PitchProcessorWorklet extends AudioWorkletProcessor {
     return true;
   }
 
-  private yin(buffer: Float32Array): { frequency: number; clarity: number } | null {
+  yin(buffer) {
     const N    = buffer.length;
     const half = Math.floor(N / 2);
     const diff = new Float32Array(half);
@@ -78,7 +81,7 @@ class PitchProcessorWorklet extends AudioWorkletProcessor {
 
     const frequency = sampleRate / refined;
     if (frequency < 80 || frequency > 1200) return null;
-    return { frequency, clarity: 1 - cmnd[tau] };
+    return { frequency: frequency, clarity: 1 - cmnd[tau] };
   }
 }
 

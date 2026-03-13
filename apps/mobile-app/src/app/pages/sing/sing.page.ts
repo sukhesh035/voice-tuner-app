@@ -14,6 +14,7 @@ import { mic, micOff, musicalNotes, statsChart } from 'ionicons/icons';
 import { PitchDetectionService, PitchResult, IndianNote } from '@voice-tuner/pitch-detection';
 import { TanpuraPlayerService } from '@voice-tuner/tanpura-player';
 import { RouterLink } from '@angular/router';
+import { ApiService } from '../../core/services/api.service';
 
 @Component({
   selector: 'app-sing',
@@ -81,16 +82,16 @@ import { RouterLink } from '@angular/router';
             <div class="note-name" [style.color]="meterColor">
               {{ currentPitch?.indianNote ?? '–' }}
             </div>
-            <div class="hz-value" *ngIf="currentPitch">
-              {{ currentPitch.frequency | number:'1.1-1' }} Hz
+            <div class="hz-value" [class.hidden]="!currentPitch">
+              {{ (currentPitch?.frequency ?? 0) | number:'1.1-1' }} Hz
             </div>
             <div class="cents-badge"
-              *ngIf="currentPitch"
-              [class.sharp]="currentPitch.centsOff > 10"
-              [class.flat]="currentPitch.centsOff < -10"
+              [class.hidden]="!currentPitch"
+              [class.sharp]="(currentPitch?.centsOff ?? 0) > 10"
+              [class.flat]="(currentPitch?.centsOff ?? 0) < -10"
               [class.in-tune]="isInTune"
             >
-              {{ currentPitch.centsOff > 0 ? '+' : '' }}{{ currentPitch.centsOff | number:'1.0-0' }}¢
+              {{ (currentPitch?.centsOff ?? 0) > 0 ? '+' : '' }}{{ (currentPitch?.centsOff ?? 0) | number:'1.0-0' }}¢
             </div>
             <div class="no-pitch" *ngIf="!currentPitch && isActive">
               Sing...
@@ -99,7 +100,7 @@ import { RouterLink } from '@angular/router';
         </div>
 
         <!-- Tuner Needle -->
-        <div class="tuner-section" *ngIf="currentPitch">
+        <div class="tuner-section">
           <div class="tuner-labels">
             <span>-50¢</span><span>-25¢</span><span>In Tune</span><span>+25¢</span><span>+50¢</span>
           </div>
@@ -108,23 +109,24 @@ import { RouterLink } from '@angular/router';
             <div
               class="tuner-needle"
               [class.in-tune]="isInTune"
+              [class.idle]="!currentPitch"
               [style.transform]="'translateX(-50%) rotate(' + needleAngle + 'deg)'"
             ></div>
           </div>
         </div>
 
         <!-- Accuracy Bar -->
-        <div class="accuracy-section" *ngIf="currentPitch">
+        <div class="accuracy-section">
           <div class="accuracy-label">
             <span>Accuracy</span>
             <span class="accuracy-value" [style.color]="meterColor">
-              {{ currentPitch.accuracy | number:'1.0-0' }}%
+              {{ currentPitch ? ((currentPitch.accuracy | number:'1.0-0') + '%') : '–%' }}
             </span>
           </div>
           <div class="sruti-progress-bar">
             <div
               class="progress-fill"
-              [style.width]="currentPitch.accuracy + '%'"
+              [style.width]="(currentPitch?.accuracy ?? 0) + '%'"
               [style.background]="meterGradient"
             ></div>
           </div>
@@ -154,8 +156,9 @@ import { RouterLink } from '@angular/router';
             (click)="toggleMic()"
           >
             <ion-icon [name]="isActive ? 'mic' : 'mic-off'"></ion-icon>
-            <span>{{ isActive ? 'Listening...' : 'Tap to Sing' }}</span>
           </button>
+
+          <div class="mic-error" *ngIf="micError">{{ micError }}</div>
 
           <div class="waveform-bars" [class.silent]="!currentPitch">
             <div *ngFor="let _ of [1,2,3,4,5,6,7,8]" class="bar"></div>
@@ -163,7 +166,7 @@ import { RouterLink } from '@angular/router';
         </div>
 
         <!-- Stats Row -->
-        <div class="stats-row" *ngIf="sessionStats.sampleCount > 0">
+        <div class="stats-row" [class.stats-hidden]="sessionStats.sampleCount === 0">
           <div class="sruti-stat-card">
             <div class="stat-value">{{ sessionStats.stabilityScore | number:'1.0-0' }}</div>
             <div class="stat-label">Stability</div>
@@ -223,6 +226,7 @@ export class SingPage implements OnInit, OnDestroy {
   constructor(
     private pitchDetection: PitchDetectionService,
     private tanpura: TanpuraPlayerService,
+    private api: ApiService,
     private cdr: ChangeDetectorRef
   ) {
     addIcons({ mic, micOff, musicalNotes, statsChart });
@@ -238,15 +242,47 @@ export class SingPage implements OnInit, OnDestroy {
       });
   }
 
+  micError: string | null = null;
+
   async toggleMic(): Promise<void> {
     if (this.isActive) {
       this.pitchDetection.stop();
-      this.sessionStats = this.pitchDetection.getSessionStats() as any;
+      const stats = this.pitchDetection.getSessionStats();
+      this.sessionStats = stats as any;
       this.isActive = false;
+      this.micError = null;
+
+      // Persist session to backend (fire-and-forget — don't block UI)
+      const tanpuraState = this.tanpura.state;
+      const durationSeconds = Math.round(stats.sessionDuration);
+      if (durationSeconds > 0) {
+        const noteAccuracies: Record<string, number> = {};
+        for (const [note, acc] of Object.entries(stats.noteAccuracies)) {
+          noteAccuracies[note] = acc as number;
+        }
+        this.api.createSession({
+          duration:       durationSeconds,
+          mode:           'free',
+          key:            tanpuraState.key,
+          score:          Math.round(stats.stabilityScore),
+          avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
+          stabilityScore: Math.round(stats.stabilityScore),
+          noteAccuracies,
+        }).then(() => {
+          this.api.checkin(Math.ceil(durationSeconds / 60)).catch(() => {});
+        }).catch(err => console.warn('[SingPage] Failed to save session:', err));
+      }
     } else {
-      await this.pitchDetection.start();
-      this.detectedNotes.clear();
-      this.isActive = true;
+      try {
+        await this.pitchDetection.start();
+        this.detectedNotes.clear();
+        this.isActive = true;
+        this.micError = null;
+      } catch (err: any) {
+        this.micError = err?.name === 'NotAllowedError'
+          ? 'Microphone permission denied. Please allow access and try again.'
+          : 'Could not start microphone. Please try again.';
+      }
     }
     this.cdr.markForCheck();
   }

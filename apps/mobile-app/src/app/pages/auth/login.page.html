@@ -1,0 +1,86 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ view === 'forgot' ? 'Reset Password' : 'Sign In' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="login-page">
+
+    <!-- ── Hero ───────────────────────────────────────────────────────── -->
+    <div class="login-hero">
+      <div class="login-logo">🎵</div>
+      <div class="login-title">Sruti</div>
+      <div class="login-sub">Indian Classical Music Companion</div>
+    </div>
+
+    <!-- ── Sign In / Sign Up form ─────────────────────────────────────── -->
+    <div *ngIf="view === 'signin'" class="login-form sruti-card">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" [(ngModel)]="email"
+          placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="password-wrap">
+          <input class="form-input" [type]="showPass ? 'text' : 'password'"
+            [(ngModel)]="password" placeholder="••••••••" autocomplete="current-password" />
+          <button class="eye-btn" type="button" (click)="showPass = !showPass">
+            <ion-icon [name]="showPass ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="forgot-link">
+        <button class="link-btn" type="button" (click)="showForgot()">Forgot password?</button>
+      </div>
+
+      <div class="error-msg"  *ngIf="errorMsg">{{ errorMsg }}</div>
+      <div *ngIf="unconfirmedEmail" class="resend-block">
+        <button class="sruti-btn sruti-btn--secondary login-btn" (click)="resendConfirmation()" [disabled]="isLoading">
+          {{ isLoading ? 'Sending...' : 'Resend Confirmation Email' }}
+        </button>
+      </div>
+      <div class="success-msg" *ngIf="successMsg">{{ successMsg }}</div>
+
+      <button class="sruti-btn sruti-btn--primary login-btn" (click)="signIn()" [disabled]="isLoading">
+        {{ isLoading ? 'Signing in...' : 'Sign In' }}
+      </button>
+      <button class="sruti-btn sruti-btn--secondary login-btn" (click)="signUp()" [disabled]="isLoading">
+        Create Account
+      </button>
+
+      <div class="divider"><span>or</span></div>
+      <button class="sruti-btn sruti-btn--ghost login-btn" (click)="continueAsGuest()">
+        Continue as Guest
+      </button>
+    </div>
+
+    <!-- ── Forgot Password form ────────────────────────────────────────── -->
+    <div *ngIf="view === 'forgot'" class="login-form sruti-card">
+      <p class="forgot-desc">
+        Enter your email and we'll send you a link to reset your password.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" [(ngModel)]="email"
+          placeholder="you@example.com" autocomplete="email" />
+      </div>
+
+      <div class="error-msg"  *ngIf="errorMsg">{{ errorMsg }}</div>
+      <div class="success-msg" *ngIf="successMsg">{{ successMsg }}</div>
+
+      <button class="sruti-btn sruti-btn--primary login-btn" (click)="sendReset()" [disabled]="isLoading">
+        {{ isLoading ? 'Sending...' : 'Send Reset Link' }}
+      </button>
+      <button class="sruti-btn sruti-btn--ghost login-btn" (click)="showSignIn()">
+        Back to Sign In
+      </button>
+    </div>
+
+  </div>
+</ion-content>

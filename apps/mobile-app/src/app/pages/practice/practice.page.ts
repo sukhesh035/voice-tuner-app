@@ -13,6 +13,7 @@ import { TrainingEngineService, TrainingMode, TrainingSessionResult } from '@voi
 import { TanpuraPlayerService } from '@voice-tuner/tanpura-player';
 import { PitchDetectionService, IndianNote } from '@voice-tuner/pitch-detection';
 import { RAGA_LIST, RagaDefinition } from '@voice-tuner/training-engine';
+import { ApiService } from '../../core/services/api.service';
 
 @Component({
   selector: 'app-practice',
@@ -72,7 +73,7 @@ import { RAGA_LIST, RagaDefinition } from '@voice-tuner/training-engine';
           <div class="raga-grid" *ngIf="!selectedRaga">
             <button
               *ngFor="let raga of ragaList"
-              class="raga-card sruti-card"
+              class="raga-card"
               (click)="selectRaga(raga)"
             >
               <div class="raga-card__indicator" [style.background]="raga.color"></div>
@@ -199,6 +200,7 @@ export class PracticePage implements OnInit, OnDestroy {
   constructor(
     private trainingEngine: TrainingEngineService,
     private tanpura: TanpuraPlayerService,
+    private api: ApiService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -236,10 +238,33 @@ export class PracticePage implements OnInit, OnDestroy {
   }
 
   stopSession(): void {
-    this.lastResult   = this.trainingEngine.endSession();
+    const result = this.trainingEngine.endSession();
+    this.lastResult    = result;
     this.sessionActive = false;
     this.tanpura.stop();
     this.cdr.markForCheck();
+
+    // Persist session to backend (fire-and-forget — don't block UI)
+    if (result.duration > 0) {
+      const noteAccuracies: Record<string, number> = {};
+      for (const [note, data] of Object.entries(result.noteAccuracies)) {
+        noteAccuracies[note] = Math.round((data as { avgAccuracy: number }).avgAccuracy);
+      }
+      const tanpuraState = this.tanpura.state;
+      this.api.createSession({
+        duration:       Math.round(result.duration),
+        mode:           result.mode,
+        raagaId:        result.raga?.id,
+        key:            tanpuraState.key,
+        score:          Math.round(result.overallAccuracy),
+        avgAccuracy:    Math.round(result.overallAccuracy),
+        stabilityScore: Math.round(result.pitchStability),
+        noteAccuracies,
+        aiSummary:      result.recommendations[0],
+      }).then(() => {
+        this.api.checkin(Math.ceil(result.duration / 60)).catch(() => {});
+      }).catch(err => console.warn('[PracticePage] Failed to save session:', err));
+    }
   }
 
   ngOnDestroy(): void {

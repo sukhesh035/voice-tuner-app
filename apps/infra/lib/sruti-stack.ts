@@ -25,6 +25,24 @@ export class SrutiStack extends cdk.Stack {
     const prefix     = `sruti-${stage}`;
 
     // ─── Cognito User Pool ────────────────────────────────────────────────────
+
+    // Pre Sign-up trigger: auto-confirm & auto-verify so users can sign in
+    // immediately after registration without clicking a confirmation email.
+    const preSignUpFn = new lambda.Function(this, 'PreSignUpFn', {
+      functionName: `${prefix}-pre-signup`,
+      runtime:      lambda.Runtime.NODEJS_22_X,
+      architecture: lambda.Architecture.ARM_64,
+      handler:      'index.handler',
+      code: lambda.Code.fromInline(`
+        exports.handler = async (event) => {
+          event.response.autoConfirmUser  = true;
+          event.response.autoVerifyEmail  = true;
+          return event;
+        };
+      `),
+      timeout: cdk.Duration.seconds(5),
+    });
+
     const userPool = new cognito.UserPool(this, 'UserPool', {
       userPoolName:        `${prefix}-users`,
       selfSignUpEnabled:   true,
@@ -38,6 +56,9 @@ export class SrutiStack extends cdk.Stack {
         requireSymbols:      false,
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
+      lambdaTriggers: {
+        preSignUp: preSignUpFn,
+      },
       removalPolicy:   stage === 'dev'
         ? cdk.RemovalPolicy.DESTROY
         : cdk.RemovalPolicy.RETAIN,

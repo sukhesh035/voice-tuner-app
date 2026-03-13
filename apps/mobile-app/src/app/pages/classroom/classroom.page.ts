@@ -5,7 +5,12 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule }   from '@angular/forms';
 import { Router }        from '@angular/router';
-import { IonicModule }   from '@ionic/angular';
+import {
+  IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
+  IonChip, IonBadge, IonSpinner, IonInput, IonBackButton, IonButtons
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { copyOutline, stopCircleOutline } from 'ionicons/icons';
 import { HttpClient }    from '@angular/common/http';
 import { Subject, interval, takeUntil } from 'rxjs';
 import { AuthService }   from '@voice-tuner/auth';
@@ -38,7 +43,7 @@ type ClassroomView = 'join' | 'teacher' | 'student-waiting' | 'student-active';
   selector: 'app-classroom',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, IonicModule],
+  imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, IonBadge, IonSpinner, IonInput, IonBackButton, IonButtons],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -173,6 +178,10 @@ export class ClassroomPage implements OnInit, OnDestroy {
   private router = inject(Router);
   private cdr    = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
+
+  constructor() {
+    addIcons({ copyOutline, stopCircleOutline });
+  }
 
   currentView: ClassroomView = 'join';
   session: ClassroomSession | null = null;

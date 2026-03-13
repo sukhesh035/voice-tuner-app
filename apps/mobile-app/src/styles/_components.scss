@@ -359,6 +359,18 @@ ion-toolbar {
   font-size: 13px;
   font-weight: 700;
   box-shadow: 0 4px 16px rgba(255, 107, 107, 0.4);
+  text-decoration: none;
 
   .streak-icon { font-size: 16px; }
+
+  &--guest {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+    cursor: pointer;
+
+    &:hover { background: rgba(255, 255, 255, 0.15); }
+  }
 }

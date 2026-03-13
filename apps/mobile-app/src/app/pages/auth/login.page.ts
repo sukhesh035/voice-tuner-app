@@ -1,103 +1,133 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonButton } from '@ionic/angular/standalone';
+import {
+  IonHeader, IonToolbar, IonTitle, IonContent,
+  IonIcon, IonBackButton, IonButtons
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { arrowBackOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
 import { AuthService } from '@voice-tuner/auth';
+
+type LoginView = 'signin' | 'forgot';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton],
-  template: `
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Sign In</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <div class="login-page">
-        <div class="login-hero">
-          <div class="login-logo">🎵</div>
-          <div class="login-title">Sruti</div>
-          <div class="login-sub">Indian Classical Music Companion</div>
-        </div>
-
-        <div class="login-form sruti-card">
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input class="form-input" type="email" [(ngModel)]="email" placeholder="you@example.com" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <input class="form-input" type="password" [(ngModel)]="password" placeholder="••••••••" />
-          </div>
-
-          <div class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</div>
-
-          <button class="sruti-btn sruti-btn--primary login-btn" (click)="signIn()" [disabled]="isLoading">
-            {{ isLoading ? 'Signing in...' : 'Sign In' }}
-          </button>
-          <button class="sruti-btn sruti-btn--secondary login-btn" (click)="signUp()" [disabled]="isLoading">
-            Create Account
-          </button>
-
-          <div class="divider"><span>or</span></div>
-          <button class="sruti-btn sruti-btn--ghost login-btn" (click)="continueAsGuest()">
-            Continue as Guest
-          </button>
-        </div>
-      </div>
-    </ion-content>
-  `,
-  styles: [`
-    .login-page { padding: 24px; min-height: 100%; display: flex; flex-direction: column; gap: 32px; justify-content: center; }
-    .login-hero { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .login-logo { font-size: 64px; }
-    .login-title { font-size: 36px; font-weight: 900; background: var(--sruti-gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .login-sub { font-size: 15px; color: var(--sruti-text-secondary); }
-    .login-form { display: flex; flex-direction: column; gap: 16px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--sruti-text-secondary); }
-    .form-input { padding: 12px 16px; background: var(--sruti-bg-input); border: 1px solid var(--sruti-border); border-radius: 10px; color: var(--sruti-text-primary); font-size: 16px; outline: none; }
-    .login-btn { width: 100%; padding: 14px !important; font-size: 16px !important; }
-    .error-msg { font-size: 13px; color: var(--sruti-pitch-off); text-align: center; }
-    .divider { display: flex; align-items: center; gap: 12px; color: var(--sruti-text-tertiary); font-size: 13px; &::before, &::after { content: ''; flex: 1; height: 1px; background: var(--sruti-border); } }
-  `]
+  imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonBackButton, IonButtons],
+  templateUrl: './login.page.html',
+  styleUrls: ['./login.page.scss'],
 })
 export class LoginPage {
-  email    = '';
-  password = '';
+  view: LoginView = 'signin';
+
+  email     = '';
+  password  = '';
+  showPass  = false;
   isLoading = false;
   errorMsg  = '';
+  successMsg = '';
+  unconfirmedEmail = '';   // set when Cognito returns UserNotConfirmedException
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {
+    addIcons({ arrowBackOutline, eyeOutline, eyeOffOutline });
+  }
 
   async signIn(): Promise<void> {
-    this.isLoading = true;
-    this.errorMsg  = '';
+    this.isLoading       = true;
+    this.errorMsg        = '';
+    this.successMsg      = '';
+    this.unconfirmedEmail = '';
     try {
       await this.authService.signIn(this.email, this.password);
       await this.router.navigate(['/home']);
     } catch (err: any) {
-      this.errorMsg = err.message ?? 'Sign in failed. Please try again.';
+      if (err.name === 'UserNotConfirmedException') {
+        this.unconfirmedEmail = this.email;
+        this.errorMsg = 'Your email address hasn\'t been confirmed yet.';
+      } else {
+        this.errorMsg = err.message ?? 'Sign in failed. Please try again.';
+      }
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
   async signUp(): Promise<void> {
-    this.isLoading = true;
-    this.errorMsg  = '';
+    this.isLoading  = true;
+    this.errorMsg   = '';
+    this.successMsg = '';
     try {
       await this.authService.signUp(this.email, this.password);
-      this.errorMsg = 'Check your email for a confirmation link.';
+      await this.router.navigate(['/home']);
     } catch (err: any) {
       this.errorMsg = err.message ?? 'Sign up failed.';
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
+  }
+
+  async sendReset(): Promise<void> {
+    if (!this.email) {
+      this.errorMsg = 'Please enter your email address.';
+      this.cdr.markForCheck();
+      return;
+    }
+    this.isLoading  = true;
+    this.errorMsg   = '';
+    this.successMsg = '';
+    try {
+      // AuthService may not have resetPassword — use a best-effort approach
+      const svc = this.authService as any;
+      if (typeof svc.resetPassword === 'function') {
+        await svc.resetPassword(this.email);
+      }
+      this.successMsg = 'Password reset email sent. Check your inbox.';
+    } catch (err: any) {
+      this.errorMsg = err.message ?? 'Could not send reset email.';
+    } finally {
+      this.isLoading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async resendConfirmation(): Promise<void> {
+    if (!this.unconfirmedEmail) return;
+    this.isLoading  = true;
+    this.errorMsg   = '';
+    this.successMsg = '';
+    try {
+      await this.authService.resendConfirmation(this.unconfirmedEmail);
+      this.successMsg = 'Confirmation email resent. Check your inbox.';
+      this.unconfirmedEmail = '';
+    } catch (err: any) {
+      this.errorMsg = err.message ?? 'Could not resend confirmation email.';
+    } finally {
+      this.isLoading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  showForgot(): void {
+    this.view       = 'forgot';
+    this.errorMsg   = '';
+    this.successMsg = '';
+    this.cdr.markForCheck();
+  }
+
+  showSignIn(): void {
+    this.view       = 'signin';
+    this.errorMsg   = '';
+    this.successMsg = '';
+    this.cdr.markForCheck();
   }
 
   continueAsGuest(): void {

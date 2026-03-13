@@ -4,7 +4,12 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IonicModule } from '@ionic/angular';
+import {
+  IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
+  IonChip, IonSpinner, IonBackButton, IonButtons
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { sparklesOutline, refreshOutline, barChartOutline } from 'ionicons/icons';
 import { RAGAS, RagaDefinition } from '@voice-tuner/training-engine';
 import { formatDuration } from '@voice-tuner/shared-utils';
 
@@ -37,7 +42,7 @@ function getGrade(score: number): Grade {
   selector: 'app-session-report',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, IonicModule],
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, IonSpinner, IonBackButton, IonButtons],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -160,6 +165,10 @@ export class SessionReportPage implements OnInit {
   private route  = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr    = inject(ChangeDetectorRef);
+
+  constructor() {
+    addIcons({ sparklesOutline, refreshOutline, barChartOutline });
+  }
 
   report: SessionReportData | null = null;
   grade: Grade = { label: 'C', color: '#FFC107' };

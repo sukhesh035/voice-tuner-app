@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import {
-  IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel
+  IonTabs, IonTabBar, IonTabButton, IonIcon
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -17,29 +17,24 @@ import {
 @Component({
   selector: 'app-tabs',
   standalone: true,
-  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, RouterLink, RouterLinkActive],
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, RouterLink],
   template: `
     <ion-tabs>
       <ion-tab-bar slot="bottom" class="sruti-tab-bar">
         <ion-tab-button tab="home" [routerLink]="['/home']">
           <ion-icon name="home-outline"></ion-icon>
-          <ion-label>Home</ion-label>
         </ion-tab-button>
         <ion-tab-button tab="tanpura" [routerLink]="['/tanpura']">
           <ion-icon name="musical-note-outline"></ion-icon>
-          <ion-label>Tanpura</ion-label>
         </ion-tab-button>
         <ion-tab-button tab="sing" [routerLink]="['/sing']" class="tab-center">
           <ion-icon name="mic-outline"></ion-icon>
-          <ion-label>Sing</ion-label>
         </ion-tab-button>
         <ion-tab-button tab="practice" [routerLink]="['/practice']">
           <ion-icon name="barbell-outline"></ion-icon>
-          <ion-label>Practice</ion-label>
         </ion-tab-button>
-        <ion-tab-button tab="progress" [routerLink]="['/progress']">
-          <ion-icon name="trending-up-outline"></ion-icon>
-          <ion-label>Progress</ion-label>
+        <ion-tab-button tab="profile" [routerLink]="['/profile']">
+          <ion-icon name="person-outline"></ion-icon>
         </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>

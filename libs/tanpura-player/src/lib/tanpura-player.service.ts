@@ -59,7 +59,7 @@ export class TanpuraPlayerService {
     isPlaying:    false,
     key:          'C',
     octave:       3,
-    tempo:        65,
+    tempo:        5,
     volume:       0.8,
     fineTune:     0,
     stringConfig: 'Sa-Pa-Sa-Sa',
@@ -69,6 +69,7 @@ export class TanpuraPlayerService {
   // Scheduling state
   private scheduleTimer: ReturnType<typeof setTimeout> | null = null;
   private nextPluckTime = 0;
+  private nextStringIndex = 0;   // simple counter, always 0→1→2→3→0→…
   private sampleBuffers = new Map<string, AudioBuffer>();
   private loadedSamples = false;
 
@@ -84,7 +85,8 @@ export class TanpuraPlayerService {
     if (!this.loadedSamples) {
       await this.preloadSamples();
     }
-    this.nextPluckTime = this.audioEngine.currentTime + 0.05;
+    this.nextPluckTime  = this.audioEngine.currentTime + 0.05;
+    this.nextStringIndex = 0;
     this.patchState({ isPlaying: true, currentString: 0 });
     this.schedule();
   }
@@ -109,7 +111,7 @@ export class TanpuraPlayerService {
   }
 
   setTempo(bpm: number): void {
-    this.patchState({ tempo: Math.max(40, Math.min(120, bpm)) });
+    this.patchState({ tempo: Math.max(0, Math.min(10, bpm)) });
   }
 
   setVolume(volume: number): void {
@@ -142,11 +144,8 @@ export class TanpuraPlayerService {
     const stringSpacing      = beatDuration / 4; // 4 strings per cycle
 
     while (this.nextPluckTime < this.audioEngine.currentTime + lookAhead) {
-      const stringIndex = Math.round(
-        ((this.nextPluckTime - this.audioEngine.currentTime) / stringSpacing) % 4
-      );
-      const clampedIndex = ((stringIndex % 4) + 4) % 4;
-      this.pluckString(clampedIndex, this.nextPluckTime);
+      this.pluckString(this.nextStringIndex, this.nextPluckTime);
+      this.nextStringIndex = (this.nextStringIndex + 1) % 4;
       this.nextPluckTime += stringSpacing + this.humanizeOffset(0.004);
     }
 

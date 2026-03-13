@@ -1,0 +1,90 @@
+.settings-page {
+  padding: 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sruti-text-secondary);
+
+  ion-icon {
+    font-size: 14px;
+  }
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px !important;
+}
+
+.setting-info {
+  flex: 1;
+  margin-right: 16px;
+}
+
+.setting-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.setting-sub {
+  font-size: 12px;
+  color: var(--sruti-text-secondary);
+  margin-top: 2px;
+}
+
+.form-select-sm {
+  background: var(--sruti-bg-input);
+  border: 1px solid var(--sruti-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: var(--sruti-text-primary);
+  font-size: 13px;
+  outline: none;
+}
+
+.link-row {
+  cursor: pointer;
+  transition: opacity 0.15s;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
+.chevron {
+  font-size: 18px;
+  color: var(--sruti-text-muted);
+  flex-shrink: 0;
+}
+
+.version-row {
+  font-size: 14px;
+  color: var(--sruti-text-secondary);
+}
+
+.version-badge {
+  font-size: 12px;
+  background: rgba(0, 230, 118, 0.12);
+  color: #00e676;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-weight: 600;
+}

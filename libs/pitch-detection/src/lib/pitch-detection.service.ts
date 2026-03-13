@@ -69,7 +69,7 @@ export class PitchDetectionService implements OnDestroy {
   /** Smooth pitch stream — debounced 30ms, ignores duplicates */
   get smoothPitch$(): Observable<PitchResult> {
     return this.pitch$.pipe(
-      filter((p): p is PitchResult => p !== null && p.clarity > 0.85),
+      filter((p): p is PitchResult => p !== null && p.clarity > 0.6),
       distinctUntilChanged((a, b) => Math.abs(a.frequency - b.frequency) < 0.5),
       debounceTime(30)
     );
@@ -93,10 +93,9 @@ export class PitchDetectionService implements OnDestroy {
    * Start real-time pitch detection from microphone.
    */
   async start(): Promise<void> {
-    const ctx = this.audioEngine.context;
-    if (!ctx) throw new Error('[PitchDetection] Audio context not ready');
-
     const micSource = await this.audioEngine.enableMicrophone();
+    const ctx = this.audioEngine.context;
+    if (!ctx) throw new Error('[PitchDetection] Audio context not ready after init');
 
     this.sessionStart   = performance.now();
     this.sessionSamples = [];
@@ -104,15 +103,42 @@ export class PitchDetectionService implements OnDestroy {
     const bufferSize = 2048;
     this.analyserBuffer = new Float32Array(bufferSize);
 
-    // Use ScriptProcessorNode as a robust fallback for Capacitor WebView
-    this.scriptProcessor = ctx.createScriptProcessor(bufferSize, 1, 1);
-    this.scriptProcessor.onaudioprocess = (event) => {
-      const inputData = event.inputBuffer.getChannelData(0);
-      this.processAudioBuffer(new Float32Array(inputData));
-    };
+    // Prefer AudioWorkletNode (already loaded by AudioEngineService.loadWorklets())
+    let connected = false;
+    try {
+      this.workletNode = new AudioWorkletNode(ctx, 'pitch-processor');
+      this.workletNode.port.onmessage = (event) => {
+        const { frequency, clarity } = event.data as { frequency: number; clarity: number };
+        if (frequency > 0) {
+          const pitchResult = this.frequencyToResult(frequency, clarity);
+          this.pitchSubject.next(pitchResult);
+          if (pitchResult.clarity > 0.85) {
+            this.sessionSamples.push(pitchResult);
+            if (this.sessionSamples.length > 3600) {
+              this.sessionSamples.splice(0, 100);
+            }
+          }
+        } else {
+          this.pitchSubject.next(null);
+        }
+      };
+      micSource.connect(this.workletNode);
+      // WorkletNode does not produce output audio — no need to connect to destination
+      connected = true;
+    } catch (err) {
+      console.warn('[PitchDetection] AudioWorkletNode unavailable, falling back to ScriptProcessorNode:', err);
+    }
 
-    micSource.connect(this.scriptProcessor);
-    this.scriptProcessor.connect(ctx.destination);
+    if (!connected) {
+      // ScriptProcessorNode fallback (deprecated, last resort for old WebViews)
+      this.scriptProcessor = ctx.createScriptProcessor(bufferSize, 1, 1);
+      this.scriptProcessor.onaudioprocess = (event) => {
+        const inputData = event.inputBuffer.getChannelData(0);
+        this.processAudioBuffer(new Float32Array(inputData));
+      };
+      micSource.connect(this.scriptProcessor);
+      this.scriptProcessor.connect(ctx.destination);
+    }
 
     this.activeSubject.next(true);
   }
@@ -121,6 +147,11 @@ export class PitchDetectionService implements OnDestroy {
    * Stop pitch detection and release microphone.
    */
   stop(): void {
+    if (this.workletNode) {
+      this.workletNode.port.onmessage = null;
+      this.workletNode.disconnect();
+      this.workletNode = null;
+    }
     if (this.scriptProcessor) {
       this.scriptProcessor.disconnect();
       this.scriptProcessor.onaudioprocess = null;
@@ -139,7 +170,7 @@ export class PitchDetectionService implements OnDestroy {
    * Compute session statistics from buffered pitch samples.
    */
   getSessionStats(): PitchStats {
-    const samples = this.sessionSamples.filter(s => s.clarity > 0.85);
+    const samples = this.sessionSamples.filter(s => s.clarity > 0.6);
     if (samples.length === 0) {
       return {
         averageFrequency: 0,
@@ -270,23 +301,25 @@ export class PitchDetectionService implements OnDestroy {
 
   private frequencyToResult(frequency: number, clarity: number): PitchResult {
     // Convert to MIDI note number
-    const midi   = 12 * Math.log2(frequency / 440) + 69;
+    const midi    = 12 * Math.log2(frequency / 440) + 69;
     const rounded = Math.round(midi);
     const centsOff = (midi - rounded) * 100;
 
     const noteIndex = ((rounded % 12) + 12) % 12;
     const octave    = Math.floor(rounded / 12) - 1;
     const note      = WESTERN_NOTES[noteIndex];
-    const indianNote = INDIAN_NOTES[noteIndex];
 
-    // Deviation from Sa
-    const saFreqNorm  = 12 * Math.log2(this.saFrequency / 440) + 69;
-    const saSemitone  = Math.round(saFreqNorm) % 12;
+    // Map to Indian sargam relative to the current Sa key
+    const saFreqNorm   = 12 * Math.log2(this.saFrequency / 440) + 69;
+    const saSemitone   = ((Math.round(saFreqNorm) % 12) + 12) % 12;
     const semitoneFromSa = ((noteIndex - saSemitone) + 12) % 12;
+    const indianNote   = INDIAN_NOTES[semitoneFromSa];
+
+    // Cents deviation from Sa (for detuning display)
     const deviationFromSa = semitoneFromSa * 100 + centsOff;
 
     const accuracy = centsToAccuracy(centsOff);
-    const isInTune = Math.abs(centsOff) <= 15;
+    const isInTune = Math.abs(centsOff) <= 25;
 
     return {
       frequency,

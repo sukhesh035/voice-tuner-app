@@ -1,0 +1,129 @@
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Progress</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <div class="progress-page">
+
+        <ng-container *ngIf="loading">
+          <div class="progress-loading">
+            <ion-spinner name="crescent"></ion-spinner>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="!loading">
+
+        <!-- Overall Score -->
+        <div class="overall-card sruti-card sruti-card--gradient">
+          <div class="overall-score">
+            <div class="score-ring">
+              <svg viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="10"/>
+                <circle cx="60" cy="60" r="50" fill="none"
+                  stroke="url(#scoreGrad)"
+                  stroke-width="10"
+                  stroke-linecap="round"
+                  [attr.stroke-dasharray]="scoreDashArray"
+                  stroke-dashoffset="-78"
+                  transform="rotate(-90 60 60)"
+                />
+                <defs>
+                  <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#7C4DFF"/>
+                    <stop offset="100%" stop-color="#00E5C2"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="score-value">{{ overallScore }}</div>
+            </div>
+            <div class="overall-info">
+              <div class="overall-title">Overall Score</div>
+              <div class="overall-sub">Based on last 30 days</div>
+              <div class="sruti-streak-badge" *ngIf="authService.isAuthenticated$ | async; else streakLogin" style="margin-top: 8px">
+                <span class="streak-icon">🔥</span> {{ streakDays }} Day Streak
+              </div>
+              <ng-template #streakLogin>
+                <a class="sruti-streak-badge sruti-streak-badge--guest" [routerLink]="['/login']" style="margin-top: 8px">
+                  <span class="streak-icon">🔥</span> Sign in to track streak
+                </a>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly stats -->
+        <div class="section">
+          <div class="section-label">This Week</div>
+          <div class="week-cards">
+            <div *ngFor="let d of weeklyData" class="week-day-card sruti-card">
+              <div class="week-day-name">{{ d.day }}</div>
+              <div class="sruti-progress-bar">
+                <div class="progress-fill" [style.width]="d.accuracy + '%'"></div>
+              </div>
+              <div class="week-day-acc">{{ d.accuracy > 0 ? (d.accuracy + '%') : '–' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Note Accuracy Grid -->
+        <div class="section">
+          <div class="section-label">Note Accuracy</div>
+          <div class="note-accuracy-grid">
+            <div *ngFor="let note of noteAccuracy" class="note-acc-item sruti-card">
+              <div class="note-acc-name">{{ note.note }}</div>
+              <div class="note-acc-bar">
+                <div class="note-acc-fill" [style.width]="note.accuracy + '%'"
+                  [style.background]="note.color"></div>
+              </div>
+              <div class="note-acc-pct">{{ note.accuracy > 0 ? (note.accuracy + '%') : '–' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Coach Summary -->
+        <div class="section">
+          <div class="section-label">AI Coach Summary</div>
+          <div class="sruti-card coach-card">
+            <div class="coach-icon">🤖</div>
+            <div class="coach-content">
+              <div class="coach-title">Weekly Analysis</div>
+              <p class="coach-text">
+                Your Sa and Pa are very stable. Focus on Ga — you're consistently
+                singing 18 cents sharp. Practice Ga with tanpura drone for 5 minutes daily.
+              </p>
+              <div class="coach-tags">
+                <span class="coach-tag good">Sa ✓</span>
+                <span class="coach-tag good">Pa ✓</span>
+                <span class="coach-tag warn">Ga ↑18¢</span>
+                <span class="coach-tag warn">Ni ↑12¢</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Practice History -->
+        <div class="section">
+          <div class="section-label">Recent Sessions</div>
+          <ng-container *ngIf="recentSessions.length > 0; else noSessions">
+            <div *ngFor="let session of recentSessions" class="session-item sruti-card">
+              <div class="session-info">
+                <div class="session-raga">{{ session.raga }}</div>
+                <div class="session-meta">{{ session.date }} · {{ session.duration }}min</div>
+              </div>
+              <div class="session-score" [style.color]="scoreColor(session.accuracy)">
+                {{ session.accuracy > 0 ? (session.accuracy + '%') : '–' }}
+              </div>
+            </div>
+          </ng-container>
+          <ng-template #noSessions>
+            <div class="sruti-card no-sessions">
+              <div class="no-sessions__text">No sessions recorded yet. Start your first riyaz!</div>
+            </div>
+          </ng-template>
+        </div>
+
+        </ng-container>
+
+      </div>
+    </ion-content>

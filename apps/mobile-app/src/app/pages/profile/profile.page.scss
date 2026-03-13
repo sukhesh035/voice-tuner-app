@@ -1,0 +1,388 @@
+@use '../../../styles/variables' as *;
+
+.profile-page {
+  padding: $spacing-4;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-5;
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sruti-text-secondary);
+  margin-bottom: $spacing-3;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+}
+
+// ── Authenticated: Hero ───────────────────────────────────
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: $spacing-4;
+  padding: $spacing-6 0 $spacing-2;
+}
+
+.avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--sruti-gradient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(var(--sruti-primary-rgb), 0.45);
+}
+
+.profile-name  { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+.profile-email { font-size: 13px; color: var(--sruti-text-secondary); margin-top: 2px; }
+.profile-since { font-size: 12px; color: var(--sruti-text-tertiary); margin-top: 3px; }
+
+// ── Stats Row ─────────────────────────────────────────────
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-3;
+}
+
+// ── Practice Time Card ────────────────────────────────────
+.time-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-4;
+
+  &__left { flex: 1; }
+
+  &__value {
+    font-size: 26px;
+    font-weight: 800;
+    font-family: var(--sruti-font-display);
+    background: var(--sruti-gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__label {
+    font-size: 13px;
+    color: var(--sruti-text-secondary);
+    margin-top: 2px;
+  }
+
+  &__goal {
+    font-size: 12px;
+    color: var(--sruti-text-tertiary);
+    margin-top: 2px;
+  }
+
+  &__right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.time-ring {
+  position: relative;
+  width: 64px;
+  height: 64px;
+
+  svg { width: 100%; height: 100%; }
+
+  &__label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--sruti-text-primary);
+  }
+}
+
+.time-ring-sub {
+  font-size: 10px;
+  color: var(--sruti-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// ── Achievements ──────────────────────────────────────────
+.achievements-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-2;
+}
+
+.achievement-chip {
+  display: flex;
+  align-items: center;
+  gap: $spacing-2;
+  padding: $spacing-3 $spacing-3;
+  background: var(--sruti-bg-card);
+  border: 1px solid var(--sruti-border);
+  border-radius: $radius-md;
+  position: relative;
+  opacity: 0.45;
+  transition: all 0.2s ease;
+
+  &.unlocked {
+    opacity: 1;
+    border-color: rgba(var(--sruti-primary-rgb), 0.35);
+    background: rgba(var(--sruti-primary-rgb), 0.06);
+  }
+}
+
+.achievement-icon  { font-size: 20px; flex-shrink: 0; }
+.achievement-label { font-size: 13px; font-weight: 600; flex: 1; }
+.achievement-check {
+  font-size: 14px;
+  color: var(--sruti-pitch-perfect);
+  flex-shrink: 0;
+}
+
+// ── Menu List ─────────────────────────────────────────────
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  text-decoration: none;
+  color: var(--sruti-text-primary);
+  padding: $spacing-4 !important;
+}
+
+.menu-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &--purple { color: var(--sruti-primary);    background: rgba(var(--sruti-primary-rgb), 0.12); }
+  &--teal   { color: var(--sruti-secondary);  background: rgba(var(--sruti-secondary-rgb), 0.12); }
+  &--gray   { color: var(--sruti-text-secondary); background: var(--sruti-bg-input); }
+}
+
+.menu-text { flex: 1; }
+.menu-title { font-size: 15px; font-weight: 600; }
+.menu-sub   { font-size: 12px; color: var(--sruti-text-secondary); margin-top: 1px; }
+.menu-chevron { font-size: 16px; color: var(--sruti-text-tertiary); }
+
+// ── Sign Out ──────────────────────────────────────────────
+.signout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-2;
+  width: 100%;
+  padding: $spacing-4;
+  border-radius: $radius-full;
+  border: 1px solid rgba(255, 23, 68, 0.3);
+  background: rgba(255, 23, 68, 0.07);
+  color: #FF1744;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--sruti-font-sans);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  ion-icon { font-size: 18px; }
+  &:active { background: rgba(255, 23, 68, 0.14); }
+}
+
+// ── Guest View ────────────────────────────────────────────
+.guest-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $spacing-8 0 $spacing-2;
+  gap: $spacing-2;
+  text-align: center;
+}
+
+.guest-avatar-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--sruti-bg-card);
+  border: 2px solid var(--sruti-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: $spacing-1;
+}
+
+.guest-avatar-icon {
+  font-size: 48px;
+  color: var(--sruti-text-tertiary);
+}
+
+.guest-title { font-size: 20px; font-weight: 700; }
+.guest-sub   { font-size: 14px; color: var(--sruti-text-secondary); }
+
+// ── Upsell Card ───────────────────────────────────────────
+.upsell-card {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+  padding: $spacing-6 !important;
+}
+
+.upsell-headline {
+  font-size: 22px;
+  font-weight: 800;
+  background: var(--sruti-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.upsell-desc {
+  font-size: 14px;
+  color: var(--sruti-text-secondary);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.upsell-features {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+}
+
+.upsell-feature {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--sruti-text-primary);
+
+  span:first-child { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+}
+
+.upsell-cta {
+  text-decoration: none;
+  text-align: center;
+  font-size: 16px !important;
+  padding: $spacing-4 $spacing-8 !important;
+}
+
+.upsell-fine {
+  font-size: 12px;
+  color: var(--sruti-text-tertiary);
+  text-align: center;
+}
+
+// ── Preview Stats (guest) ─────────────────────────────────
+.preview-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-3;
+}
+
+.preview-stat {
+  padding: $spacing-4 !important;
+  text-align: center;
+  filter: blur(3px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.preview-val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--sruti-text-tertiary);
+}
+
+.preview-label {
+  font-size: 11px;
+  color: var(--sruti-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+// ── Verify email banner ─────────────────────────────────────────────────────
+.verify-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-3;
+  padding: $spacing-4;
+  border: 1px solid rgba(124, 77, 255, 0.4);
+
+  &__icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  &__body {
+    flex: 1;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--sruti-text-primary);
+    margin-bottom: 4px;
+  }
+
+  &__desc {
+    font-size: 13px;
+    color: var(--sruti-text-secondary);
+    line-height: 1.5;
+
+    strong {
+      color: var(--sruti-text-primary);
+      font-weight: 600;
+    }
+  }
+
+  &__resend {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--sruti-accent-purple);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+    align-self: flex-end;
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}

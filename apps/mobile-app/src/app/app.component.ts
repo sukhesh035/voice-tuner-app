@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { ThemeService } from './core/services/theme.service';
+import { AuthService } from '@voice-tuner/auth';
 
 @Component({
   selector: 'app-root',
@@ -13,9 +14,15 @@ import { ThemeService } from './core/services/theme.service';
   `
 })
 export class AppComponent implements OnInit {
-  constructor(private themeService: ThemeService) {}
+  constructor(
+    private themeService: ThemeService,
+    private authService: AuthService,
+  ) {}
 
   ngOnInit(): void {
     this.themeService.initialize();
+    // Restore Cognito session from stored refresh token on every app start.
+    // Amplify handles token refresh automatically once a valid session exists.
+    this.authService.initialize();
   }
 }

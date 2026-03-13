@@ -145,6 +145,79 @@
   .raga-day-desc  { font-size: 13px; color: var(--sruti-text-secondary); line-height: 1.5; }
 }
 
+// ── Today Card locked state ───────────────────────────────
+.today-stats--blurred {
+  .today-stat__value {
+    color: var(--sruti-text-tertiary);
+    letter-spacing: 0.05em;
+  }
+}
+
+// ── Weekly locked card ────────────────────────────────────
+.weekly-locked-card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  padding: $spacing-4 !important;
+  text-decoration: none;
+  min-height: 120px;
+}
+
+.weekly-locked-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: $spacing-2;
+  height: 80px;
+  padding: 0 $spacing-2;
+  opacity: 0.18;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.day-bar-ghost {
+  flex: 1;
+  border-radius: $radius-sm $radius-sm 0 0;
+  background: var(--sruti-gradient-primary);
+  min-height: 4px;
+}
+
+.weekly-locked-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-2;
+  text-align: center;
+  padding: $spacing-4;
+
+  .lock-icon {
+    font-size: 22px;
+    color: var(--sruti-primary);
+    margin-bottom: 2px;
+  }
+}
+
+.weekly-locked-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--sruti-text-primary);
+}
+
+.weekly-locked-sub {
+  font-size: 13px;
+  color: var(--sruti-text-secondary);
+  line-height: 1.4;
+}
+
+.weekly-locked-btn {
+  margin-top: $spacing-1;
+  font-size: 14px !important;
+  padding: $spacing-2 $spacing-6 !important;
+  pointer-events: none; // the whole card is the tap target
+}
+
 // ── Weekly Bars ───────────────────────────────────────────
 .weekly-bars {
   display: flex;

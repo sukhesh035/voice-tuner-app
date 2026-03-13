@@ -4,8 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonRange,
-  IonSegment, IonSegmentButton, IonLabel, IonIcon, IonButton
+  IonHeader, IonToolbar, IonTitle, IonContent, IonRange
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { playCircle, stopCircle, musicalNote, volumeMedium, speedometer } from 'ionicons/icons';
@@ -26,7 +25,7 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
   imports: [
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
-    IonRange, IonSegment, IonSegmentButton, IonLabel, IonIcon, IonButton
+    IonRange
   ],
   template: `
     <ion-header>
@@ -98,15 +97,15 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
               <span class="control-card__value">{{ state.tempo }} <small>BPM</small></span>
             </div>
             <ion-range
-              [value]="state.tempo / 120"
+              [value]="state.tempo / 10"
               [min]="0"
               [max]="1"
-              [step]="0.008"
+              [step]="0.1"
               (ionChange)="setTempo($event)"
               class="sruti-range"
             ></ion-range>
             <div class="range-labels">
-              <span>40</span><span>Slow</span><span>Fast</span><span>120</span>
+              <span>0</span><span>Slow</span><span>Fast</span><span>10</span>
             </div>
           </div>
 
@@ -209,7 +208,7 @@ export class TanpuraPage implements OnInit, OnDestroy {
   setKey(key: MusicalKey):   void { this.tanpura.setKey(key); }
   setTempo(event: Event):   void {
     const v = (event as CustomEvent).detail.value;
-    this.tanpura.setTempo(Math.round(v * 80 + 40));
+    this.tanpura.setTempo(Math.round(v * 10));
   }
   setVolume(event: Event):  void { this.tanpura.setVolume((event as CustomEvent).detail.value); }
   setFineTune(event: Event): void { this.tanpura.setFineTune((event as CustomEvent).detail.value); }

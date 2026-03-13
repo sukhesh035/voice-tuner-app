@@ -3,7 +3,7 @@ import { provideRouter, withPreloading, PreloadAllModules } from '@angular/route
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
-import { IonicModule } from '@ionic/angular';
+import { provideIonicAngular } from '@ionic/angular/standalone';
 import { routes } from './app.routes';
 import { authInterceptor } from '@voice-tuner/auth';
 
@@ -12,12 +12,12 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withPreloading(PreloadAllModules)),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimations(),
+    provideIonicAngular({
+      mode: 'ios',
+      animated: true,
+      rippleEffect: false
+    }),
     importProvidersFrom(
-      IonicModule.forRoot({
-        mode: 'ios',
-        animated: true,
-        rippleEffect: false
-      }),
       ServiceWorkerModule.register('ngsw-worker.js', {
         enabled: !isDevMode(),
         registrationStrategy: 'registerWhenStable:30000'

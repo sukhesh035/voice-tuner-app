@@ -1,0 +1,234 @@
+.progress-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 0;
+  ion-spinner { --color: var(--sruti-primary); width: 40px; height: 40px; }
+}
+
+.no-sessions {
+  padding: 24px;
+  text-align: center;
+  &__text { color: var(--sruti-text-secondary); font-size: 14px; }
+}
+
+.progress-page {
+  padding: 16px;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sruti-text-secondary);
+  margin-bottom: 12px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+// ── Overall Card ──────────────────────────────────────────────────────────────
+.overall-card {
+  padding: 20px !important;
+}
+
+.overall-score {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.score-ring {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.score-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--sruti-text-primary);
+}
+
+.overall-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.overall-sub {
+  font-size: 13px;
+  color: var(--sruti-text-secondary);
+}
+
+// ── Weekly Cards ──────────────────────────────────────────────────────────────
+.week-cards {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.week-day-card {
+  padding: 8px 4px !important;
+  text-align: center;
+}
+
+.week-day-name {
+  font-size: 10px;
+  color: var(--sruti-text-secondary);
+  font-weight: 600;
+}
+
+.week-day-acc {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sruti-primary);
+}
+
+.sruti-progress-bar {
+  margin: 8px 0;
+  height: 4px;
+  background: var(--sruti-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--sruti-primary);
+}
+
+// ── Note Accuracy Grid ────────────────────────────────────────────────────────
+.note-accuracy-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-acc-item {
+  padding: 10px 14px !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.note-acc-name {
+  width: 40px;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.note-acc-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--sruti-border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.note-acc-fill {
+  height: 100%;
+  border-radius: 99px;
+}
+
+.note-acc-pct {
+  width: 36px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--sruti-font-mono);
+}
+
+// ── AI Coach Card ─────────────────────────────────────────────────────────────
+.coach-card {
+  display: flex;
+  gap: 16px;
+}
+
+.coach-icon {
+  font-size: 28px;
+}
+
+.coach-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.coach-text {
+  font-size: 14px;
+  color: var(--sruti-text-secondary);
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
+
+.coach-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.coach-tag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 99px;
+
+  &.good {
+    background: rgba(0, 230, 118, 0.12);
+    color: #00e676;
+  }
+
+  &.warn {
+    background: rgba(255, 179, 0, 0.12);
+    color: #ffb300;
+  }
+}
+
+// ── Session Items ─────────────────────────────────────────────────────────────
+.session-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px !important;
+  margin-bottom: 8px;
+}
+
+.session-info {
+  flex: 1;
+}
+
+.session-raga {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.session-meta {
+  font-size: 12px;
+  color: var(--sruti-text-secondary);
+}
+
+.session-score {
+  font-size: 18px;
+  font-weight: 800;
+  font-family: var(--sruti-font-mono);
+}
