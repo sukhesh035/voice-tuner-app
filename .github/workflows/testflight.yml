@@ -206,7 +206,8 @@ jobs:
           ASC_KEY_ID:    ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
-          KEY_DIR=$RUNNER_TEMP/asc-keys
+          # altool looks for the .p8 file in ~/.appstoreconnect/private_keys/ by convention
+          KEY_DIR=~/.appstoreconnect/private_keys
           mkdir -p "$KEY_DIR"
           echo "$ASC_KEY_B64" | base64 --decode > "$KEY_DIR/AuthKey_${ASC_KEY_ID}.p8"
           chmod 600 "$KEY_DIR/AuthKey_${ASC_KEY_ID}.p8"
