@@ -56,7 +56,7 @@ export const handler = async (
       }));
 
       // Compute rolling current streak from today backwards
-      const days = (result.Items ?? []).map((i) => i['sk'] as string).sort().reverse();
+      const days = (result.Items ?? []).map((i: Record<string, unknown>) => i['sk'] as string).sort().reverse();
       let streak = 0;
       let check  = today;
       for (const day of days) {
@@ -88,7 +88,7 @@ export const handler = async (
           sessionsCount:   1,
           recordedAt:      new Date().toISOString(),
         },
-      }).catch(async () => {
+      })).catch(async () => {
         // Already checked in today — just increment duration
         await ddb.send(new UpdateCommand({
           TableName: STREAKS_TABLE,
@@ -96,7 +96,7 @@ export const handler = async (
           UpdateExpression: 'ADD durationMinutes :d, sessionsCount :one',
           ExpressionAttributeValues: { ':d': duration, ':one': 1 },
         }));
-      }));
+      });
 
       // Recompute streak and update user stats
       const recentDays = await ddb.send(new QueryCommand({
@@ -107,7 +107,7 @@ export const handler = async (
         Limit: 365,
       }));
 
-      const sorted = (recentDays.Items ?? []).map((i) => i['sk'] as string).sort().reverse();
+      const sorted = (recentDays.Items ?? []).map((i: Record<string, unknown>) => i['sk'] as string).sort().reverse();
       let currentStreak = 0;
       let check = today;
       for (const day of sorted) {
@@ -136,7 +136,7 @@ export const handler = async (
           ':one':  1,
           ':zero': 0,
         },
-      }).catch(() => { /* user may not exist yet — ok */ }));
+      })).catch(() => { /* user may not exist yet — ok */ });
 
       const newMilestone = MILESTONES.filter((m) => m === currentStreak)?.[0] ?? null;
       return ok({ currentStreak, newMilestone, today });
