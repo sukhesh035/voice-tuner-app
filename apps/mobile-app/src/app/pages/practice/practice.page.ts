@@ -3,7 +3,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
@@ -189,7 +189,7 @@ export class PracticePage implements OnInit, OnDestroy {
   lastResult: TrainingSessionResult | null = null;
   lastDisallowedNote: IndianNote | null = null;
 
-  liveNotes$ = this.trainingEngine.liveNotes$;
+  liveNotes$!: Observable<IndianNote[]>;
 
   private destroy$ = new Subject<void>();
 
@@ -202,7 +202,9 @@ export class PracticePage implements OnInit, OnDestroy {
     private tanpura: TanpuraPlayerService,
     private api: ApiService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.liveNotes$ = this.trainingEngine.liveNotes$;
+  }
 
   ngOnInit(): void {
     this.trainingEngine.liveNotes$
