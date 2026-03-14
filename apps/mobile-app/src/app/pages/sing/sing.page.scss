@@ -1,18 +1,18 @@
 @use '../../../styles/variables' as *;
 
 .sing-page {
-  padding: $spacing-4;
+  padding: $spacing-3 $spacing-4;
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  gap: $spacing-5;
+  gap: $spacing-3;
 }
 
 // ── Pitch Meter ───────────────────────────────────────────
 .pitch-meter-container {
   position: relative;
-  width: 260px;
-  height: 260px;
+  width: 220px;
+  height: 220px;
   margin: 0 auto;
 }
 
@@ -32,7 +32,7 @@
   pointer-events: none;
 
   .note-name {
-    font-size: 56px;
+    font-size: 44px;
     font-weight: 800;
     font-family: var(--sruti-font-display);
     line-height: 1;
@@ -89,7 +89,7 @@
 
 .tuner-gauge {
   position: relative;
-  height: 56px;
+  height: 44px;
   background: var(--sruti-bg-card);
   border-radius: $radius-md;
   border: 1px solid var(--sruti-border);
@@ -106,10 +106,10 @@
 
   .tuner-needle {
     position: absolute;
-    bottom: 6px;
+    bottom: 5px;
     left: 50%;
     width: 3px;
-    height: 42px;
+    height: 33px;
     background: var(--sruti-primary);
     border-radius: $radius-full;
     transform-origin: bottom center;
@@ -154,17 +154,17 @@
 // ── Note Grid ─────────────────────────────────────────────
 .note-grid-section {
   .section-title {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--sruti-text-secondary);
-    margin-bottom: $spacing-3;
+    margin-bottom: $spacing-2;
   }
 
   .note-chip {
-    height: 48px;
-    font-size: 13px;
+    height: 40px;
+    font-size: 12px;
 
     &.current {
       animation: bounce-in 0.3s ease forwards;
@@ -178,7 +178,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: $spacing-4;
+  gap: $spacing-3;
 }
 
 .mic-error {
@@ -196,8 +196,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 88px;
-  height: 88px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   border: 2px solid var(--sruti-border);
   background: var(--sruti-bg-card);
@@ -207,7 +207,7 @@
   -webkit-tap-highlight-color: transparent;
   padding: 0;
 
-  ion-icon { font-size: 32px; }
+  ion-icon { font-size: 28px; }
 
   &.is-active {
     background: var(--sruti-gradient-primary);

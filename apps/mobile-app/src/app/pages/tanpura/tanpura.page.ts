@@ -174,7 +174,7 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
               class="string-config-btn"
               [class.selected]="state.stringConfig === config"
               (click)="setStringConfig(config)"
-            >{{ config }}</button>
+            >{{ configLabel(config) }}</button>
           </div>
         </div>
 
@@ -185,8 +185,14 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
 })
 export class TanpuraPage implements OnInit, OnDestroy {
   readonly allKeys    = ALL_KEYS;
-  readonly stringConfigs: StringConfig[] = ['Sa-Pa-Sa-Sa', 'Sa-Ma-Sa-Sa', 'Sa-Ma#-Sa-Sa'];
-  readonly stringLabels = ['Sa', 'Pa', 'Sa', 'Sa'];
+  readonly stringConfigs: StringConfig[] = ['Sa-Pa-Sa', 'Sa-Ma-Sa', 'Sa-Ma#-Sa'];
+  readonly stringLabels = ['Sa', 'Pa', 'Sa'];
+
+  private readonly configLabels: Record<StringConfig, string> = {
+    'Sa-Pa-Sa':  'Sa - Pa - Sa',
+    'Sa-Ma-Sa':  'Sa - Ma - Sa',
+    'Sa-Ma#-Sa': 'Sa - Ma♯ - Sa',
+  };
 
   state$ = this.tanpura.state$;
 
@@ -216,6 +222,7 @@ export class TanpuraPage implements OnInit, OnDestroy {
   setStringConfig(c: StringConfig): void { this.tanpura.setStringConfig(c); }
 
   keyDisplay(key: MusicalKey): string { return KEY_DISPLAY[key]; }
+  configLabel(config: StringConfig): string { return this.configLabels[config]; }
 
   ngOnDestroy(): void {
     this.destroy$.next();

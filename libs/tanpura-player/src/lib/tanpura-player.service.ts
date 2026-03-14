@@ -6,7 +6,7 @@ import { AudioEngineService } from '@voice-tuner/audio-engine';
 
 export type MusicalKey = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
 
-export type StringConfig = 'Sa-Pa-Sa-Sa' | 'Sa-Ma-Sa-Sa' | 'Sa-Ma#-Sa-Sa';
+export type StringConfig = 'Sa-Pa-Sa' | 'Sa-Ma-Sa' | 'Sa-Ma#-Sa';
 
 export interface TanpuraState {
   isPlaying:   boolean;
@@ -16,7 +16,7 @@ export interface TanpuraState {
   volume:      number;         // 0–1
   fineTune:    number;         // cents (-100 to +100)
   stringConfig: StringConfig;
-  currentString: number;       // 0–3 (which string is plucking)
+  currentString: number;       // 0–2 (which string is plucking)
 }
 
 export interface PluckSchedule {
@@ -33,19 +33,18 @@ const NOTE_FREQS: Record<MusicalKey, number> = {
   'G#': 415.30, 'A':  440.00, 'A#': 466.16, 'B':  493.88
 };
 
-// String intervals: Sa(1/1), Pa(3/2), Sa(2/1), Sa(2/1) — Classic Kharaj Pancham
+// String intervals: Sa(1/1), Pa(3/2), Sa(2/1) — Classic Kharaj Pancham
 const STRING_INTERVALS: Record<StringConfig, number[]> = {
-  'Sa-Pa-Sa-Sa':  [1.0, 1.5, 2.0, 2.0],
-  'Sa-Ma-Sa-Sa':  [1.0, 4/3, 2.0, 2.0],
-  'Sa-Ma#-Sa-Sa': [1.0, Math.pow(2, 6/12), 2.0, 2.0]
+  'Sa-Pa-Sa':  [1.0, 1.5, 2.0],
+  'Sa-Ma-Sa':  [1.0, 4/3, 2.0],
+  'Sa-Ma#-Sa': [1.0, Math.pow(2, 6/12), 2.0]
 };
 
 // Per-string resonance parameters (simulate layered harmonic content)
 const STRING_RESONANCE = [
   { decay: 4.2, brightness: 0.7, jitter: 0.008 },  // Sa (lower)
-  { decay: 3.6, brightness: 0.6, jitter: 0.010 },  // Pa
+  { decay: 3.6, brightness: 0.6, jitter: 0.010 },  // Pa / Ma
   { decay: 3.8, brightness: 0.8, jitter: 0.007 },  // Sa (upper)
-  { decay: 3.9, brightness: 0.75, jitter: 0.006 }  // Sa (upper)
 ];
 
 /**
@@ -62,7 +61,7 @@ export class TanpuraPlayerService {
     tempo:        5,
     volume:       0.8,
     fineTune:     0,
-    stringConfig: 'Sa-Pa-Sa-Sa',
+    stringConfig: 'Sa-Pa-Sa',
     currentString: 0
   });
 
@@ -141,11 +140,11 @@ export class TanpuraPlayerService {
     if (!isPlaying) return;
 
     const beatDuration       = 60 / tempo;
-    const stringSpacing      = beatDuration / 4; // 4 strings per cycle
+    const stringSpacing      = beatDuration / 3; // 3 strings per cycle
 
     while (this.nextPluckTime < this.audioEngine.currentTime + lookAhead) {
       this.pluckString(this.nextStringIndex, this.nextPluckTime);
-      this.nextStringIndex = (this.nextStringIndex + 1) % 4;
+      this.nextStringIndex = (this.nextStringIndex + 1) % 3;
       this.nextPluckTime += stringSpacing + this.humanizeOffset(0.004);
     }
 
@@ -274,7 +273,6 @@ export class TanpuraPlayerService {
       str0: '/assets/audio/tanpura/sa-lower.mp3',
       str1: '/assets/audio/tanpura/pa.mp3',
       str2: '/assets/audio/tanpura/sa-upper.mp3',
-      str3: '/assets/audio/tanpura/sa-upper.mp3'
     };
 
     const loadPromises = Object.entries(sampleUrls).map(async ([key, url]) => {
