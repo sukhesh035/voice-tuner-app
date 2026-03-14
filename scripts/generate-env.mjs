@@ -25,7 +25,7 @@ if (!['dev', 'prod'].includes(stage)) {
 }
 
 const stackName = `sruti-${stage}`;
-const region    = process.env['AWS_REGION'] ?? 'ap-south-1';
+const region    = process.env['AWS_REGION'] ?? 'us-east-1';
 
 console.log(`\n📦 Reading CloudFormation outputs from stack: ${stackName} (${region})\n`);
 
@@ -66,7 +66,7 @@ export const environment = {
     identityPoolId:   '${out['IdentityPoolId']}',
   },
   s3: {
-    bucket:  '${isProd ? 'sruti-prod-audio-assets' : 'sruti-dev-audio-assets'}',
+    bucket:  '${isProd ? 'sruti-prod-audio-assets-use1' : 'sruti-dev-audio-assets-use1'}',
     region:  '${region}',
     baseUrl: '${out['AudioCdnUrl']}',
   },
