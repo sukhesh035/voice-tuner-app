@@ -137,7 +137,7 @@ export class SrutiStack extends cdk.Stack {
 
     // ─── S3 Audio Assets Bucket ───────────────────────────────────────────────
     const audioBucket = new s3.Bucket(this, 'AudioBucket', {
-      bucketName:       `${prefix}-audio-assets`,
+      bucketName:       `${prefix}-audio-assets-use1`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       versioned:         false,
       cors: [{
@@ -161,7 +161,7 @@ export class SrutiStack extends cdk.Stack {
 
     // ─── PWA Web Hosting ─────────────────────────────────────────────────────
     const webBucket = new s3.Bucket(this, 'WebBucket', {
-      bucketName:        `${prefix}-web`,
+      bucketName:        `${prefix}-web-use1`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       versioned:         false,
       removalPolicy:     stage === 'dev' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
