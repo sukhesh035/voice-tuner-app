@@ -9,6 +9,7 @@ import {
 import { addIcons } from 'ionicons';
 import { arrowBackOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
 import { AuthService } from '@voice-tuner/auth';
+import { ApiService } from '../../core/services/api.service';
 
 type LoginView = 'signin' | 'forgot';
 
@@ -33,6 +34,7 @@ export class LoginPage {
 
   constructor(
     private authService: AuthService,
+    private api: ApiService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {
@@ -46,6 +48,8 @@ export class LoginPage {
     this.unconfirmedEmail = '';
     try {
       await this.authService.signIn(this.email, this.password);
+      // Ensure user record exists in DynamoDB (auto-provisions on first login)
+      this.api.getProfile().catch(() => {});
       await this.router.navigate(['/home']);
     } catch (err: any) {
       if (err.name === 'UserNotConfirmedException') {
@@ -66,6 +70,8 @@ export class LoginPage {
     this.successMsg = '';
     try {
       await this.authService.signUp(this.email, this.password);
+      // Provision user record in DynamoDB immediately after sign-up
+      this.api.getProfile().catch(() => {});
       await this.router.navigate(['/home']);
     } catch (err: any) {
       this.errorMsg = err.message ?? 'Sign up failed.';
