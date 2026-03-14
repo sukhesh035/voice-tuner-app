@@ -77,29 +77,37 @@ const RAGAS_OF_DAY = [
               <div class="action-card__icon tanpura-icon">
                 <ion-icon name="musical-note"></ion-icon>
               </div>
-              <div class="action-card__label">Tanpura</div>
-              <div class="action-card__sub">Drone Player</div>
+              <div class="action-card__text">
+                <div class="action-card__label">Tanpura</div>
+                <div class="action-card__sub">Drone Player</div>
+              </div>
             </a>
             <a class="action-card sruti-card" [routerLink]="['/sing']">
               <div class="action-card__icon sing-icon">
                 <ion-icon name="mic"></ion-icon>
               </div>
-              <div class="action-card__label">Sing</div>
-              <div class="action-card__sub">Pitch Detection</div>
+              <div class="action-card__text">
+                <div class="action-card__label">Sing</div>
+                <div class="action-card__sub">Pitch Detection</div>
+              </div>
             </a>
             <a class="action-card sruti-card" [routerLink]="['/practice']">
               <div class="action-card__icon practice-icon">
                 <ion-icon name="sparkles"></ion-icon>
               </div>
-              <div class="action-card__label">Practice</div>
-              <div class="action-card__sub">Raga Trainer</div>
+              <div class="action-card__text">
+                <div class="action-card__label">Practice</div>
+                <div class="action-card__sub">Raga Trainer</div>
+              </div>
             </a>
             <a class="action-card sruti-card" [routerLink]="['/guru']">
               <div class="action-card__icon guru-icon">
                 <ion-icon name="school"></ion-icon>
               </div>
-              <div class="action-card__label">Guru Mode</div>
-              <div class="action-card__sub">Classroom</div>
+              <div class="action-card__text">
+                <div class="action-card__label">Guru Mode</div>
+                <div class="action-card__sub">Classroom</div>
+              </div>
             </a>
           </div>
         </div>
@@ -113,11 +121,11 @@ const RAGAS_OF_DAY = [
                 <div class="today-stats">
                   <div class="today-stat">
                     <div class="today-stat__value">{{ todayMinutes }}</div>
-                    <div class="today-stat__label">Minutes</div>
+                    <div class="today-stat__label">Min</div>
                   </div>
                   <div class="today-stat">
                     <div class="today-stat__value">{{ todayAccuracy }}</div>
-                    <div class="today-stat__label">Accuracy</div>
+                    <div class="today-stat__label">Acc</div>
                   </div>
                   <div class="today-stat">
                     <div class="today-stat__value">{{ todaySessions }}</div>
@@ -130,11 +138,9 @@ const RAGAS_OF_DAY = [
                   <ion-spinner name="crescent"></ion-spinner>
                 </div>
               </ng-template>
-              <div class="today-cta">
-                <a [routerLink]="['/practice']" class="sruti-btn sruti-btn--primary">
-                  {{ todaySessions > 0 ? 'Continue Riyaz' : 'Start Riyaz' }}
-                </a>
-              </div>
+              <a [routerLink]="['/practice']" class="sruti-btn sruti-btn--primary today-btn">
+                {{ todaySessions > 0 ? 'Continue' : 'Start Riyaz' }}
+              </a>
             </div>
           </ng-container>
           <ng-template #todayGuest>
