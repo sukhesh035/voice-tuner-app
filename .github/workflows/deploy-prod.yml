@@ -21,7 +21,7 @@ jobs:
       contents: read
 
     env:
-      AWS_REGION: ap-south-1
+      AWS_REGION: us-east-1
       STAGE:      prod
       STACK_NAME: sruti-prod
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true

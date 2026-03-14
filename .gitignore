@@ -22,6 +22,7 @@ android/
 .capacitor/
 
 # CDK synthesis output
+cdk.out/
 apps/infra/cdk.out/
 
 # Local environment overrides (keep the committed environment.ts templates)
