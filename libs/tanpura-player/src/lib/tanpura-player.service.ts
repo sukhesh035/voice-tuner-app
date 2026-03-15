@@ -8,6 +8,8 @@ export type MusicalKey = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#'
 
 export type StringConfig = 'Sa-Pa-Sa' | 'Sa-Ma-Sa' | 'Sa-Ma#-Sa';
 
+export type Instrument = 'tanpura' | 'keyboard' | 'guitar';
+
 export interface TanpuraState {
   isPlaying:   boolean;
   key:         MusicalKey;
@@ -17,6 +19,7 @@ export interface TanpuraState {
   fineTune:    number;         // cents (-100 to +100)
   stringConfig: StringConfig;
   currentString: number;       // 0–2 (which string is plucking)
+  instrument:  Instrument;     // currently selected drone instrument
 }
 
 export interface PluckSchedule {
@@ -62,7 +65,8 @@ export class TanpuraPlayerService {
     volume:       0.8,
     fineTune:     0,
     stringConfig: 'Sa-Pa-Sa',
-    currentString: 0
+    currentString: 0,
+    instrument:   'tanpura'
   });
 
   // Scheduling state
@@ -98,6 +102,40 @@ export class TanpuraPlayerService {
     this.patchState({ isPlaying: false });
   }
 
+  /**
+   * Stop the scheduler AND immediately ramp the master gain to zero.
+   * This silences all in-flight oscillator nodes (which have long decay tails
+   * and would otherwise keep playing through the speakers for several seconds
+   * even after stop() is called).
+   * Use this before opening the microphone so the mic does not hear them.
+   */
+  stopAndSilence(): void {
+    this.stop();
+    const gain = this.audioEngine.masterGainNode;
+    const ctx  = this.audioEngine.context;
+    if (gain && ctx) {
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
+      // 30 ms linear ramp to zero — fast enough to be inaudible as a click,
+      // but instant enough that nothing leaks into the microphone.
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.03);
+    }
+  }
+
+  /**
+   * Restore the master gain to the configured volume level.
+   * Call this when playback resumes after a listening phase.
+   */
+  restoreVolume(): void {
+    const gain = this.audioEngine.masterGainNode;
+    const ctx  = this.audioEngine.context;
+    if (gain && ctx) {
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(this.state.volume, ctx.currentTime + 0.05);
+    }
+  }
+
   toggle(): Promise<void> | void {
     return this.state.isPlaying ? this.stop() : this.play();
   }
@@ -128,6 +166,16 @@ export class TanpuraPlayerService {
 
   setStringConfig(config: StringConfig): void {
     this.patchState({ stringConfig: config });
+  }
+
+  setInstrument(instrument: Instrument): void {
+    const wasPlaying = this.state.isPlaying;
+    if (wasPlaying) this.stop();
+    // Clear cached samples so preloadSamples() reloads for the new instrument
+    this.sampleBuffers.clear();
+    this.loadedSamples = false;
+    this.patchState({ instrument });
+    if (wasPlaying) setTimeout(() => this.play(), 0);
   }
 
   // ── Core Scheduling ────────────────────────────────────
@@ -172,12 +220,34 @@ export class TanpuraPlayerService {
   }
 
   /**
-   * Synthesize a tanpura pluck using additive synthesis:
-   * – Fundamental + harmonics with decaying amplitude
-   * – Karplus-Strong-inspired resonance
-   * – Slight frequency modulation for alap-like shimmer
+   * Synthesize a pluck using the method appropriate for the current instrument.
+   * Dispatches to tanpura (additive), keyboard (piano-like), or guitar (Karplus-Strong).
    */
   private synthesizePluck(
+    ctx: AudioContext,
+    freq: number,
+    when: number,
+    res: { decay: number; brightness: number; jitter: number }
+  ): void {
+    switch (this.state.instrument) {
+      case 'keyboard':
+        this.synthesizeKeyboard(ctx, freq, when, res);
+        break;
+      case 'guitar':
+        this.synthesizeGuitar(ctx, freq, when, res);
+        break;
+      case 'tanpura':
+      default:
+        this.synthesizeTanpura(ctx, freq, when, res);
+        break;
+    }
+  }
+
+  /**
+   * Tanpura synthesis: additive harmonics with 3rd-partial boost,
+   * long exponential decay, and micro-jitter for organic shimmer.
+   */
+  private synthesizeTanpura(
     ctx: AudioContext,
     freq: number,
     when: number,
@@ -218,6 +288,137 @@ export class TanpuraPlayerService {
       osc.start(when);
       osc.stop(when + res.decay * 3);
     }
+  }
+
+  /**
+   * Keyboard / piano-like synthesis:
+   * Clean sine+triangle mix with fast attack, medium decay envelope.
+   * Produces a bell-like, sustaining tone reminiscent of a harmonium/keyboard drone.
+   */
+  private synthesizeKeyboard(
+    ctx: AudioContext,
+    freq: number,
+    when: number,
+    res: { decay: number; brightness: number; jitter: number }
+  ): void {
+    const masterGain = this.audioEngine.masterGainNode;
+    if (!masterGain) return;
+
+    const centMul = this.centMultiplier();
+    const attack  = 0.005;  // fast attack
+    const decay   = res.decay * 0.6;  // shorter decay than tanpura
+    const sustain = 0.35;
+
+    // Sine fundamental
+    const oscSine = ctx.createOscillator();
+    const envSine = ctx.createGain();
+    oscSine.type = 'sine';
+    oscSine.frequency.value = freq * centMul;
+    envSine.gain.setValueAtTime(0, when);
+    envSine.gain.linearRampToValueAtTime(0.22 * res.brightness, when + attack);
+    envSine.gain.setTargetAtTime(0.22 * sustain * res.brightness, when + attack, decay * 0.3);
+    envSine.gain.setTargetAtTime(0, when + decay, decay * 0.4);
+    oscSine.connect(envSine);
+    envSine.connect(masterGain);
+    oscSine.start(when);
+    oscSine.stop(when + decay * 3);
+
+    // Triangle for warmth (one octave up, quieter)
+    const oscTri = ctx.createOscillator();
+    const envTri = ctx.createGain();
+    oscTri.type = 'triangle';
+    oscTri.frequency.value = freq * 2 * centMul;
+    envTri.gain.setValueAtTime(0, when);
+    envTri.gain.linearRampToValueAtTime(0.08 * res.brightness, when + attack);
+    envTri.gain.setTargetAtTime(0, when + attack + 0.01, decay * 0.25);
+    oscTri.connect(envTri);
+    envTri.connect(masterGain);
+    oscTri.start(when);
+    oscTri.stop(when + decay * 2);
+
+    // Soft 3rd harmonic for body
+    const osc3 = ctx.createOscillator();
+    const env3 = ctx.createGain();
+    osc3.type = 'sine';
+    osc3.frequency.value = freq * 3 * centMul;
+    env3.gain.setValueAtTime(0, when);
+    env3.gain.linearRampToValueAtTime(0.04 * res.brightness, when + attack);
+    env3.gain.setTargetAtTime(0, when + attack + 0.01, decay * 0.15);
+    osc3.connect(env3);
+    env3.connect(masterGain);
+    osc3.start(when);
+    osc3.stop(when + decay * 1.5);
+  }
+
+  /**
+   * Guitar / plucked-string synthesis using Karplus-Strong algorithm:
+   * Short noise burst excitation → delay line with lowpass feedback → natural pluck decay.
+   */
+  private synthesizeGuitar(
+    ctx: AudioContext,
+    freq: number,
+    when: number,
+    res: { decay: number; brightness: number; jitter: number }
+  ): void {
+    const masterGain = this.audioEngine.masterGainNode;
+    if (!masterGain) return;
+
+    const centMul   = this.centMultiplier();
+    const targetFreq = freq * centMul;
+    const sampleRate = ctx.sampleRate;
+    const period     = Math.round(sampleRate / targetFreq);
+    const duration   = res.decay * 2.5;
+
+    // Create a buffer filled with noise for the excitation burst
+    const bufferSize = Math.max(period, 2);
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, sampleRate);
+    const noiseData   = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      noiseData[i] = (Math.random() * 2 - 1) * 0.85;
+    }
+
+    // Noise burst source
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+
+    // Lowpass filter to shape the pluck tone
+    const lpf = ctx.createBiquadFilter();
+    lpf.type = 'lowpass';
+    // Higher brightness → higher cutoff → brighter pluck
+    lpf.frequency.value = Math.min(targetFreq * (4 + res.brightness * 6), sampleRate / 2);
+    lpf.Q.value = 0.5;
+
+    // Delay line for Karplus-Strong resonance
+    const delay = ctx.createDelay(1);
+    delay.delayTime.value = 1 / targetFreq;
+
+    // Feedback gain — controls how long the string rings
+    const feedback = ctx.createGain();
+    // Higher value = longer sustain; 0.996 gives a natural guitar ring
+    feedback.gain.value = 0.996;
+
+    // Output envelope
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.20 * res.brightness, when);
+    env.gain.setTargetAtTime(0, when + 0.05, duration * 0.35);
+
+    // Signal chain: noise → lpf → env → masterGain
+    //                              ↑ delay ← feedback ← ↓
+    noise.connect(lpf);
+    lpf.connect(env);
+    env.connect(masterGain);
+
+    // Feedback loop: env → delay → feedback → lpf
+    env.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(lpf);
+
+    noise.start(when);
+    noise.stop(when + bufferSize / sampleRate);
+
+    // Schedule cleanup: ramp to zero and disconnect after decay
+    env.gain.setValueAtTime(env.gain.value, when + duration);
+    env.gain.linearRampToValueAtTime(0, when + duration + 0.05);
   }
 
   private playSample(
@@ -267,12 +468,12 @@ export class TanpuraPlayerService {
   // ── Sample Loading ─────────────────────────────────────
 
   private async preloadSamples(): Promise<void> {
-    // Attempt to load high-quality samples from CDN / S3
-    // Falls back gracefully to synthesis if loading fails
+    // Load samples from the directory matching the current instrument
+    const instrument = this.state.instrument;
     const sampleUrls: Record<string, string> = {
-      str0: '/assets/audio/tanpura/sa-lower.mp3',
-      str1: '/assets/audio/tanpura/pa.mp3',
-      str2: '/assets/audio/tanpura/sa-upper.mp3',
+      str0: `/assets/audio/${instrument}/sa-lower.mp3`,
+      str1: `/assets/audio/${instrument}/pa.mp3`,
+      str2: `/assets/audio/${instrument}/sa-upper.mp3`,
     };
 
     const loadPromises = Object.entries(sampleUrls).map(async ([key, url]) => {

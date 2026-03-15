@@ -6,6 +6,30 @@
 <ion-content>
   <div class="settings-page">
 
+    <!-- ── Drone Instrument ────────────────────────────────────────────── -->
+    <div class="settings-group">
+      <div class="group-label">
+        <ion-icon name="musical-note-outline"></ion-icon> Drone Instrument
+      </div>
+      <div class="instrument-selector">
+        <button
+          *ngFor="let inst of instruments"
+          class="instrument-card sruti-card"
+          [class.selected]="selectedInstrument === inst.id"
+          (click)="selectInstrument(inst.id)"
+        >
+          <div class="instrument-card__visual" [ngClass]="inst.icon">
+            <span class="instrument-card__emoji">
+              {{ inst.id === 'tanpura' ? '🎵' : inst.id === 'keyboard' ? '🎹' : '🎸' }}
+            </span>
+          </div>
+          <div class="instrument-card__label">{{ inst.label }}</div>
+          <div class="instrument-card__desc">{{ inst.desc }}</div>
+          <div class="instrument-card__check" *ngIf="selectedInstrument === inst.id">&#10003;</div>
+        </button>
+      </div>
+    </div>
+
     <!-- ── Appearance ──────────────────────────────────────────────────── -->
     <div class="settings-group">
       <div class="group-label">
@@ -39,7 +63,7 @@
       <div class="settings-row sruti-card">
         <div class="setting-info">
           <div class="setting-name">Use Audio Samples</div>
-          <div class="setting-sub">High quality tanpura samples (loads on Wi-Fi)</div>
+          <div class="setting-sub">High quality instrument samples (loads on Wi-Fi)</div>
         </div>
         <ion-toggle [(ngModel)]="useSamples" color="primary"></ion-toggle>
       </div>
@@ -80,7 +104,11 @@
           <div class="setting-name">Daily Riyaz Reminder</div>
           <div class="setting-sub">Get reminded to practice every day</div>
         </div>
-        <ion-toggle [(ngModel)]="dailyReminder" color="primary"></ion-toggle>
+        <ion-toggle
+          [checked]="dailyReminder"
+          (ionChange)="toggleNotifications($event)"
+          color="primary"
+        ></ion-toggle>
       </div>
     </div>
 

@@ -21,8 +21,7 @@ export const environment = {
     url: 'https://dlfmvipmlfhsm.cloudfront.net',
   },
   featureFlags: {
-    aiCoach:       true,
-    guruClassroom: true,
-    offlineMode:   true,
+    aiCoach:     true,
+    offlineMode: true,
   },
 };

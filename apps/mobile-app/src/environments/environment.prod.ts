@@ -21,8 +21,7 @@ export const environment = {
     url: 'https://d1f644lz4vig94.cloudfront.net',
   },
   featureFlags: {
-    aiCoach:       true,
-    guruClassroom: true,
-    offlineMode:   true,
+    aiCoach:     true,
+    offlineMode: true,
   },
 };
