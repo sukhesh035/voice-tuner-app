@@ -206,19 +206,15 @@ export class SrutiStack extends cdk.Stack {
       memorySize: 256,
       timeout: cdk.Duration.seconds(10),
       environment: commonEnv,
-      bundling: { minify: true, sourceMap: false, target: 'node22' },
     } as Partial<lambda.FunctionProps>;
 
-    // Use NodejsFunction for bundling
-    const handlerDir = path.join(__dirname, '../../backend-api/src/handlers');
+    const distDir = path.join(__dirname, '../../../dist/apps/backend-api');
 
     const makeFn = (id: string, entry: string) =>
       new lambda.Function(this, id, {
         ...lambdaDefaults as lambda.FunctionProps,
-        handler: 'handler',
-        code: lambda.Code.fromAsset(
-          path.join(__dirname, '../../../dist/apps/backend-api'),
-        ),
+        handler: `${entry}.handler.handler`,
+        code: lambda.Code.fromAsset(distDir),
         functionName: `${prefix}-${entry}`,
       });
 

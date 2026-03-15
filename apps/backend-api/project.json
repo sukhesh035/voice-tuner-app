@@ -6,18 +6,11 @@
   "tags": ["scope:backend", "type:app"],
   "targets": {
     "build": {
-      "executor": "@nx/esbuild:esbuild",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/backend-api"],
       "options": {
-        "outputPath": "dist/apps/backend-api",
-        "main": "apps/backend-api/src/handlers/sessions.handler.ts",
-        "tsConfig": "apps/backend-api/tsconfig.app.json",
-        "platform": "node",
-        "bundle": true,
-        "minify": true,
-        "sourcemap": false,
-        "target": "node22",
-        "external": ["@aws-sdk/client-dynamodb", "@aws-sdk/lib-dynamodb"]
+        "command": "node_modules/.bin/esbuild apps/backend-api/src/handlers/sessions.handler.ts apps/backend-api/src/handlers/users.handler.ts apps/backend-api/src/handlers/streaks.handler.ts apps/backend-api/src/handlers/classroom.handler.ts --bundle --minify --platform=node --target=node22 --format=cjs --external:@aws-sdk/client-dynamodb --external:@aws-sdk/lib-dynamodb --outdir=dist/apps/backend-api",
+        "cwd": "{workspaceRoot}"
       }
     },
     "lint": {

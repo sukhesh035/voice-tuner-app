@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { filter, map, take } from 'rxjs/operators';
 import {
   signIn as amplifySignIn,
   signUp as amplifySignUp,
@@ -20,6 +20,7 @@ export interface AppUser {
 export class AuthService {
   private userSubject = new BehaviorSubject<AppUser | null>(null);
   private pendingConfirmationSubject = new BehaviorSubject<string | null>(null);
+  private initializedSubject = new BehaviorSubject<boolean>(false);
 
   get user$(): Observable<AppUser | null> { return this.userSubject.asObservable(); }
   get isAuthenticated$(): Observable<boolean> { return this.user$.pipe(map(u => u !== null)); }
@@ -27,6 +28,13 @@ export class AuthService {
   /** Email address waiting for Cognito confirmation, or null if none. */
   get pendingConfirmation$(): Observable<string | null> { return this.pendingConfirmationSubject.asObservable(); }
   get pendingConfirmationEmail(): string | null { return this.pendingConfirmationSubject.value; }
+  /** Emits true (exactly once) when initialize() has completed — success or failure. */
+  get initialized$(): Observable<true> {
+    return this.initializedSubject.asObservable().pipe(
+      filter((v): v is true => v === true),
+      take(1)
+    );
+  }
 
   async initialize(): Promise<void> {
     try {
@@ -48,6 +56,9 @@ export class AuthService {
       });
     } catch {
       this.userSubject.next(null);
+    } finally {
+      // Always signal completion so guards and pages don't wait forever.
+      this.initializedSubject.next(true);
     }
   }
 
@@ -65,7 +76,8 @@ export class AuthService {
 
   async signUp(email: string, password: string): Promise<void> {
     await amplifySignUp({ username: email, password, options: { userAttributes: { email } } });
-    this.pendingConfirmationSubject.next(email);
+    // Pre-signup Lambda auto-confirms the user, so we can sign in immediately.
+    await this.signIn(email, password);
   }
 
   async signOut(): Promise<void> {
