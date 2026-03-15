@@ -174,7 +174,7 @@ jobs:
           echo "══════════════════════════════════════════════════════════"
           echo "  Xcode build settings (key subset)"
           echo "══════════════════════════════════════════════════════════"
-          xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration Release -showBuildSettings 2>/dev/null \
+          xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration Release -destination "generic/platform=iOS" -showBuildSettings 2>/dev/null \
             | grep -E '(TARGETED_DEVICE_FAMILY|IPHONEOS_DEPLOYMENT_TARGET|INFOPLIST_FILE|PRODUCT_BUNDLE_IDENTIFIER|LAUNCH_STORYBOARD_NAME|ASSETCATALOG|MARKETING_VERSION|CURRENT_PROJECT_VERSION)' \
             || true
 
@@ -255,6 +255,7 @@ jobs:
             -project "$PROJECT" \
             -scheme "$SCHEME" \
             -configuration Release \
+            -destination "generic/platform=iOS" \
             -archivePath "$ARCHIVE_PATH" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="$TEAM_ID" \
