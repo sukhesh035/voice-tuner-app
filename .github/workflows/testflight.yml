@@ -74,13 +74,13 @@ jobs:
           ../../node_modules/.bin/cap add ios
           ../../node_modules/.bin/cap sync ios
 
-      # ── 8. Copy app icon into freshly-generated iOS project ───────────────
-      #   cap add ios regenerates the xcassets with the default Capacitor icon.
-      #   We overwrite AppIcon-512@2x.png with our own 1024×1024 resource.
-      - name: Copy app icon into iOS xcassets
-        run: |
-          ICONSET="apps/mobile-app/ios/App/App/Assets.xcassets/AppIcon.appiconset"
-          cp apps/mobile-app/resources/icon.png "$ICONSET/AppIcon-512@2x.png"
+      # ── 8. Generate iOS native assets (Icons & Launch Screens) ────────────
+      #   cap add ios provides default Capacitor assets. We use @capacitor/assets
+      #   to generate the proper AppIcon and Splash screen sizes, which also
+      #   ensures the LaunchScreen storyboard behaves correctly on modern iPhones.
+      - name: Generate iOS native assets
+        working-directory: apps/mobile-app
+        run: pnpm exec capacitor-assets generate --ios --assetPath resources
 
       # ── 9. Restore Info.plist customisations (gitignored with ios/) ────────
       #   • CFBundleDisplayName = Swara AI
