@@ -4,6 +4,10 @@ import { ThemeService } from './core/services/theme.service';
 import { AuthService } from '@voice-tuner/auth';
 import { ApiService } from './core/services/api.service';
 
+// On a real device over cellular/WiFi, Cognito's fetchAuthSession can take
+// 300–800ms. Cap the wait so a slow or offline network never freezes the app.
+const AUTH_INIT_TIMEOUT_MS = 5000;
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -23,9 +27,10 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.themeService.initialize();
-    // Restore Cognito session from stored refresh token on every app start.
-    // Amplify handles token refresh automatically once a valid session exists.
-    this.authService.initialize().then(() => {
+    // Race auth init against a timeout so a slow/offline Cognito call never
+    // blocks the whole app from rendering.
+    const timeout = new Promise<void>(resolve => setTimeout(resolve, AUTH_INIT_TIMEOUT_MS));
+    Promise.race([this.authService.initialize(), timeout]).then(() => {
       if (this.authService.currentUser) {
         // Ensure user record exists in DynamoDB after session restore
         this.api.getProfile().catch(() => {});

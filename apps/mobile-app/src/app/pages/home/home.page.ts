@@ -10,7 +10,7 @@ import {
 } from 'ionicons/icons';
 import { AuthService } from '@voice-tuner/auth';
 import { ApiService, PracticeSession } from '../../core/services/api.service';
-import { take } from 'rxjs/operators';
+import { filter, take } from 'rxjs/operators';
 
 const RAGAS_OF_DAY = [
   { name: 'Yaman',       hindi: 'यमन',       time: '🌆 Evening',   desc: 'The most popular evening raga. Begin with Sa Pa Ni Sa in Alaap.' },
@@ -261,10 +261,17 @@ export class HomePage implements OnInit {
   }
 
   ngOnInit(): void {
-    // Only load if already authenticated (e.g. after session restore on refresh).
-    // Also subscribe so if auth state changes (sign in), we reload data.
-    this.authService.isAuthenticated$.pipe(take(1)).subscribe(isAuth => {
-      if (isAuth) this.loadData();
+    // Wait for Cognito session restore to finish, then check auth state once.
+    // Using filter+take(1) mirrors the safe pattern in ProfilePage — avoids
+    // snapping the initial false from the BehaviorSubject before initialize()
+    // completes on a real device (300–800ms network call).
+    this.authService.initialized$.pipe(
+      take(1)
+    ).subscribe(() => {
+      this.authService.isAuthenticated$.pipe(
+        filter((isAuth): isAuth is true => isAuth === true),
+        take(1)
+      ).subscribe(() => this.loadData());
     });
   }
 

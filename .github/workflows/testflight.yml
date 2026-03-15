@@ -87,6 +87,7 @@ jobs:
       #   • NSMicrophoneUsageDescription
       #   • UISupportedInterfaceOrientations~ipad (all 4 — App Store requirement)
       #   • ITSAppUsesNonExemptEncryption = false (exempt from export compliance)
+      #   • UIRequiresFullScreen = true (prevents zoom/scaling on iPhone)
       - name: Patch Info.plist
         run: |
           PLIST="apps/mobile-app/ios/App/App/Info.plist"
@@ -109,6 +110,11 @@ jobs:
           # The app only uses standard HTTPS/TLS (Apple OS encryption), which is exempt
           /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST" \
             || /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
+
+          # Disable Display Zoom / compatibility scaling — prevents the app appearing
+          # zoomed in on iPhone. Without this, iOS may apply a legacy scaling mode.
+          /usr/libexec/PlistBuddy -c "Set :UIRequiresFullScreen true" "$PLIST" \
+            || /usr/libexec/PlistBuddy -c "Add :UIRequiresFullScreen bool true" "$PLIST"
 
       # ── 9. Set version + build number ─────────────────────────────────────
       #   Marketing version is always 1.1 (cap add ios regenerates ios/ with 1.0
