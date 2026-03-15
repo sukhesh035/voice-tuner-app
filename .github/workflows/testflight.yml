@@ -32,24 +32,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.2.2
 
-      # ── 2. Select Xcode ─────────────────────────────────────────────────
-      #   macos-26 runners ship multiple Xcode versions. Pin to the latest
-      #   stable release (exclude betas — they can have missing platforms).
-      #   Local dev uses Xcode 26.3, so we match that.
+      # ── 2. Select Xcode 26.3 ─────────────────────────────────────────────
+      #   Pin to Xcode 26.3 — matches local dev and is a known-good stable
+      #   release. Xcode 26.4 on this runner has broken iOS destinations.
       - name: Select Xcode
         run: |
           echo "── Available Xcode versions ──"
           ls -d /Applications/Xcode*.app 2>/dev/null || true
 
-          # Pick the highest stable Xcode (exclude beta/alpha)
-          STABLE_XCODE=$(ls -d /Applications/Xcode_*.app 2>/dev/null \
-            | grep -vi 'beta\|alpha\|rc' \
-            | sort -V | tail -1)
-          if [ -z "$STABLE_XCODE" ]; then
-            STABLE_XCODE="/Applications/Xcode.app"
+          # Pin to 26.3 — try common naming patterns on GHA runners
+          if [ -d "/Applications/Xcode_26.3.app" ]; then
+            XCODE="/Applications/Xcode_26.3.app"
+          elif [ -d "/Applications/Xcode_26.3.0.app" ]; then
+            XCODE="/Applications/Xcode_26.3.0.app"
+          else
+            echo "::error::Xcode 26.3 not found on runner"
+            exit 1
           fi
-          echo "Selecting: $STABLE_XCODE"
-          sudo xcode-select -s "$STABLE_XCODE"
+          echo "Selecting: $XCODE"
+          sudo xcode-select -s "$XCODE"
 
           echo "── Active Xcode ──"
           xcode-select -p
