@@ -269,7 +269,7 @@ export class SingPage implements OnInit, OnDestroy {
           stabilityScore: Math.round(stats.stabilityScore),
           noteAccuracies,
         }).then(() => {
-          this.api.checkin(Math.ceil(durationSeconds / 60)).catch(() => {});
+          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).catch(() => {});
         }).catch(err => console.warn('[SingPage] Failed to save session:', err));
       }
     } else {

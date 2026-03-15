@@ -76,6 +76,7 @@ export const handler = async (
       const body     = JSON.parse(event.body ?? '{}');
       const today    = getDateStr();
       const duration = body.durationMinutes ?? 0;
+      const score    = typeof body.score === 'number' ? body.score : null;
 
       // Upsert today's record
       await ddb.send(new PutCommand({
@@ -119,7 +120,34 @@ export const handler = async (
         } else break;
       }
 
-      // Persist updated streak to user record
+      // Read current user stats so we can compute longestStreak and overallScore
+      let prevTotalSessions = 0;
+      let prevOverallScore  = 0;
+      let prevLongestStreak = 0;
+      try {
+        const userResult = await ddb.send(new GetCommand({
+          TableName: USERS_TABLE,
+          Key: { userId: auth.userId },
+          ProjectionExpression: 'stats',
+        }));
+        const stats = (userResult.Item as Record<string, any>)?.stats;
+        if (stats) {
+          prevTotalSessions = stats.totalSessions ?? 0;
+          prevOverallScore  = stats.overallScore  ?? 0;
+          prevLongestStreak = stats.longestStreak  ?? 0;
+        }
+      } catch (err) { console.warn('[checkin] Failed to read prev user stats, using defaults:', err); }
+
+      // Compute new overallScore as a running average across all sessions.
+      // Formula: newAvg = (oldAvg * oldCount + newScore) / (oldCount + 1)
+      const newTotalSessions = prevTotalSessions + 1;
+      const newOverallScore = score != null
+        ? Math.round(((prevOverallScore * prevTotalSessions) + score) / newTotalSessions)
+        : prevOverallScore;
+
+      const newLongestStreak = Math.max(prevLongestStreak, currentStreak);
+
+      // Persist updated stats to user record
       await ddb.send(new UpdateCommand({
         TableName: USERS_TABLE,
         Key: { userId: auth.userId },
@@ -127,16 +155,18 @@ export const handler = async (
           SET stats.currentStreak = :cs,
               stats.totalMinutes  = stats.totalMinutes + :dur,
               stats.totalSessions = stats.totalSessions + :one,
-              stats.longestStreak = if_not_exists(stats.longestStreak, :zero)
+              stats.longestStreak = :ls,
+              stats.overallScore  = :os
         `,
         ConditionExpression: 'attribute_exists(userId)',
         ExpressionAttributeValues: {
-          ':cs':   currentStreak,
-          ':dur':  duration,
-          ':one':  1,
-          ':zero': 0,
+          ':cs':  currentStreak,
+          ':dur': duration,
+          ':one': 1,
+          ':ls':  newLongestStreak,
+          ':os':  newOverallScore,
         },
-      })).catch(() => { /* user may not exist yet — ok */ });
+      })).catch((err) => { console.error('[checkin] Failed to update user stats:', err); });
 
       const newMilestone = MILESTONES.filter((m) => m === currentStreak)?.[0] ?? null;
       return ok({ currentStreak, newMilestone, today });

@@ -50,10 +50,5 @@ export const routes: Routes = [
     path: 'session-report/:id',
     loadComponent: () => import('./pages/session-report/session-report.page').then(m => m.SessionReportPage)
   },
-  {
-    path: 'guru',
-    loadComponent: () => import('./pages/guru/guru.page').then(m => m.GuruPage),
-    canActivate: [authGuard]
-  },
   { path: '**', redirectTo: '' }
 ];

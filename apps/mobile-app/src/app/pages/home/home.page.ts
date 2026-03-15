@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
@@ -6,21 +6,14 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-  musicalNote, mic, flame, school, trendingUp, sparkles, lockClosed, personCircle
+  musicalNote, mic, flame, trendingUp, sparkles, lockClosed, personCircle
 } from 'ionicons/icons';
 import { AuthService } from '@voice-tuner/auth';
 import { ApiService, PracticeSession } from '../../core/services/api.service';
-import { filter, take } from 'rxjs/operators';
-
-const RAGAS_OF_DAY = [
-  { name: 'Yaman',       hindi: 'यमन',       time: '🌆 Evening',   desc: 'The most popular evening raga. Begin with Sa Pa Ni Sa in Alaap.' },
-  { name: 'Bhairav',     hindi: 'भैरव',       time: '🌅 Morning',   desc: 'The quintessential morning raga. Start slowly with komal Re and Dha.' },
-  { name: 'Hamsadhwani', hindi: 'हंसध्वनि',  time: '🌙 Night',     desc: 'A joyous raga with no Ma and Dha. Perfect for beginners.' },
-  { name: 'Bhimpalasi',  hindi: 'भीमपलासी',  time: '🕒 Afternoon', desc: 'An emotional raga of the afternoon — focus on Ga and Ni.' },
-  { name: 'Kedar',       hindi: 'केदार',      time: '🌆 Evening',   desc: 'Evening raga with a unique vakra movement through Ma#.' },
-  { name: 'Bihag',       hindi: 'बिहाग',     time: '🌙 Night',     desc: 'A romantic late-night raga. Both Ma and Ma# are used.' },
-  { name: 'Darbari',     hindi: 'दरबारी',    time: '🌙 Late Night', desc: 'Raga of the royal court. Slow, deep, with heavy Ga and Ni.' },
-];
+import { TanpuraPlayerService, Instrument } from '@voice-tuner/tanpura-player';
+import { MELAKARTA_LIST } from '@voice-tuner/training-engine';
+import { filter, take, map } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -78,7 +71,7 @@ const RAGAS_OF_DAY = [
                 <ion-icon name="musical-note"></ion-icon>
               </div>
               <div class="action-card__text">
-                <div class="action-card__label">Tanpura</div>
+                <div class="action-card__label">{{ droneLabel }}</div>
                 <div class="action-card__sub">Drone Player</div>
               </div>
             </a>
@@ -100,15 +93,7 @@ const RAGAS_OF_DAY = [
                 <div class="action-card__sub">Raga Trainer</div>
               </div>
             </a>
-            <a class="action-card sruti-card" [routerLink]="['/guru']">
-              <div class="action-card__icon guru-icon">
-                <ion-icon name="school"></ion-icon>
-              </div>
-              <div class="action-card__text">
-                <div class="action-card__label">Guru Mode</div>
-                <div class="action-card__sub">Classroom</div>
-              </div>
-            </a>
+
           </div>
         </div>
 
@@ -224,13 +209,26 @@ const RAGAS_OF_DAY = [
   `,
   styleUrls: ['./home.page.scss']
 })
-export class HomePage implements OnInit {
+export class HomePage implements OnInit, OnDestroy {
   readonly weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   // Ghost bars behind the lock — randomised-looking but fixed so no flicker
   readonly lockedBarHeights = [45, 70, 30, 85, 60, 50, 20];
-  readonly ragaOfDay = RAGAS_OF_DAY[new Date().getDay() % RAGAS_OF_DAY.length];
+  readonly ragaOfDay = (() => {
+    // Days elapsed since a fixed epoch (2024-01-01) so the index advances by
+    // one each calendar day and cycles through all 72 Melakarta ragas before repeating.
+    const EPOCH = Date.UTC(2024, 0, 1);
+    const dayIndex = Math.floor((Date.now() - EPOCH) / 86_400_000);
+    const raga = MELAKARTA_LIST[((dayIndex % MELAKARTA_LIST.length) + MELAKARTA_LIST.length) % MELAKARTA_LIST.length];
+    return { name: raga.englishName, hindi: raga.name, time: raga.time, desc: raga.description };
+  })();
+
+  private static readonly INSTRUMENT_LABELS: Record<Instrument, string> = {
+    tanpura: 'Tanpura', keyboard: 'Keyboard', guitar: 'Guitar'
+  };
 
   loading = false;
+  droneLabel = 'Tanpura';
+  private instrumentSub?: Subscription;
 
   // Today's stats
   todayMinutes = 0;
@@ -255,12 +253,21 @@ export class HomePage implements OnInit {
   constructor(
     public authService: AuthService,
     private api: ApiService,
+    private tanpuraPlayer: TanpuraPlayerService,
     private cdr: ChangeDetectorRef
   ) {
-    addIcons({ musicalNote, mic, flame, school, trendingUp, sparkles, lockClosed, personCircle });
+    addIcons({ musicalNote, mic, flame, trendingUp, sparkles, lockClosed, personCircle });
   }
 
   ngOnInit(): void {
+    // Track instrument changes for dynamic drone label
+    this.instrumentSub = this.tanpuraPlayer.state$.pipe(
+      map(s => s.instrument)
+    ).subscribe(inst => {
+      this.droneLabel = HomePage.INSTRUMENT_LABELS[inst] ?? 'Tanpura';
+      this.cdr.markForCheck();
+    });
+
     // Wait for Cognito session restore to finish, then check auth state once.
     // Using filter+take(1) mirrors the safe pattern in ProfilePage — avoids
     // snapping the initial false from the BehaviorSubject before initialize()
@@ -273,6 +280,10 @@ export class HomePage implements OnInit {
         take(1)
       ).subscribe(() => this.loadData());
     });
+  }
+
+  ngOnDestroy(): void {
+    this.instrumentSub?.unsubscribe();
   }
 
   private async loadData(): Promise<void> {

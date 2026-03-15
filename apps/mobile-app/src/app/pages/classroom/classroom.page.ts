@@ -48,7 +48,7 @@ type ClassroomView = 'join' | 'teacher' | 'student-waiting' | 'student-active';
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-back-button defaultHref="/tabs/guru"></ion-back-button>
+          <ion-back-button defaultHref="/home"></ion-back-button>
         </ion-buttons>
         <ion-title>{{ viewTitle }}</ion-title>
         <ion-buttons slot="end" *ngIf="currentView === 'teacher' && session">
@@ -285,7 +285,7 @@ export class ClassroomPage implements OnInit, OnDestroy {
       `${environment.apiBaseUrl}/classroom/sessions/${this.session.sessionCode}`,
       { headers: { Authorization: `Bearer ${token}` } },
     ).subscribe(() => {
-      this.router.navigate(['/tabs/guru']);
+      this.router.navigate(['/home']);
     });
   }
 }

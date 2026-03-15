@@ -2,7 +2,8 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner
+  IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner,
+  ViewWillEnter
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -229,7 +230,7 @@ interface Achievement {
   `,
   styleUrls: ['./profile.page.scss']
 })
-export class ProfilePage implements OnInit {
+export class ProfilePage implements OnInit, ViewWillEnter {
   resendLoading = false;
   loading = false;
 
@@ -313,8 +314,15 @@ export class ProfilePage implements OnInit {
   }
 
   ngOnInit(): void {
-    // Wait for the first truthy auth state, then load once.
-    // Using filter+take(1) prevents re-fetching on every Cognito token refresh emission.
+    // Initial load: wait for auth to be ready, then fetch data once.
+    this.authService.isAuthenticated$.pipe(
+      filter((isAuth): isAuth is true => isAuth === true),
+      take(1)
+    ).subscribe(() => this.loadData());
+  }
+
+  ionViewWillEnter(): void {
+    // Reload data every time the tab becomes visible (Ionic caches tab pages).
     this.authService.isAuthenticated$.pipe(
       filter((isAuth): isAuth is true => isAuth === true),
       take(1)

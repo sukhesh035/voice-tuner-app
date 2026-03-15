@@ -28,6 +28,7 @@ export interface UserProfile {
     theme: 'dark' | 'light';
     notificationsEnabled: boolean;
     dailyGoalMinutes: number;
+    instrument: 'tanpura' | 'keyboard' | 'guitar';
   };
   stats: {
     totalSessions: number;
@@ -47,6 +48,7 @@ const DEFAULT_PREFS: UserProfile['preferences'] = {
   theme:                'dark',
   notificationsEnabled: true,
   dailyGoalMinutes:     20,
+  instrument:           'tanpura',
 };
 
 const DEFAULT_STATS: UserProfile['stats'] = {

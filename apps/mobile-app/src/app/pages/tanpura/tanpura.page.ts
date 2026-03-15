@@ -8,7 +8,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { playCircle, stopCircle, musicalNote, volumeMedium, speedometer } from 'ionicons/icons';
-import { TanpuraPlayerService, MusicalKey, StringConfig, TanpuraState } from '@voice-tuner/tanpura-player';
+import { TanpuraPlayerService, MusicalKey, StringConfig, TanpuraState, Instrument } from '@voice-tuner/tanpura-player';
 import { AudioEngineService } from '@voice-tuner/audio-engine';
 
 const ALL_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -30,7 +30,7 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>Tanpura</ion-title>
+        <ion-title>{{ instrumentTitle((state$ | async)?.instrument ?? 'tanpura') }}</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -194,6 +194,12 @@ export class TanpuraPage implements OnInit, OnDestroy {
     'Sa-Ma#-Sa': 'Sa - Ma♯ - Sa',
   };
 
+  private readonly instrumentTitles: Record<Instrument, string> = {
+    tanpura:  'Tanpura',
+    keyboard: 'Keyboard',
+    guitar:   'Guitar',
+  };
+
   state$ = this.tanpura.state$;
 
   private destroy$ = new Subject<void>();
@@ -223,6 +229,7 @@ export class TanpuraPage implements OnInit, OnDestroy {
 
   keyDisplay(key: MusicalKey): string { return KEY_DISPLAY[key]; }
   configLabel(config: StringConfig): string { return this.configLabels[config]; }
+  instrumentTitle(instrument: Instrument): string { return this.instrumentTitles[instrument] ?? 'Tanpura'; }
 
   ngOnDestroy(): void {
     this.destroy$.next();

@@ -81,62 +81,296 @@
   .live-note  { font-size: 48px; font-weight: 800; transition: color 0.15s ease; }
 }
 
-// ── Raga Grid ─────────────────────────────────────────────
-.raga-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+// ── Raga Section ──────────────────────────────────────────
+.raga-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+// ── Raga Browser Sections ─────────────────────────────────
+.raga-browser {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-5;
+}
+
+.raga-browser-section {
+  display: flex;
+  flex-direction: column;
   gap: $spacing-3;
 }
 
+.raga-section-header {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--sruti-text-secondary);
+}
+
+// ── Popular Ragas Row ─────────────────────────────────────
+.popular-ragas-row {
+  display: flex;
+  gap: $spacing-3;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: $spacing-1;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.popular-raga-card {
+  flex-shrink: 0;
+  width: 130px;
+  padding: $spacing-4;
+  background: var(--sruti-bg-card);
+  border: 1px solid var(--sruti-glass-border);
+  border-radius: $radius-lg;
+  color: var(--sruti-text-primary);
+  font-family: var(--sruti-font-sans);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s ease;
+
+  &:active { transform: scale(0.96); }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-bottom: $spacing-2;
+  }
+
+  &__name {
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__time {
+    font-size: 11px;
+    color: var(--sruti-text-tertiary);
+    margin-top: 2px;
+  }
+}
+
+// ── Raga Search ───────────────────────────────────────────
+.raga-search {
+  position: relative;
+
+  &__input {
+    width: 100%;
+    padding: $spacing-3 $spacing-4 $spacing-3 $spacing-10;
+    border-radius: $radius-lg;
+    border: 1px solid var(--sruti-border);
+    background: var(--sruti-bg-card);
+    color: var(--sruti-text-primary);
+    font-size: 15px;
+    font-family: var(--sruti-font-sans);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+
+    &::placeholder {
+      color: var(--sruti-text-tertiary);
+    }
+
+    &:focus {
+      border-color: var(--sruti-primary);
+      box-shadow: 0 0 0 3px rgba(var(--sruti-primary-rgb), 0.15);
+    }
+  }
+
+  &__icon {
+    position: absolute;
+    left: $spacing-4;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+// ── Chakra Filter ─────────────────────────────────────────
+.chakra-filter {
+  display: flex;
+  gap: $spacing-2;
+  overflow-x: auto;
+  padding-bottom: $spacing-1;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.chakra-chip {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-1;
+  padding: 6px $spacing-3;
+  border-radius: $radius-full;
+  border: 1px solid var(--sruti-border);
+  background: var(--sruti-bg-card);
+  color: var(--sruti-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--sruti-font-sans);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:active { transform: scale(0.96); }
+
+  &--active {
+    background: var(--sruti-primary);
+    border-color: var(--sruti-primary);
+    color: white;
+  }
+
+  &__count, &__range {
+    font-size: 10px;
+    opacity: 0.7;
+  }
+}
+
+// ── Raga List ─────────────────────────────────────────────
+.raga-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+  max-height: 55vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: $spacing-1;
+}
+
+.raga-list-empty {
+  text-align: center;
+  padding: $spacing-8 $spacing-4;
+  color: var(--sruti-text-tertiary);
+  font-size: 14px;
+}
+
+// ── Raga Card ─────────────────────────────────────────────
 .raga-card {
   cursor: pointer;
-  padding: $spacing-4 !important;
+  padding: $spacing-3 $spacing-4 !important;
   display: flex;
   gap: $spacing-3;
   align-items: center;
   background: var(--sruti-bg-card);
   border: 1px solid var(--sruti-glass-border);
-  border-radius: $radius-xl;
+  border-radius: $radius-lg;
   color: var(--sruti-text-primary);
   font-family: var(--sruti-font-sans);
   width: 100%;
   text-align: left;
   -webkit-tap-highlight-color: transparent;
   transition: all 0.15s ease;
-  box-shadow: $shadow-card;
 
-  &:active { transform: scale(0.97); }
+  &:active { transform: scale(0.98); }
+
+  &__mela {
+    width: 36px;
+    height: 36px;
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
+  }
 
   &__indicator {
     width: 4px;
-    height: 40px;
+    height: 36px;
     border-radius: $radius-full;
     flex-shrink: 0;
   }
 
   &__content { flex: 1; min-width: 0; }
-  &__name    { font-size: 15px; font-weight: 700; }
-  &__hindi   { font-size: 12px; color: var(--sruti-text-secondary); }
-  &__time    { font-size: 11px; color: var(--sruti-text-tertiary); margin-top: 2px; }
+  &__name {
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &__hindi {
+    font-size: 11px;
+    color: var(--sruti-text-secondary);
+  }
+  &__meta {
+    display: flex;
+    gap: $spacing-2;
+    margin-top: 2px;
+  }
+  &__time {
+    font-size: 10px;
+    color: var(--sruti-text-tertiary);
+  }
+  &__mood {
+    font-size: 10px;
+    color: var(--sruti-text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+  &__arrow {
+    font-size: 20px;
+    color: var(--sruti-text-tertiary);
+    flex-shrink: 0;
+    font-weight: 300;
+  }
 }
 
 // ── Raga Detail ───────────────────────────────────────────
 .raga-info-card {
   .raga-info-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: $spacing-3;
     margin-bottom: $spacing-3;
+  }
+
+  .raga-info-mela {
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-md;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
   }
 
   .raga-info-dot {
     width: 12px; height: 12px;
     border-radius: 50%;
     flex-shrink: 0;
+    margin-top: 6px;
   }
 
+  .raga-info-titles { flex: 1; min-width: 0; }
   .raga-info-name { font-size: 18px; font-weight: 700; }
-  .raga-info-meta { font-size: 12px; color: var(--sruti-text-secondary); }
+  .raga-info-hindi {
+    font-size: 13px;
+    color: var(--sruti-text-secondary);
+    margin-top: 1px;
+  }
+  .raga-info-meta { font-size: 12px; color: var(--sruti-text-tertiary); margin-top: 2px; }
+
   .change-raga-btn {
     margin-left: auto;
     font-size: 13px;
@@ -149,7 +383,19 @@
     padding: $spacing-1 $spacing-2;
     border-radius: $radius-md;
     -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
     &:active { opacity: 0.7; }
+  }
+
+  .raga-mood-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--sruti-primary);
+    background: rgba(var(--sruti-primary-rgb), 0.1);
+    border-radius: $radius-full;
+    padding: 3px $spacing-3;
+    margin-bottom: $spacing-3;
   }
 
   .raga-info-desc {
@@ -158,6 +404,163 @@
     line-height: 1.5;
     margin: 0;
   }
+}
+
+// ── Aroh / Avaroh Sequence ────────────────────────────────
+.raga-sequence-section {
+  background: var(--sruti-bg-card);
+  border: 1px solid var(--sruti-glass-border);
+  border-radius: $radius-xl;
+  padding: $spacing-4;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-3;
+}
+
+.sequence-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+}
+
+.sequence-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sruti-text-tertiary);
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+.sequence-notes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+.seq-note {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sruti-text-primary);
+  padding: 3px 6px;
+  border-radius: $radius-sm;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &--vadi {
+    background: rgba(var(--sruti-primary-rgb), 0.15);
+    color: var(--sruti-primary);
+    border: 1px solid rgba(var(--sruti-primary-rgb), 0.3);
+  }
+
+  &--samvadi {
+    background: rgba(0, 188, 212, 0.12);
+    color: #00BCD4;
+    border: 1px solid rgba(0, 188, 212, 0.25);
+  }
+
+  &--singing {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+    transform: scale(1.1);
+  }
+}
+
+.seq-arrow {
+  font-size: 11px;
+  color: var(--sruti-text-tertiary);
+  margin: 0 1px;
+}
+
+.vadi-legend {
+  display: flex;
+  gap: $spacing-4;
+  padding-top: $spacing-2;
+  border-top: 1px solid var(--sruti-border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-1;
+  font-size: 11px;
+  color: var(--sruti-text-tertiary);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+
+  &--vadi {
+    background: var(--sruti-primary);
+  }
+
+  &--samvadi {
+    background: #00BCD4;
+  }
+}
+
+// ── Note chip enhancements (vadi/samvadi) ─────────────────
+.note-chip {
+  position: relative;
+
+  &.vadi-highlight {
+    border-color: var(--sruti-primary) !important;
+    box-shadow: 0 0 8px rgba(var(--sruti-primary-rgb), 0.3);
+  }
+
+  &.samvadi-highlight {
+    border-color: #00BCD4 !important;
+    box-shadow: 0 0 8px rgba(0, 188, 212, 0.25);
+  }
+
+  .note-role {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--sruti-primary);
+  }
+}
+
+// ── Raga Live Pitch Feedback ──────────────────────────────
+.raga-live-pitch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-4;
+  padding: $spacing-6 $spacing-4;
+  border-radius: $radius-xl;
+  border: 1px solid var(--sruti-glass-border);
+  background: var(--sruti-bg-card);
+}
+
+.raga-live-note {
+  font-size: 56px;
+  font-weight: 800;
+  font-family: var(--sruti-font-display);
+  line-height: 1;
+  color: var(--sruti-text-primary);
+  transition: color 0.15s ease;
+
+  &.on-target {
+    color: #4caf50;
+  }
+
+  &.off-target {
+    color: #FF5252;
+  }
+}
+
+.raga-live-accuracy {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--sruti-text-secondary);
 }
 
 .notes-section {
@@ -180,6 +583,604 @@
   font-weight: 600;
   color: #FF5252;
   animation: slide-up 0.3s ease;
+}
+
+// ── BPM Tempo Control ─────────────────────────────────────
+.raga-bpm-control {
+  background: var(--sruti-bg-card);
+  border: 1px solid var(--sruti-glass-border);
+  border-radius: $radius-xl;
+  padding: $spacing-4;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-3;
+}
+
+.bpm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bpm-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sruti-text-secondary);
+}
+
+.bpm-value {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--sruti-primary);
+  font-family: var(--sruti-font-display);
+}
+
+.bpm-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: $radius-full;
+  background: var(--sruti-border);
+  outline: none;
+  transition: opacity 0.2s;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--sruti-primary);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(var(--sruti-primary-rgb), 0.35);
+    transition: transform 0.15s ease;
+
+    &:active {
+      transform: scale(1.15);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--sruti-primary);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 8px rgba(var(--sruti-primary-rgb), 0.35);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+
+    &::-webkit-slider-thumb {
+      cursor: not-allowed;
+    }
+  }
+}
+
+.bpm-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--sruti-text-tertiary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+// ── Raga Progress Bar ─────────────────────────────────────
+.raga-progress {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+}
+
+.raga-progress-bar {
+  height: 4px;
+  border-radius: $radius-full;
+  background: var(--sruti-border);
+  overflow: hidden;
+}
+
+.raga-progress-fill {
+  height: 100%;
+  border-radius: $radius-full;
+  background: var(--sruti-primary);
+  transition: width 0.4s ease;
+}
+
+.raga-progress-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sruti-text-tertiary);
+  text-align: center;
+}
+
+// ── Sequence note progress highlights ─────────────────────
+.seq-note {
+  &--current {
+    background: rgba(var(--sruti-primary-rgb), 0.25) !important;
+    color: var(--sruti-primary) !important;
+    border: 1.5px solid var(--sruti-primary);
+    transform: scale(1.15);
+    font-weight: 800;
+  }
+
+  &--done {
+    opacity: 0.4;
+  }
+}
+
+.sequence-label {
+  &--active {
+    color: var(--sruti-primary) !important;
+  }
+}
+
+// ── Raga phase display (uses shared .phase-display) ───────
+.raga-phase {
+  // Inherits from .phase-display — no additional base styles needed
+}
+
+// ── Raga Practice Countdown ───────────────────────────────
+.raga-practice-countdown {
+  font-size: 20px;
+  font-weight: 800;
+  font-family: var(--sruti-font-display);
+  color: var(--sruti-primary);
+  margin-top: $spacing-1;
+}
+
+// ── Raga Result Section ───────────────────────────────────
+.raga-result-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+  padding: $spacing-4 0;
+}
+
+.raga-result-overall {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-2;
+}
+
+.raga-result-accuracy-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px solid var(--sruti-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  font-family: var(--sruti-font-display);
+  color: var(--sruti-text-secondary);
+  transition: border-color 0.3s ease, color 0.3s ease;
+
+  &.good {
+    border-color: #FF9800;
+    color: #FF9800;
+  }
+
+  &.great {
+    border-color: #4caf50;
+    color: #4caf50;
+  }
+}
+
+.raga-result-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sruti-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+// ── Per-note Breakdown Grid ───────────────────────────────
+.raga-note-breakdown {
+  background: var(--sruti-bg-card);
+  border: 1px solid var(--sruti-glass-border);
+  border-radius: $radius-xl;
+  padding: $spacing-4;
+}
+
+.raga-note-breakdown-header {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sruti-text-secondary);
+  margin-bottom: $spacing-3;
+}
+
+.raga-note-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: $spacing-2;
+}
+
+.raga-note-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: $spacing-2 $spacing-1;
+  border-radius: $radius-md;
+  border: 1.5px solid var(--sruti-border);
+  background: var(--sruti-bg-card);
+  transition: all 0.2s ease;
+
+  &--hit {
+    border-color: rgba(76, 175, 80, 0.4);
+    background: rgba(76, 175, 80, 0.06);
+  }
+
+  &--miss {
+    border-color: rgba(255, 82, 82, 0.35);
+    background: rgba(255, 82, 82, 0.06);
+  }
+
+  &__name {
+    font-size: 15px;
+    font-weight: 800;
+    font-family: var(--sruti-font-display);
+    color: var(--sruti-text-primary);
+  }
+
+  &__accuracy {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--sruti-text-secondary);
+  }
+
+  &__status {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &--hit &__status { color: #4caf50; }
+  &--miss &__status { color: #FF5252; }
+}
+
+// ── Wrong Notes ───────────────────────────────────────────
+.raga-wrong-notes {
+  background: rgba(255, 82, 82, 0.06);
+  border: 1px solid rgba(255, 82, 82, 0.2);
+  border-radius: $radius-lg;
+  padding: $spacing-3 $spacing-4;
+}
+
+.raga-wrong-notes-header {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #FF5252;
+  margin-bottom: $spacing-2;
+}
+
+.raga-wrong-notes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-2;
+}
+
+.raga-wrong-note-chip {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FF5252;
+  background: rgba(255, 82, 82, 0.12);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  border-radius: $radius-full;
+  padding: 3px $spacing-3;
+}
+
+// ── Result Feedback & Actions ─────────────────────────────
+.raga-result-feedback {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--sruti-text-secondary);
+  text-align: center;
+  padding: 0 $spacing-2;
+}
+
+.raga-result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+  align-items: center;
+
+  .round-btn {
+    width: 100%;
+    max-width: 240px;
+  }
+}
+
+// ── Shruti Phase Display ──────────────────────────────────
+.phase-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-3;
+  padding: $spacing-8 $spacing-4;
+  border-radius: $radius-xl;
+  border: 1px solid var(--sruti-glass-border);
+  background: var(--sruti-bg-card);
+  text-align: center;
+  min-height: 220px;
+  transition: border-color 0.3s ease, background 0.3s ease;
+
+  .phase-icon {
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  .phase-note {
+    font-size: 72px;
+    font-weight: 800;
+    font-family: var(--sruti-font-display);
+    background: var(--sruti-gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+  }
+
+  .phase-label {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--sruti-text-primary);
+  }
+
+  .phase-hint {
+    font-size: 12px;
+    color: var(--sruti-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+.phase-playing {
+  border-color: rgba(var(--sruti-primary-rgb), 0.3);
+  background: rgba(var(--sruti-primary-rgb), 0.04);
+}
+
+.phase-ready {
+  border-color: rgba(255, 152, 0, 0.35);
+  background: rgba(255, 152, 0, 0.04);
+}
+
+.phase-listening {
+  border-color: rgba(76, 175, 80, 0.4);
+  background: rgba(76, 175, 80, 0.04);
+}
+
+.phase-result {
+  border-color: var(--sruti-glass-border);
+}
+
+// Pulsing mic dot when listening
+.pulse-icon {
+  color: #4caf50;
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+
+// Hourglass spin during ready gap
+.ready-icon {
+  display: inline-block;
+  color: #FF9800;
+  animation: hourglass-flip 1.8s ease-in-out infinite;
+}
+
+@keyframes hourglass-flip {
+  0%, 100% { transform: rotate(0deg); }
+  45%       { transform: rotate(0deg); }
+  55%       { transform: rotate(180deg); }
+  100%      { transform: rotate(180deg); }
+}
+
+@keyframes mic-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.85); }
+}
+
+// ── on-target colour during listening ────────────────────────────────────────
+.on-target {
+  color: #4caf50 !important;
+}
+
+// Live pitch row inside listening phase
+.live-pitch-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  margin-top: $spacing-1;
+}
+
+.live-pitch-note {
+  font-size: 52px;
+  font-weight: 800;
+  font-family: var(--sruti-font-display);
+  line-height: 1;
+  transition: color 0.15s ease;
+  min-width: 80px;
+  text-align: center;
+}
+
+.live-pitch-accuracy {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--sruti-text-secondary);
+}
+
+// ── Result phase: note comparison row ────────────────────────────────────────
+.result-notes-compared {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-4;
+  width: 100%;
+}
+
+.result-note-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-1;
+}
+
+.result-note-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sruti-text-tertiary);
+}
+
+.result-note-value {
+  font-size: 52px;
+  font-weight: 800;
+  font-family: var(--sruti-font-display);
+  line-height: 1;
+  color: var(--sruti-text-primary);
+  min-width: 80px;
+  text-align: center;
+  transition: color 0.2s ease;
+
+  &.note-match {
+    color: #4caf50;
+  }
+
+  &.note-miss {
+    color: #FF5252;
+  }
+}
+
+.result-arrow {
+  font-size: 24px;
+  color: var(--sruti-text-tertiary);
+  flex-shrink: 0;
+}
+
+.round-accuracy-badge {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--sruti-text-secondary);
+  background: var(--sruti-bg-card);
+  border: 2px solid var(--sruti-border);
+  border-radius: $radius-full;
+  padding: $spacing-2 $spacing-4;
+  min-width: 72px;
+  text-align: center;
+  transition: border-color 0.3s ease, color 0.3s ease;
+
+  &.good {
+    border-color: #FF9800;
+    color: #FF9800;
+  }
+
+  &.great {
+    border-color: #4caf50;
+    color: #4caf50;
+  }
+}
+
+.round-feedback {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--sruti-text-secondary);
+  text-align: center;
+  max-width: 320px;
+  padding: 0 $spacing-2;
+}
+
+// Round accuracy circle (result phase)
+.round-accuracy-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px solid var(--sruti-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--sruti-text-secondary);
+  transition: border-color 0.3s ease, color 0.3s ease;
+
+  &.good {
+    border-color: #FF9800;
+    color: #FF9800;
+  }
+
+  &.great {
+    border-color: #4caf50;
+    color: #4caf50;
+  }
+}
+
+// Round-level status pill & next-round button
+.shruti-round-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: $spacing-3;
+}
+
+.round-btn {
+  min-width: 160px;
+  padding: $spacing-3 $spacing-6 !important;
+}
+
+.round-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-2;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sruti-text-secondary);
+  background: var(--sruti-bg-card);
+  border: 1px solid var(--sruti-border);
+  border-radius: $radius-full;
+  padding: $spacing-2 $spacing-4;
+}
+
+.pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.playing-dot {
+  background: var(--sruti-primary);
+  animation: blink 1.2s step-start infinite;
+}
+
+.ready-dot {
+  background: #FF9800;
+  animation: blink 0.6s step-start infinite;
+}
+
+.listening-dot {
+  background: #4caf50;
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
 }
 
 // ── Session Controls ──────────────────────────────────────
@@ -240,4 +1241,273 @@
   line-height: 1.5;
   color: var(--sruti-text-primary);
   padding: $spacing-4 !important;
+}
+
+// ── Ear Training ──────────────────────────────────────────
+.ear-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
+.ear-scorebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: $spacing-3 $spacing-4 !important;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex: 1;
+  }
+
+  &__value {
+    font-size: 26px;
+    font-weight: 800;
+    font-family: var(--sruti-font-display);
+    color: var(--sruti-text-primary);
+    line-height: 1;
+  }
+
+  &__label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sruti-text-tertiary);
+  }
+
+  &__divider {
+    width: 1px;
+    height: 36px;
+    background: var(--sruti-border);
+    flex-shrink: 0;
+  }
+}
+
+.ear-intro {
+  padding: $spacing-6 !important;
+
+  &__title {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: $spacing-2;
+  }
+
+  &__desc {
+    font-size: 14px;
+    color: var(--sruti-text-secondary);
+    line-height: 1.55;
+    margin-bottom: $spacing-5;
+  }
+
+  &__steps {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-2;
+  }
+}
+
+.ear-step {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  font-size: 14px;
+  color: var(--sruti-text-secondary);
+
+  &__num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(var(--sruti-primary-rgb), 0.12);
+    color: var(--sruti-primary);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+}
+
+.ear-phase-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-3;
+  padding: $spacing-8 $spacing-4;
+  border-radius: $radius-xl;
+  border: 1px solid var(--sruti-glass-border);
+  background: var(--sruti-bg-card);
+  text-align: center;
+  min-height: 200px;
+  transition: border-color 0.3s ease, background 0.3s ease;
+
+  &.phase-playing {
+    border-color: rgba(var(--sruti-primary-rgb), 0.35);
+    background: rgba(var(--sruti-primary-rgb), 0.04);
+  }
+
+  &.phase-guessing {
+    border-color: rgba(255, 152, 0, 0.35);
+    background: rgba(255, 152, 0, 0.04);
+  }
+
+  &.phase-correct {
+    border-color: rgba(76, 175, 80, 0.4);
+    background: rgba(76, 175, 80, 0.05);
+  }
+
+  &.phase-wrong {
+    border-color: rgba(255, 82, 82, 0.4);
+    background: rgba(255, 82, 82, 0.05);
+  }
+}
+
+.ear-phase-label {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--sruti-text-primary);
+}
+
+.ear-phase-hint {
+  font-size: 12px;
+  color: var(--sruti-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+// Animated sound-wave bars while note plays
+.ear-wave {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 44px;
+
+  span {
+    display: block;
+    width: 6px;
+    border-radius: $radius-full;
+    background: var(--sruti-primary);
+    animation: ear-bar 0.8s ease-in-out infinite;
+
+    &:nth-child(1) { height: 18px; animation-delay: 0s; }
+    &:nth-child(2) { height: 32px; animation-delay: 0.12s; }
+    &:nth-child(3) { height: 44px; animation-delay: 0.24s; }
+    &:nth-child(4) { height: 32px; animation-delay: 0.36s; }
+    &:nth-child(5) { height: 18px; animation-delay: 0.48s; }
+  }
+}
+
+@keyframes ear-bar {
+  0%, 100% { transform: scaleY(0.5); opacity: 0.6; }
+  50%       { transform: scaleY(1);   opacity: 1; }
+}
+
+.ear-question-mark {
+  font-size: 72px;
+  font-weight: 800;
+  font-family: var(--sruti-font-display);
+  color: #FF9800;
+  line-height: 1;
+  animation: ear-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes ear-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(0.93); }
+}
+
+.ear-feedback-icon {
+  font-size: 52px;
+  line-height: 1;
+  font-weight: 800;
+
+  &.correct-icon { color: #4caf50; }
+  &.wrong-icon   { color: #FF5252; }
+}
+
+.ear-reveal-note {
+  font-size: 56px;
+  font-weight: 800;
+  font-family: var(--sruti-font-display);
+  background: var(--sruti-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.ear-note-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-2;
+}
+
+.ear-note-btn {
+  padding: $spacing-3 $spacing-1;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--sruti-font-sans);
+  text-align: center;
+  border-radius: $radius-lg;
+  border: 1.5px solid var(--sruti-glass-border);
+  background: var(--sruti-bg-card);
+  color: var(--sruti-text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
+  box-shadow: $shadow-card;
+
+  &:active:not(:disabled) {
+    transform: scale(0.94);
+    background: rgba(var(--sruti-primary-rgb), 0.1);
+  }
+
+  &--correct {
+    border-color: #4caf50 !important;
+    background: rgba(76, 175, 80, 0.12) !important;
+    color: #4caf50 !important;
+    opacity: 1 !important;
+  }
+
+  &--wrong {
+    border-color: #FF5252 !important;
+    background: rgba(255, 82, 82, 0.12) !important;
+    color: #FF5252 !important;
+  }
+
+  &--disabled,
+  &:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+}
+
+.ear-next-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-3;
+}
+
+.ear-replay-btn {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sruti-primary);
+  background: rgba(var(--sruti-primary-rgb), 0.08);
+  border: 1.5px solid rgba(var(--sruti-primary-rgb), 0.25);
+  border-radius: $radius-lg;
+  padding: $spacing-3 $spacing-5;
+  cursor: pointer;
+  font-family: var(--sruti-font-sans);
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s ease;
+
+  &:active { opacity: 0.7; transform: scale(0.96); }
 }

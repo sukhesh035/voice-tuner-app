@@ -2,7 +2,8 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonSpinner
+  IonHeader, IonToolbar, IonTitle, IonContent, IonSpinner,
+  ViewWillEnter
 } from '@ionic/angular/standalone';
 import { filter, take } from 'rxjs/operators';
 import { AuthService } from '@voice-tuner/auth';
@@ -19,7 +20,7 @@ interface RecentSession  { raga: string; date: string; duration: number; accurac
   templateUrl: './progress.page.html',
   styleUrls: ['./progress.page.scss'],
 })
-export class ProgressPage implements OnInit {
+export class ProgressPage implements OnInit, ViewWillEnter {
   loading = false;
 
   // Derived display data
@@ -57,6 +58,14 @@ export class ProgressPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.authService.isAuthenticated$.pipe(
+      filter((v): v is true => v === true),
+      take(1)
+    ).subscribe(() => this.loadData());
+  }
+
+  ionViewWillEnter(): void {
+    // Reload data every time the tab becomes visible (Ionic caches tab pages).
     this.authService.isAuthenticated$.pipe(
       filter((v): v is true => v === true),
       take(1)

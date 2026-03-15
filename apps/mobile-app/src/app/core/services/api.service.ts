@@ -13,6 +13,16 @@ export interface UserStats {
   overallScore:  number;
 }
 
+export interface UserPreferences {
+  defaultKey:           string;
+  defaultTempo:         number;
+  pitchSensitivity:     number;
+  theme:                'dark' | 'light';
+  notificationsEnabled: boolean;
+  dailyGoalMinutes:     number;
+  instrument:           'tanpura' | 'keyboard' | 'guitar';
+}
+
 export interface UserProfile {
   userId:       string;
   email:        string;
@@ -20,10 +30,7 @@ export interface UserProfile {
   createdAt:    string;
   stats:        UserStats;
   favoriteRagas: string[];
-  preferences: {
-    dailyGoalMinutes: number;
-    defaultKey:       string;
-  };
+  preferences:  UserPreferences;
 }
 
 export interface StreaksResponse {
@@ -88,15 +95,21 @@ export class ApiService {
     );
   }
 
-  checkin(durationMinutes: number): Promise<{ currentStreak: number }> {
+  checkin(durationMinutes: number, score?: number): Promise<{ currentStreak: number }> {
     return firstValueFrom(
-      this.http.post<{ currentStreak: number }>(`${this.base}/api/streaks/checkin`, { durationMinutes })
+      this.http.post<{ currentStreak: number }>(`${this.base}/api/streaks/checkin`, { durationMinutes, score })
     );
   }
 
   createSession(payload: CreateSessionPayload): Promise<{ sessionId: string; createdAt: string }> {
     return firstValueFrom(
       this.http.post<{ sessionId: string; createdAt: string }>(`${this.base}/api/sessions`, payload)
+    );
+  }
+
+  updatePreferences(prefs: Partial<UserPreferences>): Promise<{ updated: boolean; updatedAt: string }> {
+    return firstValueFrom(
+      this.http.put<{ updated: boolean; updatedAt: string }>(`${this.base}/api/users/me`, { preferences: prefs })
     );
   }
 }
