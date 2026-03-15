@@ -94,6 +94,98 @@ jobs:
           ../../node_modules/.bin/cap add ios
           ../../node_modules/.bin/cap sync ios
 
+      # ── 8b. Inject MainViewController + patch Main.storyboard & pbxproj ─
+      #   The default Capacitor template uses CAPBridgeViewController directly,
+      #   which doesn't extend the webView to the screen edges. Our local dev
+      #   project has a custom MainViewController subclass that:
+      #     1. Sets contentInsetAdjustmentBehavior = .never (edge-to-edge)
+      #     2. Forwards real safe-area insets to CSS custom properties
+      #   Since ios/ is gitignored, CI must create this file + patch
+      #   Main.storyboard and project.pbxproj to reference it.
+      - name: Inject MainViewController & patch storyboard + pbxproj
+        run: |
+          APP_DIR="apps/mobile-app/ios/App/App"
+          PBXPROJ="apps/mobile-app/ios/App/App.xcodeproj/project.pbxproj"
+
+          # ── Create MainViewController.swift ──
+          cat > "$APP_DIR/MainViewController.swift" << 'ENDSWIFT'
+          import UIKit
+          import Capacitor
+
+          class MainViewController: CAPBridgeViewController {
+
+              override func viewDidLoad() {
+                  super.viewDidLoad()
+                  webView?.scrollView.contentInsetAdjustmentBehavior = .never
+              }
+
+              override func viewSafeAreaInsetsDidChange() {
+                  super.viewSafeAreaInsetsDidChange()
+                  let insets = view.safeAreaInsets
+                  bridge?.webView?.evaluateJavaScript("""
+                      document.documentElement.style.setProperty('--ion-safe-area-top', '\(insets.top)px');
+                      document.documentElement.style.setProperty('--ion-safe-area-bottom', '\(insets.bottom)px');
+                      document.documentElement.style.setProperty('--ion-safe-area-left', '\(insets.left)px');
+                      document.documentElement.style.setProperty('--ion-safe-area-right', '\(insets.right)px');
+                  """, completionHandler: nil)
+              }
+          }
+          ENDSWIFT
+
+          # ── Patch Main.storyboard: use MainViewController ──
+          sed -i '' \
+            's/customClass="CAPBridgeViewController" customModule="Capacitor"/customClass="MainViewController" customModule="App" customModuleProvider="target"/' \
+            "$APP_DIR/Base.lproj/Main.storyboard"
+
+          # ── Patch project.pbxproj: add MainViewController.swift to build ──
+          # Use Python for reliable pbxproj text manipulation (macOS has python3)
+          python3 << 'ENDPY'
+          import re
+
+          pbx_path = "apps/mobile-app/ios/App/App.xcodeproj/project.pbxproj"
+          with open(pbx_path, "r") as f:
+              content = f.read()
+
+          FILE_REF = "A1B2C3D400000000DEADBEEF"
+          BUILD_REF = "A1B2C3D400000001DEADBEEF"
+
+          # 1) PBXBuildFile section — add after AppDelegate build file
+          anchor = '504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };'
+          insert_build = f'\t\t{BUILD_REF} /* MainViewController.swift in Sources */ = {{isa = PBXBuildFile; fileRef = {FILE_REF} /* MainViewController.swift */; }};'
+          content = content.replace(anchor, anchor + "\n" + insert_build)
+
+          # 2) PBXFileReference section — add after AppDelegate file reference
+          anchor2 = '504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };'
+          insert_fileref = f'\t\t{FILE_REF} /* MainViewController.swift */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; }};'
+          content = content.replace(anchor2, anchor2 + "\n" + insert_fileref)
+
+          # 3) PBXGroup — add file ref after AppDelegate.swift in the App group children
+          # The group lists children like: 504EC3071FED79650016851F /* AppDelegate.swift */,
+          group_anchor = '504EC3071FED79650016851F /* AppDelegate.swift */,'
+          group_insert = f'\t\t\t\t{FILE_REF} /* MainViewController.swift */,'
+          # Only replace the first occurrence (in the group section)
+          content = content.replace(group_anchor, group_anchor + "\n" + group_insert, 1)
+
+          # 4) PBXSourcesBuildPhase — add after AppDelegate in sources list
+          sources_anchor = '504EC3081FED79650016851F /* AppDelegate.swift in Sources */,'
+          sources_insert = f'\t\t\t\t{BUILD_REF} /* MainViewController.swift in Sources */,'
+          content = content.replace(sources_anchor, sources_anchor + "\n" + sources_insert, 1)
+
+          with open(pbx_path, "w") as f:
+              f.write(content)
+
+          print("pbxproj patched successfully")
+          ENDPY
+
+          echo "── MainViewController.swift ──"
+          cat "$APP_DIR/MainViewController.swift"
+          echo ""
+          echo "── Main.storyboard (patched) ──"
+          cat "$APP_DIR/Base.lproj/Main.storyboard"
+          echo ""
+          echo "── pbxproj MainViewController references ──"
+          grep -n "MainViewController" "$PBXPROJ" || echo "WARNING: MainViewController not found in pbxproj!"
+
       # ── 9. Generate iOS native assets (icons + splash) ─────────────────
       - name: Generate iOS native assets
         run: pnpm cap:generate-assets
