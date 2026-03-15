@@ -75,12 +75,11 @@ jobs:
           ../../node_modules/.bin/cap sync ios
 
       # ── 8. Generate iOS native assets (Icons & Launch Screens) ────────────
-      #   cap add ios provides default Capacitor assets. We use @capacitor/assets
+      #   cap add ios provides default Capacitor assets. We use our script
       #   to generate the proper AppIcon and Splash screen sizes, which also
       #   ensures the LaunchScreen storyboard behaves correctly on modern iPhones.
       - name: Generate iOS native assets
-        working-directory: apps/mobile-app
-        run: pnpm exec capacitor-assets generate --ios --assetPath resources
+        run: pnpm cap:generate-assets
 
       # ── 9. Restore Info.plist customisations (gitignored with ios/) ────────
       #   • CFBundleDisplayName = Swara AI
