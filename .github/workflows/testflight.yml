@@ -81,6 +81,54 @@ jobs:
       - name: Generate iOS native assets
         run: pnpm cap:generate-assets
 
+      # ── 8b. Fix LaunchScreen.storyboard for modern iPhones ────────────────
+      #   The default Capacitor LaunchScreen.storyboard references "retina4_7"
+      #   (iPhone 8, 4.7" screen). iOS sees this old device size and applies
+      #   compatibility scaling (letterboxing) on modern edge-to-edge phones.
+      #   We replace it with a storyboard that uses Auto Layout constraints
+      #   and no fixed device reference, so iOS treats it as a modern app.
+      - name: Patch LaunchScreen.storyboard
+        run: |
+          cat > apps/mobile-app/ios/App/App/Base.lproj/LaunchScreen.storyboard << 'STORYBOARD'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+              <dependencies>
+                  <deployment identifier="iOS"/>
+                  <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+                  <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+              </dependencies>
+              <scenes>
+                  <scene sceneID="EHf-IW-A2E">
+                      <objects>
+                          <viewController id="01J-lp-oVM" sceneMemberID="viewController">
+                              <view key="view" contentMode="scaleToFill" id="main-view">
+                                  <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                  <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                  <subviews>
+                                      <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" image="Splash" translatesAutoresizingMaskIntoConstraints="NO" id="splash-img">
+                                          <color key="backgroundColor" red="0.039" green="0.039" blue="0.106" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                      </imageView>
+                                  </subviews>
+                                  <color key="backgroundColor" red="0.039" green="0.039" blue="0.106" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                  <constraints>
+                                      <constraint firstItem="splash-img" firstAttribute="top" secondItem="main-view" secondAttribute="top" id="c1"/>
+                                      <constraint firstItem="splash-img" firstAttribute="bottom" secondItem="main-view" secondAttribute="bottom" id="c2"/>
+                                      <constraint firstItem="splash-img" firstAttribute="leading" secondItem="main-view" secondAttribute="leading" id="c3"/>
+                                      <constraint firstItem="splash-img" firstAttribute="trailing" secondItem="main-view" secondAttribute="trailing" id="c4"/>
+                                  </constraints>
+                              </view>
+                          </viewController>
+                          <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                      </objects>
+                      <point key="canvasLocation" x="53" y="375"/>
+                  </scene>
+              </scenes>
+              <resources>
+                  <image name="Splash" width="2732" height="2732"/>
+              </resources>
+          </document>
+          STORYBOARD
+
       # ── 9. Restore Info.plist customisations (gitignored with ios/) ────────
       #   • CFBundleDisplayName = Swara AI
       #   • NSMicrophoneUsageDescription
