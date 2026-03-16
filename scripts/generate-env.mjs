@@ -101,6 +101,9 @@ export const environment = {
     guruClassroom: true,
     offlineMode:   true,
   },
+  liveUpdate: {
+    manifestUrl: '${out['UpdatesCdnUrl']}/manifest.json',
+  },
   enableAnalytics: ${isProd},
   firebase: {
     apiKey:            '${firebase.apiKey}',

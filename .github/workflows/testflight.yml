@@ -102,6 +102,20 @@ jobs:
           ../../node_modules/.bin/cap add ios
           ../../node_modules/.bin/cap sync ios
 
+      # ── 8a. Decode GoogleService-Info.plist (Firebase native SDK) ──────
+      #   @capacitor-firebase/analytics auto-calls FirebaseApp.configure()
+      #   on iOS, which requires GoogleService-Info.plist in the app bundle.
+      #   Download the plist from Firebase Console → Project settings → iOS app,
+      #   base64-encode it, and store as GOOGLE_SERVICE_INFO_PLIST_BASE64 secret.
+      - name: Decode GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICE_INFO_B64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICE_INFO_B64" | base64 --decode \
+            > apps/mobile-app/ios/App/App/GoogleService-Info.plist
+          echo "── GoogleService-Info.plist written ──"
+          plutil -p apps/mobile-app/ios/App/App/GoogleService-Info.plist
+
       # ── 8b. Create shared Xcode scheme ────────────────────────────────
       #   Capacitor's template does not include a .xcscheme file.
       #   Xcode 26 requires a shared scheme with explicit platform support
@@ -266,26 +280,47 @@ jobs:
 
           FILE_REF = "A1B2C3D400000000DEADBEEF"
           BUILD_REF = "A1B2C3D400000001DEADBEEF"
+          GSERVICE_FILE_REF = "B1C2D3E4F5A6B7C8D9E0F1A1"
+          GSERVICE_BUILD_REF = "B1C2D3E4F5A6B7C8D9E0F1A2"
 
           # 1) PBXBuildFile section — add after AppDelegate build file
           anchor = '504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };'
           insert_build = f'\t\t{BUILD_REF} /* MainViewController.swift in Sources */ = {{isa = PBXBuildFile; fileRef = {FILE_REF} /* MainViewController.swift */; }};'
-          content = content.replace(anchor, anchor + "\n" + insert_build)
+          insert_gservice_build = f'\t\t{GSERVICE_BUILD_REF} /* GoogleService-Info.plist in Resources */ = {{isa = PBXBuildFile; fileRef = {GSERVICE_FILE_REF} /* GoogleService-Info.plist */; }};'
+          content = content.replace(anchor, anchor + "\n" + insert_build + "\n" + insert_gservice_build)
 
           # 2) PBXFileReference section — add after AppDelegate file reference
           anchor2 = '504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };'
           insert_fileref = f'\t\t{FILE_REF} /* MainViewController.swift */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; }};'
-          content = content.replace(anchor2, anchor2 + "\n" + insert_fileref)
+          insert_gservice_fileref = f'\t\t{GSERVICE_FILE_REF} /* GoogleService-Info.plist */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; }};'
+          content = content.replace(anchor2, anchor2 + "\n" + insert_fileref + "\n" + insert_gservice_fileref)
 
           # 3) PBXGroup — add file ref after AppDelegate.swift in the App group children
           group_anchor = '504EC3071FED79650016851F /* AppDelegate.swift */,'
           group_insert = f'\t\t\t\t{FILE_REF} /* MainViewController.swift */,'
-          content = content.replace(group_anchor, group_anchor + "\n" + group_insert, 1)
+          group_insert_gservice = f'\t\t\t\t{GSERVICE_FILE_REF} /* GoogleService-Info.plist */,'
+          content = content.replace(group_anchor, group_anchor + "\n" + group_insert + "\n" + group_insert_gservice, 1)
 
           # 4) PBXSourcesBuildPhase — add after AppDelegate in sources list
           sources_anchor = '504EC3081FED79650016851F /* AppDelegate.swift in Sources */,'
           sources_insert = f'\t\t\t\t{BUILD_REF} /* MainViewController.swift in Sources */,'
           content = content.replace(sources_anchor, sources_anchor + "\n" + sources_insert, 1)
+
+          # 5) PBXResourcesBuildPhase — add GoogleService-Info.plist to resources
+          # Find an existing resource entry to anchor on. Capacitor templates include
+          # Assets.xcassets and storyboard files in the resources phase. We search for
+          # the "Resources" build phase and inject our plist build ref.
+          resources_phase_match = re.search(
+              r'/\* Resources \*/ = \{[^}]*isa = PBXResourcesBuildPhase;[^}]*files = \(',
+              content
+          )
+          if resources_phase_match:
+              insert_pos = resources_phase_match.end()
+              resources_inject = f'\n\t\t\t\t{GSERVICE_BUILD_REF} /* GoogleService-Info.plist in Resources */,'
+              content = content[:insert_pos] + resources_inject + content[insert_pos:]
+              print("Added GoogleService-Info.plist to PBXResourcesBuildPhase")
+          else:
+              print("WARNING: Could not find PBXResourcesBuildPhase — GoogleService-Info.plist NOT added to resources")
 
           # ── SPM signing fix ──────────────────────────────────────────────
           # Xcode 26 propagates PROVISIONING_PROFILE_SPECIFIER from the project
@@ -293,23 +328,13 @@ jobs:
           # support provisioning profiles and error out.
           #
           # Fix strategy:
-          #   - Find the project-level XCBuildConfiguration for "Release"
-          #     (the one inside the project's XCConfigurationList, NOT the App
-          #     target's config list). Patch it to disable signing entirely.
-          #   - Find the App target's XCBuildConfiguration for "Release"
-          #     and patch it to re-enable Manual signing with our profile.
-          #
-          # The Capacitor template has two Release configs with these GUIDs:
-          #   504EC3191FED79650016851F  — project-level Release config
-          #   504EC3181FED79650016851F  — App target-level Release config
-          #
-          # We identify them by finding the project's XCConfigurationList
-          # (which is referenced as buildConfigurationList for PBXProject),
-          # then extracting the Release config GUID from it. The other Release
-          # config GUID belongs to the App target.
+          #   - Patch ProvisioningStyle in PBXProject TargetAttributes to Manual
+          #     (Xcode 26 uses this to determine automatic vs manual signing).
+          #   - Patch project-level Release XCBuildConfiguration to disable signing.
+          #   - Patch App target-level Release XCBuildConfiguration to re-enable
+          #     Manual signing with our provisioning profile.
 
           # Identify project-level vs target-level Release config GUIDs.
-          # PBXProject entry has: buildConfigurationList = <GUID> /* Build configuration list for PBXProject "App" */;
           proj_cfg_list_match = re.search(
               r'buildConfigurationList\s*=\s*(\w+)\s*/\*\s*Build configuration list for PBXProject',
               content
@@ -320,11 +345,9 @@ jobs:
           proj_cfg_list_guid = proj_cfg_list_match.group(1)
           print(f"Project buildConfigurationList GUID: {proj_cfg_list_guid}")
 
-          # From the XCConfigurationList for the project, extract the Release config GUID
-          # Format:  <GUID> /* Release */,
           proj_cfg_list_block_match = re.search(
-              rf'{proj_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
-              content, re.DOTALL
+              rf'^\s*{proj_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
+              content, re.DOTALL | re.MULTILINE
           )
           if not proj_cfg_list_block_match:
               print("ERROR: Could not find project XCConfigurationList block")
@@ -337,8 +360,6 @@ jobs:
           proj_release_guid = proj_release_match.group(1)
           print(f"Project-level Release config GUID: {proj_release_guid}")
 
-          # Similarly find the App target's Release config GUID
-          # PBXNativeTarget entry has: buildConfigurationList = <GUID> /* Build configuration list for PBXNativeTarget "App" */;
           target_cfg_list_match = re.search(
               r'buildConfigurationList\s*=\s*(\w+)\s*/\*\s*Build configuration list for PBXNativeTarget',
               content
@@ -350,8 +371,8 @@ jobs:
           print(f"App target buildConfigurationList GUID: {target_cfg_list_guid}")
 
           target_cfg_list_block_match = re.search(
-              rf'{target_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
-              content, re.DOTALL
+              rf'^\s*{target_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
+              content, re.DOTALL | re.MULTILINE
           )
           if not target_cfg_list_block_match:
               print("ERROR: Could not find App target XCConfigurationList block")
@@ -364,17 +385,23 @@ jobs:
           target_release_guid = target_release_match.group(1)
           print(f"App target-level Release config GUID: {target_release_guid}")
 
-          # ── Patch project-level Release config ──────────────────────────
-          # Find its buildSettings block and append signing-disable settings.
-          # We look for: <proj_release_guid> /* Release */ = { isa = XCBuildConfiguration; buildSettings = { ... }; name = Release; };
-          # and inject into the buildSettings block.
-          def patch_build_settings(content, config_guid, settings_to_inject):
+          # ── Patch TargetAttributes: ProvisioningStyle ──────────────────
+          # The PBXProject section has TargetAttributes with
+          #   ProvisioningStyle = Automatic;
+          # Xcode 26 uses this as the source of truth. Must be Manual.
+          old_provisioning = 'ProvisioningStyle = Automatic;'
+          new_provisioning = 'ProvisioningStyle = Manual;'
+          if old_provisioning in content:
+              content = content.replace(old_provisioning, new_provisioning)
+              print("Patched TargetAttributes: ProvisioningStyle = Manual")
+          else:
+              print("NOTE: ProvisioningStyle = Automatic not found (may already be Manual)")
+
+          def patch_build_settings_v2(content, config_guid, settings_to_inject):
               """
-              Find the XCBuildConfiguration block for config_guid and inject
-              key = value; lines into its buildSettings dict, before the closing }.
-              Uses a balanced-brace approach to find the right closing brace.
+              Upsert key=value pairs into a specific XCBuildConfiguration's buildSettings.
+              Replaces existing keys in-place; appends missing keys before closing brace.
               """
-              # Find the start of this config block
               block_start_match = re.search(
                   rf'{config_guid}\s*/\*[^*]*\*/\s*=\s*\{{\s*isa\s*=\s*XCBuildConfiguration',
                   content
@@ -383,13 +410,11 @@ jobs:
                   print(f"ERROR: Could not find XCBuildConfiguration block for {config_guid}")
                   return content
 
-              # Find buildSettings = { within this block
               bs_start = content.find('buildSettings = {', block_start_match.start())
               if bs_start == -1:
                   print(f"ERROR: No buildSettings in config {config_guid}")
                   return content
 
-              # Walk forward from the opening { of buildSettings to find closing }
               brace_pos = content.index('{', bs_start + len('buildSettings ='))
               depth = 1
               pos = brace_pos + 1
@@ -399,39 +424,55 @@ jobs:
                   elif content[pos] == '}':
                       depth -= 1
                   pos += 1
-              closing_brace_pos = pos - 1  # position of the matching }
+              closing_brace_pos = pos - 1
 
-              # Build injection string
-              injection = ''
+              # Work on just the region from brace_pos to closing_brace_pos (inclusive)
+              before = content[:brace_pos + 1]        # up to and including opening {
+              middle = content[brace_pos + 1:closing_brace_pos]  # contents
+              after  = content[closing_brace_pos:]    # } and everything after
+
+              keys_to_append = {}
               for key, value in settings_to_inject.items():
-                  injection += f'\n\t\t\t\t{key} = {value};'
+                  pattern = rf'(\s+{re.escape(key)}\s*=\s*)[^;]+(;)'
+                  replacement = rf'\g<1>{value}\2'
+                  new_middle, n = re.subn(pattern, replacement, middle)
+                  if n > 0:
+                      middle = new_middle
+                      print(f"  Replaced {key} = {value}")
+                  else:
+                      keys_to_append[key] = value
 
-              # Insert before closing brace
-              content = content[:closing_brace_pos] + injection + '\n\t\t\t' + content[closing_brace_pos:]
-              return content
+              injection = ''
+              for key, value in keys_to_append.items():
+                  injection += f'\n\t\t\t\t{key} = {value};'
+                  print(f"  Appended {key} = {value}")
+
+              return before + middle + injection + '\n\t\t\t' + after
 
           # Disable all signing at project level — SPM targets inherit this
+          print("Patching project-level Release config:")
           project_release_settings = {
-              'CODE_SIGN_IDENTITY':        '""',
-              'CODE_SIGN_STYLE':           'Manual',
-              'CODE_SIGNING_REQUIRED':     'NO',
-              'CODE_SIGNING_ALLOWED':      'NO',
+              'CODE_SIGN_IDENTITY':             '""',
+              'CODE_SIGN_STYLE':                'Manual',
+              'CODE_SIGNING_REQUIRED':          'NO',
+              'CODE_SIGNING_ALLOWED':           'NO',
               'PROVISIONING_PROFILE_SPECIFIER': '""',
           }
-          content = patch_build_settings(content, proj_release_guid, project_release_settings)
-          print("Patched project-level Release config: signing disabled")
+          content = patch_build_settings_v2(content, proj_release_guid, project_release_settings)
+          print("→ project-level Release config: signing disabled")
 
           # Enable Manual signing on the App target — overrides project defaults
+          print("Patching App target-level Release config:")
           target_release_settings = {
-              'CODE_SIGN_IDENTITY':        '"Apple Distribution"',
-              'CODE_SIGN_STYLE':           'Manual',
-              'CODE_SIGNING_REQUIRED':     'YES',
-              'CODE_SIGNING_ALLOWED':      'YES',
-              'DEVELOPMENT_TEAM':          '"334BUFYVP9"',
+              'CODE_SIGN_IDENTITY':             '"Apple Distribution"',
+              'CODE_SIGN_STYLE':                'Manual',
+              'CODE_SIGNING_REQUIRED':          'YES',
+              'CODE_SIGNING_ALLOWED':           'YES',
+              'DEVELOPMENT_TEAM':               '"334BUFYVP9"',
               'PROVISIONING_PROFILE_SPECIFIER': '"swara-ai-appstore"',
           }
-          content = patch_build_settings(content, target_release_guid, target_release_settings)
-          print("Patched App target-level Release config: Manual signing with swara-ai-appstore")
+          content = patch_build_settings_v2(content, target_release_guid, target_release_settings)
+          print("→ App target-level Release config: Manual signing with swara-ai-appstore")
 
           with open(pbx_path, "w") as f:
               f.write(content)
@@ -449,7 +490,10 @@ jobs:
           grep -n "MainViewController" "$PBXPROJ" || echo "WARNING: MainViewController not found in pbxproj!"
           echo ""
           echo "── pbxproj signing settings (Release configs) ──"
-          grep -n -E "(CODE_SIGN|PROVISIONING_PROFILE|DEVELOPMENT_TEAM)" "$PBXPROJ" || true
+          grep -n -E "(CODE_SIGN|PROVISIONING_PROFILE|DEVELOPMENT_TEAM|ProvisioningStyle)" "$PBXPROJ" || true
+          echo ""
+          echo "── pbxproj GoogleService-Info.plist references ──"
+          grep -n "GoogleService-Info" "$PBXPROJ" || echo "WARNING: GoogleService-Info.plist not found in pbxproj!"
 
       # ── 9. Generate iOS native assets (icons + splash) ─────────────────
       - name: Generate iOS native assets
