@@ -24,5 +24,8 @@ export const environment = {
     aiCoach:     true,
     offlineMode: true,
   },
+  liveUpdate: {
+    manifestUrl: 'https://REPLACE_AFTER_CDK_DEPLOY/manifest.json',
+  },
   enableAnalytics: true,
 };

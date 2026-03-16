@@ -19,6 +19,14 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
   },
   plugins: {
+    CapacitorUpdater: {
+      // We drive updates manually from LiveUpdateService, not from the plugin's
+      // built-in polling. The service fetches the manifest, downloads the zip,
+      // and applies it at a safe moment (e.g. when the user returns to Home).
+      autoUpdate: false,
+      // Roll back to the built-in bundle if a downloaded update crashes on boot.
+      autoDeleteFailed: true,
+    },
     SplashScreen: {
       launchShowDuration: 1500,
       launchAutoHide: true,

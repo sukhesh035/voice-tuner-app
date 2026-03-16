@@ -24,6 +24,9 @@ export const environment = {
     aiCoach:     true,
     offlineMode: true,
   },
+  liveUpdate: {
+    manifestUrl: 'https://REPLACE_AFTER_CDK_DEPLOY/manifest.json',
+  },
   enableAnalytics: false,
   // Firebase config — not used in dev (analytics disabled).
   // In prod this block is injected by generate-env.mjs from CI secrets.
