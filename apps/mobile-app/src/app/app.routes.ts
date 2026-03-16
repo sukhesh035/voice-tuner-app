@@ -50,5 +50,13 @@ export const routes: Routes = [
     path: 'session-report/:id',
     loadComponent: () => import('./pages/session-report/session-report.page').then(m => m.SessionReportPage)
   },
+  {
+    path: 'privacy-policy',
+    loadComponent: () => import('./pages/privacy-policy/privacy-policy.page').then(m => m.PrivacyPolicyPage)
+  },
+  {
+    path: 'terms-of-service',
+    loadComponent: () => import('./pages/terms-of-service/terms-of-service.page').then(m => m.TermsOfServicePage)
+  },
   { path: '**', redirectTo: '' }
 ];
