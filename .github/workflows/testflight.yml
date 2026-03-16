@@ -81,6 +81,14 @@ jobs:
       # ── 6. Generate environment.prod.ts from live stack outputs ────────
       - name: Generate environment.prod.ts
         run: pnpm generate-env:prod
+        env:
+          FIREBASE_API_KEY:            ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN:        ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID:         ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET:     ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID:             ${{ secrets.FIREBASE_APP_ID }}
+          FIREBASE_MEASUREMENT_ID:     ${{ secrets.FIREBASE_MEASUREMENT_ID }}
 
       # ── 7. Build PWA (production) ──────────────────────────────────────
       - name: Build PWA
@@ -94,7 +102,108 @@ jobs:
           ../../node_modules/.bin/cap add ios
           ../../node_modules/.bin/cap sync ios
 
-      # ── 8b. Inject MainViewController + patch Main.storyboard & pbxproj ─
+      # ── 8b. Create shared Xcode scheme ────────────────────────────────
+      #   Capacitor's template does not include a .xcscheme file.
+      #   Xcode 26 requires a shared scheme with explicit platform support
+      #   for xcodebuild archive -destination "generic/platform=iOS" to work.
+      #   We write the scheme XML ourselves so CI is self-contained.
+      - name: Create shared Xcode scheme
+        run: |
+          SCHEMES_DIR="apps/mobile-app/ios/App/App.xcodeproj/xcshareddata/xcschemes"
+          mkdir -p "$SCHEMES_DIR"
+          cat > "$SCHEMES_DIR/App.xcscheme" << 'ENDSCHEME'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Scheme
+             LastUpgradeVersion = "1600"
+             version = "1.7">
+             <BuildAction
+                parallelizeBuildables = "YES"
+                buildImplicitDependencies = "YES">
+                <BuildActionEntries>
+                   <BuildActionEntry
+                      buildForTesting = "YES"
+                      buildForRunning = "YES"
+                      buildForProfiling = "YES"
+                      buildForArchiving = "YES"
+                      buildForAnalyzing = "YES">
+                      <BuildableReference
+                         BuildableIdentifier = "primary"
+                         BlueprintIdentifier = "504EC3031FED79650016851F"
+                         BuildableName = "App.app"
+                         BlueprintName = "App"
+                         ReferencedContainer = "container:App.xcodeproj">
+                      </BuildableReference>
+                   </BuildActionEntry>
+                </BuildActionEntries>
+             </BuildAction>
+             <TestAction
+                buildConfiguration = "Debug"
+                selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+                selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+                shouldUseLaunchSchemeArgsEnv = "YES">
+                <Testables>
+                </Testables>
+             </TestAction>
+             <LaunchAction
+                buildConfiguration = "Debug"
+                selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+                selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+                launchStyle = "0"
+                useCustomWorkingDirectory = "NO"
+                ignoresPersistentStateOnLaunch = "NO"
+                debugDocumentVersioning = "YES"
+                debugServiceExtension = "internal"
+                allowLocationSimulation = "YES">
+                <BuildableProductRunnable
+                   runnableDebuggingMode = "0">
+                   <BuildableReference
+                      BuildableIdentifier = "primary"
+                      BlueprintIdentifier = "504EC3031FED79650016851F"
+                      BuildableName = "App.app"
+                      BlueprintName = "App"
+                      ReferencedContainer = "container:App.xcodeproj">
+                   </BuildableReference>
+                </BuildableProductRunnable>
+             </LaunchAction>
+             <ProfileAction
+                buildConfiguration = "Release"
+                shouldUseLaunchSchemeArgsEnv = "YES"
+                savedToolIdentifier = ""
+                useCustomWorkingDirectory = "NO"
+                debugDocumentVersioning = "YES">
+                <BuildableProductRunnable
+                   runnableDebuggingMode = "0">
+                   <BuildableReference
+                      BuildableIdentifier = "primary"
+                      BlueprintIdentifier = "504EC3031FED79650016851F"
+                      BuildableName = "App.app"
+                      BlueprintName = "App"
+                      ReferencedContainer = "container:App.xcodeproj">
+                   </BuildableReference>
+                </BuildableProductRunnable>
+             </ProfileAction>
+             <AnalyzeAction
+                buildConfiguration = "Debug">
+             </AnalyzeAction>
+             <ArchiveAction
+                buildConfiguration = "Release"
+                revealArchiveInOrganizer = "YES">
+                <BuildableReference
+                   BuildableIdentifier = "primary"
+                   BlueprintIdentifier = "504EC3031FED79650016851F"
+                   BuildableName = "App.app"
+                   BlueprintName = "App"
+                   ReferencedContainer = "container:App.xcodeproj">
+                </BuildableReference>
+             </ArchiveAction>
+          </Scheme>
+          ENDSCHEME
+          echo "── Scheme written ──"
+          cat "$SCHEMES_DIR/App.xcscheme"
+          echo "── xcodebuild -list ──"
+          xcodebuild -project "apps/mobile-app/ios/App/App.xcodeproj" -list
+
+      # ── 8c. Inject MainViewController + patch Main.storyboard & pbxproj ─
       #   The default Capacitor template uses CAPBridgeViewController directly,
       #   which doesn't extend the webView to the screen edges. Our local dev
       #   project has a custom MainViewController subclass that:
@@ -102,6 +211,15 @@ jobs:
       #     2. Forwards real safe-area insets to CSS custom properties
       #   Since ios/ is gitignored, CI must create this file + patch
       #   Main.storyboard and project.pbxproj to reference it.
+      #
+      #   This step also patches the project-level Release build configuration
+      #   to disable code signing for ALL targets by default. SPM dependency
+      #   targets (Firebase, GoogleUtilities, etc.) inherit from the project
+      #   level and will have signing disabled. The App target's own target-level
+      #   Release build config is then patched to re-enable Manual signing with
+      #   the correct provisioning profile, so only the App target gets signed.
+      #   This is required for Xcode 26 which errors when SPM targets receive
+      #   a provisioning profile specifier (they don't support profiles).
       - name: Inject MainViewController & patch storyboard + pbxproj
         run: |
           APP_DIR="apps/mobile-app/ios/App/App"
@@ -137,7 +255,7 @@ jobs:
             's/customClass="CAPBridgeViewController" customModule="Capacitor"/customClass="MainViewController" customModule="App" customModuleProvider="target"/' \
             "$APP_DIR/Base.lproj/Main.storyboard"
 
-          # ── Patch project.pbxproj: add MainViewController.swift to build ──
+          # ── Patch project.pbxproj ──
           # Use Python for reliable pbxproj text manipulation (macOS has python3)
           python3 << 'ENDPY'
           import re
@@ -160,16 +278,160 @@ jobs:
           content = content.replace(anchor2, anchor2 + "\n" + insert_fileref)
 
           # 3) PBXGroup — add file ref after AppDelegate.swift in the App group children
-          # The group lists children like: 504EC3071FED79650016851F /* AppDelegate.swift */,
           group_anchor = '504EC3071FED79650016851F /* AppDelegate.swift */,'
           group_insert = f'\t\t\t\t{FILE_REF} /* MainViewController.swift */,'
-          # Only replace the first occurrence (in the group section)
           content = content.replace(group_anchor, group_anchor + "\n" + group_insert, 1)
 
           # 4) PBXSourcesBuildPhase — add after AppDelegate in sources list
           sources_anchor = '504EC3081FED79650016851F /* AppDelegate.swift in Sources */,'
           sources_insert = f'\t\t\t\t{BUILD_REF} /* MainViewController.swift in Sources */,'
           content = content.replace(sources_anchor, sources_anchor + "\n" + sources_insert, 1)
+
+          # ── SPM signing fix ──────────────────────────────────────────────
+          # Xcode 26 propagates PROVISIONING_PROFILE_SPECIFIER from the project
+          # level to ALL targets including SPM package targets, which don't
+          # support provisioning profiles and error out.
+          #
+          # Fix strategy:
+          #   - Find the project-level XCBuildConfiguration for "Release"
+          #     (the one inside the project's XCConfigurationList, NOT the App
+          #     target's config list). Patch it to disable signing entirely.
+          #   - Find the App target's XCBuildConfiguration for "Release"
+          #     and patch it to re-enable Manual signing with our profile.
+          #
+          # The Capacitor template has two Release configs with these GUIDs:
+          #   504EC3191FED79650016851F  — project-level Release config
+          #   504EC3181FED79650016851F  — App target-level Release config
+          #
+          # We identify them by finding the project's XCConfigurationList
+          # (which is referenced as buildConfigurationList for PBXProject),
+          # then extracting the Release config GUID from it. The other Release
+          # config GUID belongs to the App target.
+
+          # Identify project-level vs target-level Release config GUIDs.
+          # PBXProject entry has: buildConfigurationList = <GUID> /* Build configuration list for PBXProject "App" */;
+          proj_cfg_list_match = re.search(
+              r'buildConfigurationList\s*=\s*(\w+)\s*/\*\s*Build configuration list for PBXProject',
+              content
+          )
+          if not proj_cfg_list_match:
+              print("ERROR: Could not find project-level buildConfigurationList")
+              exit(1)
+          proj_cfg_list_guid = proj_cfg_list_match.group(1)
+          print(f"Project buildConfigurationList GUID: {proj_cfg_list_guid}")
+
+          # From the XCConfigurationList for the project, extract the Release config GUID
+          # Format:  <GUID> /* Release */,
+          proj_cfg_list_block_match = re.search(
+              rf'{proj_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
+              content, re.DOTALL
+          )
+          if not proj_cfg_list_block_match:
+              print("ERROR: Could not find project XCConfigurationList block")
+              exit(1)
+          proj_cfg_entries = proj_cfg_list_block_match.group(1)
+          proj_release_match = re.search(r'(\w+)\s*/\*\s*Release\s*\*/', proj_cfg_entries)
+          if not proj_release_match:
+              print("ERROR: Could not find Release config in project XCConfigurationList")
+              exit(1)
+          proj_release_guid = proj_release_match.group(1)
+          print(f"Project-level Release config GUID: {proj_release_guid}")
+
+          # Similarly find the App target's Release config GUID
+          # PBXNativeTarget entry has: buildConfigurationList = <GUID> /* Build configuration list for PBXNativeTarget "App" */;
+          target_cfg_list_match = re.search(
+              r'buildConfigurationList\s*=\s*(\w+)\s*/\*\s*Build configuration list for PBXNativeTarget',
+              content
+          )
+          if not target_cfg_list_match:
+              print("ERROR: Could not find target-level buildConfigurationList")
+              exit(1)
+          target_cfg_list_guid = target_cfg_list_match.group(1)
+          print(f"App target buildConfigurationList GUID: {target_cfg_list_guid}")
+
+          target_cfg_list_block_match = re.search(
+              rf'{target_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
+              content, re.DOTALL
+          )
+          if not target_cfg_list_block_match:
+              print("ERROR: Could not find App target XCConfigurationList block")
+              exit(1)
+          target_cfg_entries = target_cfg_list_block_match.group(1)
+          target_release_match = re.search(r'(\w+)\s*/\*\s*Release\s*\*/', target_cfg_entries)
+          if not target_release_match:
+              print("ERROR: Could not find Release config in App target XCConfigurationList")
+              exit(1)
+          target_release_guid = target_release_match.group(1)
+          print(f"App target-level Release config GUID: {target_release_guid}")
+
+          # ── Patch project-level Release config ──────────────────────────
+          # Find its buildSettings block and append signing-disable settings.
+          # We look for: <proj_release_guid> /* Release */ = { isa = XCBuildConfiguration; buildSettings = { ... }; name = Release; };
+          # and inject into the buildSettings block.
+          def patch_build_settings(content, config_guid, settings_to_inject):
+              """
+              Find the XCBuildConfiguration block for config_guid and inject
+              key = value; lines into its buildSettings dict, before the closing }.
+              Uses a balanced-brace approach to find the right closing brace.
+              """
+              # Find the start of this config block
+              block_start_match = re.search(
+                  rf'{config_guid}\s*/\*[^*]*\*/\s*=\s*\{{\s*isa\s*=\s*XCBuildConfiguration',
+                  content
+              )
+              if not block_start_match:
+                  print(f"ERROR: Could not find XCBuildConfiguration block for {config_guid}")
+                  return content
+
+              # Find buildSettings = { within this block
+              bs_start = content.find('buildSettings = {', block_start_match.start())
+              if bs_start == -1:
+                  print(f"ERROR: No buildSettings in config {config_guid}")
+                  return content
+
+              # Walk forward from the opening { of buildSettings to find closing }
+              brace_pos = content.index('{', bs_start + len('buildSettings ='))
+              depth = 1
+              pos = brace_pos + 1
+              while pos < len(content) and depth > 0:
+                  if content[pos] == '{':
+                      depth += 1
+                  elif content[pos] == '}':
+                      depth -= 1
+                  pos += 1
+              closing_brace_pos = pos - 1  # position of the matching }
+
+              # Build injection string
+              injection = ''
+              for key, value in settings_to_inject.items():
+                  injection += f'\n\t\t\t\t{key} = {value};'
+
+              # Insert before closing brace
+              content = content[:closing_brace_pos] + injection + '\n\t\t\t' + content[closing_brace_pos:]
+              return content
+
+          # Disable all signing at project level — SPM targets inherit this
+          project_release_settings = {
+              'CODE_SIGN_IDENTITY':        '""',
+              'CODE_SIGN_STYLE':           'Manual',
+              'CODE_SIGNING_REQUIRED':     'NO',
+              'CODE_SIGNING_ALLOWED':      'NO',
+              'PROVISIONING_PROFILE_SPECIFIER': '""',
+          }
+          content = patch_build_settings(content, proj_release_guid, project_release_settings)
+          print("Patched project-level Release config: signing disabled")
+
+          # Enable Manual signing on the App target — overrides project defaults
+          target_release_settings = {
+              'CODE_SIGN_IDENTITY':        '"Apple Distribution"',
+              'CODE_SIGN_STYLE':           'Manual',
+              'CODE_SIGNING_REQUIRED':     'YES',
+              'CODE_SIGNING_ALLOWED':      'YES',
+              'DEVELOPMENT_TEAM':          '"334BUFYVP9"',
+              'PROVISIONING_PROFILE_SPECIFIER': '"swara-ai-appstore"',
+          }
+          content = patch_build_settings(content, target_release_guid, target_release_settings)
+          print("Patched App target-level Release config: Manual signing with swara-ai-appstore")
 
           with open(pbx_path, "w") as f:
               f.write(content)
@@ -185,6 +447,9 @@ jobs:
           echo ""
           echo "── pbxproj MainViewController references ──"
           grep -n "MainViewController" "$PBXPROJ" || echo "WARNING: MainViewController not found in pbxproj!"
+          echo ""
+          echo "── pbxproj signing settings (Release configs) ──"
+          grep -n -E "(CODE_SIGN|PROVISIONING_PROFILE|DEVELOPMENT_TEAM)" "$PBXPROJ" || true
 
       # ── 9. Generate iOS native assets (icons + splash) ─────────────────
       - name: Generate iOS native assets
@@ -341,6 +606,12 @@ jobs:
           PLIST
 
       # ── 16. Archive ────────────────────────────────────────────────────
+      #   Signing is fully configured in project.pbxproj by the patch step above:
+      #     - Project-level Release config: signing disabled (CODE_SIGNING_ALLOWED=NO)
+      #     - App target-level Release config: Manual signing with swara-ai-appstore
+      #   SPM dependency targets inherit from the project level → no profile → no error.
+      #   We do NOT pass PROVISIONING_PROFILE_SPECIFIER here to avoid re-triggering
+      #   the Xcode 26 SPM provisioning profile propagation bug.
       - name: Archive
         run: |
           xcodebuild archive \
@@ -349,11 +620,15 @@ jobs:
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath "$ARCHIVE_PATH" \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM="$TEAM_ID" \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="swara-ai-appstore" \
-            | xcpretty || true
+            -skipPackagePluginValidation \
+            2>&1 | tee /tmp/xcodebuild-archive.log | xcpretty; \
+            STATUS=${PIPESTATUS[0]}; \
+            if [ $STATUS -ne 0 ]; then \
+              echo ""; \
+              echo "── xcodebuild raw output (last 100 lines) ──"; \
+              tail -100 /tmp/xcodebuild-archive.log; \
+              exit $STATUS; \
+            fi
 
       # ── 17. Export IPA ─────────────────────────────────────────────────
       - name: Export IPA

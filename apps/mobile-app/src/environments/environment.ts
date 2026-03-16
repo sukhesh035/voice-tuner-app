@@ -25,4 +25,15 @@ export const environment = {
     offlineMode: true,
   },
   enableAnalytics: false,
+  // Firebase config — not used in dev (analytics disabled).
+  // In prod this block is injected by generate-env.mjs from CI secrets.
+  firebase: {
+    apiKey:            '',
+    authDomain:        '',
+    projectId:         '',
+    storageBucket:     '',
+    messagingSenderId: '',
+    appId:             '',
+    measurementId:     '',
+  },
 };
