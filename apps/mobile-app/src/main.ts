@@ -17,15 +17,8 @@ Amplify.configure({
 });
 
 // Initialise Firebase (web SDK — required even on native for @capacitor-firebase to work)
-const firebaseApp = initializeApp({
-  apiKey:            'AIzaSyDROHvKgZe59e-MI0tWgu9XQLw_ZXLIsik',
-  authDomain:        'swara-ai-4caf4.firebaseapp.com',
-  projectId:         'swara-ai-4caf4',
-  storageBucket:     'swara-ai-4caf4.firebasestorage.app',
-  messagingSenderId: '902627762999',
-  appId:             '1:902627762999:web:a4529814deb1cd132b70b2',
-  measurementId:     'G-MTV5EP385L',
-});
+// Config is injected at CI time via generate-env.mjs from GitHub secrets — never hardcoded.
+const firebaseApp = initializeApp(environment.firebase);
 
 // Analytics web SDK: only initialise in browser contexts AND when enabled (production)
 if (!Capacitor.isNativePlatform() && environment.enableAnalytics) {
