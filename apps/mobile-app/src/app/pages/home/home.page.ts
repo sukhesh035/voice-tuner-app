@@ -44,7 +44,7 @@ import { Subscription } from 'rxjs';
 
           <div class="hero-title">
             Your Daily<br />
-            <span class="hero-highlight">Riyaz Companion ✦</span>
+            <span class="hero-highlight">Riyaz Companion</span>
           </div>
 
           <ng-container *ngIf="authService.isAuthenticated$ | async; else streakGuest">
