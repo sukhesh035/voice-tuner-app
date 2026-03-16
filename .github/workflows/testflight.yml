@@ -504,6 +504,8 @@ jobs:
       #   The Capacitor template Info.plist is minimal. We add:
       #   - CFBundleDisplayName
       #   - NSMicrophoneUsageDescription
+      #   - NSCameraUsageDescription (profile photo)
+      #   - NSPhotoLibraryUsageDescription (profile photo)
       #   - UISupportedInterfaceOrientations~ipad (all 4, App Store requirement)
       #   - ITSAppUsesNonExemptEncryption = false
       #   - UIRequiresFullScreen = true
@@ -520,6 +522,14 @@ jobs:
           # Microphone permission
           /usr/libexec/PlistBuddy -c "Set :NSMicrophoneUsageDescription 'Swara AI uses the microphone to detect your singing pitch in real time for practice and tuning.'" "$PLIST" \
             || /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'Swara AI uses the microphone to detect your singing pitch in real time for practice and tuning.'" "$PLIST"
+
+          # Camera permission (profile photo)
+          /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription 'Swara AI uses the camera to take a profile photo.'" "$PLIST" \
+            || /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Swara AI uses the camera to take a profile photo.'" "$PLIST"
+
+          # Photo library permission (profile photo)
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription 'Swara AI accesses your photo library to choose a profile photo.'" "$PLIST" \
+            || /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'Swara AI accesses your photo library to choose a profile photo.'" "$PLIST"
 
           # iPad orientations (multitasking requirement)
           /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations~ipad" "$PLIST" 2>/dev/null || true

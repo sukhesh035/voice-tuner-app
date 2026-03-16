@@ -1,19 +1,24 @@
 /**
  * Users Lambda Handler
- * Routes: GET /users/me, PUT /users/me
+ * Routes: GET /users/me, PUT /users/me, POST /users/me/upload-url
  */
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
   DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
   verifyToken, unauthorized, ok, created,
   badRequest, notFound, serverError,
 } from '../middleware/auth.middleware';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
-const TABLE = process.env['USERS_TABLE']!;
+const s3  = new S3Client({});
+const TABLE          = process.env['USERS_TABLE']!;
+const UPLOADS_BUCKET = process.env['UPLOADS_BUCKET'] ?? '';
+const UPLOADS_CDN    = process.env['UPLOADS_CDN_URL'] ?? '';
 
 export interface UserProfile {
   userId: string;          // PK
@@ -39,6 +44,7 @@ export interface UserProfile {
   };
   favoriteRagas: string[];
   guruCode?: string;        // set if user is a teacher
+  photoUrl?: string;        // CloudFront URL to profile photo
 }
 
 const DEFAULT_PREFS: UserProfile['preferences'] = {
@@ -103,7 +109,7 @@ export const handler = async (
       const values: Record<string, unknown> = { ':updatedAt': now };
       const names:  Record<string, string>  = {};
 
-      const allowedTopLevel = ['displayName', 'favoriteRagas'];
+      const allowedTopLevel = ['displayName', 'favoriteRagas', 'photoUrl'];
       for (const key of allowedTopLevel) {
         if (body[key] !== undefined) {
           updates.push(`#${key} = :${key}`);
@@ -131,6 +137,28 @@ export const handler = async (
       }));
 
       return ok({ updated: true, updatedAt: now });
+    }
+
+    // POST /users/me/upload-url — generate presigned S3 upload URL for profile photo
+    if (method === 'POST' && event.rawPath.endsWith('/upload-url')) {
+      if (!UPLOADS_BUCKET) {
+        return serverError(new Error('UPLOADS_BUCKET not configured'));
+      }
+
+      const body = JSON.parse(event.body ?? '{}');
+      const contentType = body.contentType ?? 'image/jpeg';
+      const key = `avatars/${auth.userId}.jpg`;
+
+      const command = new PutObjectCommand({
+        Bucket:      UPLOADS_BUCKET,
+        Key:         key,
+        ContentType: contentType,
+      });
+
+      const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 min
+      const cdnUrl = `${UPLOADS_CDN}/${key}`;
+
+      return ok({ uploadUrl, cdnUrl, key });
     }
 
     return badRequest('Unknown route');
