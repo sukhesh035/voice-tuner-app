@@ -293,23 +293,13 @@ jobs:
           # support provisioning profiles and error out.
           #
           # Fix strategy:
-          #   - Find the project-level XCBuildConfiguration for "Release"
-          #     (the one inside the project's XCConfigurationList, NOT the App
-          #     target's config list). Patch it to disable signing entirely.
-          #   - Find the App target's XCBuildConfiguration for "Release"
-          #     and patch it to re-enable Manual signing with our profile.
-          #
-          # The Capacitor template has two Release configs with these GUIDs:
-          #   504EC3191FED79650016851F  — project-level Release config
-          #   504EC3181FED79650016851F  — App target-level Release config
-          #
-          # We identify them by finding the project's XCConfigurationList
-          # (which is referenced as buildConfigurationList for PBXProject),
-          # then extracting the Release config GUID from it. The other Release
-          # config GUID belongs to the App target.
+          #   - Patch ProvisioningStyle in PBXProject TargetAttributes to Manual
+          #     (Xcode 26 uses this to determine automatic vs manual signing).
+          #   - Patch project-level Release XCBuildConfiguration to disable signing.
+          #   - Patch App target-level Release XCBuildConfiguration to re-enable
+          #     Manual signing with our provisioning profile.
 
           # Identify project-level vs target-level Release config GUIDs.
-          # PBXProject entry has: buildConfigurationList = <GUID> /* Build configuration list for PBXProject "App" */;
           proj_cfg_list_match = re.search(
               r'buildConfigurationList\s*=\s*(\w+)\s*/\*\s*Build configuration list for PBXProject',
               content
@@ -320,8 +310,6 @@ jobs:
           proj_cfg_list_guid = proj_cfg_list_match.group(1)
           print(f"Project buildConfigurationList GUID: {proj_cfg_list_guid}")
 
-          # From the XCConfigurationList for the project, extract the Release config GUID
-          # Format:  <GUID> /* Release */,
           proj_cfg_list_block_match = re.search(
               rf'{proj_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
               content, re.DOTALL
@@ -337,8 +325,6 @@ jobs:
           proj_release_guid = proj_release_match.group(1)
           print(f"Project-level Release config GUID: {proj_release_guid}")
 
-          # Similarly find the App target's Release config GUID
-          # PBXNativeTarget entry has: buildConfigurationList = <GUID> /* Build configuration list for PBXNativeTarget "App" */;
           target_cfg_list_match = re.search(
               r'buildConfigurationList\s*=\s*(\w+)\s*/\*\s*Build configuration list for PBXNativeTarget',
               content
@@ -364,75 +350,17 @@ jobs:
           target_release_guid = target_release_match.group(1)
           print(f"App target-level Release config GUID: {target_release_guid}")
 
-          # ── Patch project-level Release config ──────────────────────────
-          # Find its buildSettings block and append signing-disable settings.
-          # We look for: <proj_release_guid> /* Release */ = { isa = XCBuildConfiguration; buildSettings = { ... }; name = Release; };
-          # and inject into the buildSettings block.
-          def patch_build_settings(content, config_guid, settings_to_inject):
-              """
-              Find the XCBuildConfiguration block for config_guid and upsert
-              key = value; lines into its buildSettings dict.
-              - If a key already exists in the block, its value is replaced in-place.
-              - If a key is absent, it is appended before the closing }.
-              Uses a balanced-brace approach to isolate the buildSettings dict.
-              """
-              # Find the start of this config block
-              block_start_match = re.search(
-                  rf'{config_guid}\s*/\*[^*]*\*/\s*=\s*\{{\s*isa\s*=\s*XCBuildConfiguration',
-                  content
-              )
-              if not block_start_match:
-                  print(f"ERROR: Could not find XCBuildConfiguration block for {config_guid}")
-                  return content
-
-              # Find buildSettings = { within this block
-              bs_start = content.find('buildSettings = {', block_start_match.start())
-              if bs_start == -1:
-                  print(f"ERROR: No buildSettings in config {config_guid}")
-                  return content
-
-              # Walk forward from the opening { of buildSettings to find closing }
-              brace_pos = content.index('{', bs_start + len('buildSettings ='))
-              depth = 1
-              pos = brace_pos + 1
-              while pos < len(content) and depth > 0:
-                  if content[pos] == '{':
-                      depth += 1
-                  elif content[pos] == '}':
-                      depth -= 1
-                  pos += 1
-              closing_brace_pos = pos - 1  # position of the matching }
-
-              # Extract just the buildSettings block content (between { and })
-              bs_content = content[brace_pos:closing_brace_pos + 1]
-
-              # For each setting: replace in-place if key exists, otherwise append
-              keys_to_append = {}
-              for key, value in settings_to_inject.items():
-                  # Match: optional whitespace, KEY, whitespace, =, whitespace, <anything>, ;
-                  pattern = rf'(\s+{re.escape(key)}\s*=\s*)[^;]+(;)'
-                  replacement = rf'\g<1>{value}\2'
-                  new_bs_content, n_replacements = re.subn(pattern, replacement, bs_content)
-                  if n_replacements > 0:
-                      bs_content = new_bs_content
-                      print(f"  Replaced {key} = {value}")
-                  else:
-                      keys_to_append[key] = value
-
-              # Rebuild content with updated buildSettings block
-              content = content[:brace_pos] + bs_content[:-1]  # strip the closing }
-
-              # Append any keys that weren't already present
-              for key, value in keys_to_append.items():
-                  content += f'\n\t\t\t\t{key} = {value};'
-                  print(f"  Appended {key} = {value}")
-
-              content += '\n\t\t\t' + '}'  # re-add closing }
-              content += content[closing_brace_pos + 1:]  # remainder of file... wait
-
-              # Oops - need to reconstruct properly. Let's redo this cleanly.
-              # Actually the above double-appends the rest of file. Fix:
-              return None  # signal to use the corrected approach below
+          # ── Patch TargetAttributes: ProvisioningStyle ──────────────────
+          # The PBXProject section has TargetAttributes with
+          #   ProvisioningStyle = Automatic;
+          # Xcode 26 uses this as the source of truth. Must be Manual.
+          old_provisioning = 'ProvisioningStyle = Automatic;'
+          new_provisioning = 'ProvisioningStyle = Manual;'
+          if old_provisioning in content:
+              content = content.replace(old_provisioning, new_provisioning)
+              print("Patched TargetAttributes: ProvisioningStyle = Manual")
+          else:
+              print("NOTE: ProvisioningStyle = Automatic not found (may already be Manual)")
 
           def patch_build_settings_v2(content, config_guid, settings_to_inject):
               """
@@ -527,7 +455,7 @@ jobs:
           grep -n "MainViewController" "$PBXPROJ" || echo "WARNING: MainViewController not found in pbxproj!"
           echo ""
           echo "── pbxproj signing settings (Release configs) ──"
-          grep -n -E "(CODE_SIGN|PROVISIONING_PROFILE|DEVELOPMENT_TEAM)" "$PBXPROJ" || true
+          grep -n -E "(CODE_SIGN|PROVISIONING_PROFILE|DEVELOPMENT_TEAM|ProvisioningStyle)" "$PBXPROJ" || true
 
       # ── 9. Generate iOS native assets (icons + splash) ─────────────────
       - name: Generate iOS native assets
