@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner,
-  ViewWillEnter, ActionSheetController
+  ViewWillEnter, ActionSheetController, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -319,6 +319,7 @@ export class ProfilePage implements OnInit, ViewWillEnter {
     private cdr: ChangeDetectorRef,
     private analytics: AnalyticsService,
     private actionSheet: ActionSheetController,
+    private alertCtrl: AlertController,
   ) {
     addIcons({
       personCircle, trendingUp, flame, musicalNote,
@@ -373,18 +374,19 @@ export class ProfilePage implements OnInit, ViewWillEnter {
 
     let source: CameraSource;
     if (isNative) {
+      let picked: CameraSource | null = null;
       const sheet = await this.actionSheet.create({
         header: 'Profile Photo',
         buttons: [
-          { text: 'Take Photo',          icon: 'camera-outline', data: CameraSource.Camera },
-          { text: 'Choose from Gallery',  icon: 'image-outline',  data: CameraSource.Photos },
+          { text: 'Take Photo',          icon: 'camera-outline', handler: () => { picked = CameraSource.Camera; } },
+          { text: 'Choose from Gallery',  icon: 'image-outline',  handler: () => { picked = CameraSource.Photos; } },
           { text: 'Cancel', role: 'cancel' },
         ],
       });
       await sheet.present();
-      const result = await sheet.onDidDismiss();
-      if (result.role === 'cancel' || result.data === undefined) return;
-      source = result.data;
+      await sheet.onDidDismiss();
+      if (picked === null) return;
+      source = picked;
     } else {
       source = CameraSource.Photos;
     }
@@ -437,8 +439,18 @@ export class ProfilePage implements OnInit, ViewWillEnter {
       }
 
       this.analytics.logEvent('profile_photo_updated');
-    } catch (err) {
+    } catch (err: any) {
       console.error('[ProfilePage] changePhoto error', err);
+      // Show error to user (don't swallow silently)
+      const msg = err?.message || String(err);
+      if (!msg.includes('cancelled') && !msg.includes('User cancelled')) {
+        const alert = await this.alertCtrl.create({
+          header: 'Photo Upload Failed',
+          message: msg,
+          buttons: ['OK'],
+        });
+        await alert.present();
+      }
     } finally {
       this.uploading = false;
       this.cdr.markForCheck();
