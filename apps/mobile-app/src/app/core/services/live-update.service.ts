@@ -36,14 +36,18 @@ export class LiveUpdateService {
    * 4. When the user next backgrounds/foregrounds the app, apply the update.
    */
   async initialize(): Promise<void> {
+    console.log('[LiveUpdate] initialize() called');
+
     // Live updates only make sense on a real device with a native shell.
     if (!Capacitor.isNativePlatform()) {
+      console.log('[LiveUpdate] not a native platform — skipping');
       return;
     }
 
     // Let the plugin know the current bundle is good — skip this and the
     // plugin will roll back to the built-in bundle after a timeout.
     await CapacitorUpdater.notifyAppReady();
+    console.log('[LiveUpdate] notifyAppReady() done');
 
     // Check for an update in the background (non-blocking).
     this.checkForUpdate().catch((err) =>
@@ -62,6 +66,7 @@ export class LiveUpdateService {
 
   private async checkForUpdate(): Promise<void> {
     const manifestUrl = (environment as any).liveUpdate?.manifestUrl;
+    console.log('[LiveUpdate] manifestUrl:', manifestUrl ?? '(not configured)');
     if (!manifestUrl) {
       return; // No manifest URL configured — nothing to do.
     }
@@ -75,9 +80,13 @@ export class LiveUpdateService {
 
     const manifest: UpdateManifest = await res.json();
     const current = await CapacitorUpdater.current();
+    console.log(
+      `[LiveUpdate] current: ${current.bundle.version}, remote: ${manifest.version}`,
+    );
 
     // Compare versions — skip download if already running this version.
     if (current.bundle.version === manifest.version) {
+      console.log('[LiveUpdate] already up-to-date');
       return;
     }
 
