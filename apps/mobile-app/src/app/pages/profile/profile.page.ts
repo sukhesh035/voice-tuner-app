@@ -14,6 +14,7 @@ import {
 import { filter, take } from 'rxjs/operators';
 import { AuthService } from '@voice-tuner/auth';
 import { ApiService, UserProfile, StreaksResponse } from '../../core/services/api.service';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 interface Achievement {
   icon: string;
@@ -304,7 +305,8 @@ export class ProfilePage implements OnInit, ViewWillEnter {
   constructor(
     public authService: AuthService,
     private api: ApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private analytics: AnalyticsService
   ) {
     addIcons({
       personCircle, trendingUp, flame, musicalNote,
@@ -339,6 +341,10 @@ export class ProfilePage implements OnInit, ViewWillEnter {
       ]);
       this.profile = profile;
       this.streaks = streaks;
+      // Associate analytics events with the logged-in user
+      if (profile?.userId) {
+        this.analytics.setUserId(profile.userId);
+      }
     } catch (err) {
       console.error('[ProfilePage] loadData error', err);
     } finally {
@@ -348,6 +354,8 @@ export class ProfilePage implements OnInit, ViewWillEnter {
   }
 
   async signOut(): Promise<void> {
+    this.analytics.logEvent('sign_out');
+    this.analytics.setUserId(null);
     await this.authService.signOut();
     this.cdr.markForCheck();
   }

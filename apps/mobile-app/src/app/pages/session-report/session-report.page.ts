@@ -12,6 +12,7 @@ import { addIcons } from 'ionicons';
 import { sparklesOutline, refreshOutline, barChartOutline } from 'ionicons/icons';
 import { RAGAS, RagaDefinition } from '@voice-tuner/training-engine';
 import { formatDuration } from '@voice-tuner/shared-utils';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 export interface SessionReportData {
   sessionId:      string;
@@ -162,9 +163,10 @@ function getGrade(score: number): Grade {
   `],
 })
 export class SessionReportPage implements OnInit {
-  private route  = inject(ActivatedRoute);
-  private router = inject(Router);
-  private cdr    = inject(ChangeDetectorRef);
+  private route     = inject(ActivatedRoute);
+  private router    = inject(Router);
+  private cdr       = inject(ChangeDetectorRef);
+  private analytics = inject(AnalyticsService);
 
   constructor() {
     addIcons({ sparklesOutline, refreshOutline, barChartOutline });
@@ -201,13 +203,18 @@ export class SessionReportPage implements OnInit {
   }
 
   private loadReport(report: SessionReportData) {
-    this.report         = report;
-    this.grade          = getGrade(report.score);
+    this.report            = report;
+    this.grade             = getGrade(report.score);
     this.formattedDuration = formatDuration(report.duration);
-    this.raga           = (report.raagaId ? RAGAS[report.raagaId] : undefined) ?? null;
-    this.noteList       = Object.entries(report.noteAccuracies)
+    this.raga              = (report.raagaId ? RAGAS[report.raagaId] : undefined) ?? null;
+    this.noteList          = Object.entries(report.noteAccuracies)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
+    this.analytics.logEvent('session_report_viewed', {
+      mode:  report.mode,
+      score: report.score,
+      ...(report.raagaId ? { raaga_id: report.raagaId } : {}),
+    });
     this.cdr.markForCheck();
   }
 

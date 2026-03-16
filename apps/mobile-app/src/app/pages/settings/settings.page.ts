@@ -13,6 +13,7 @@ import { ApiService, UserPreferences } from '../../core/services/api.service';
 import { TanpuraPlayerService, Instrument } from '@voice-tuner/tanpura-player';
 import { AuthService } from '@voice-tuner/auth';
 import { filter, take } from 'rxjs/operators';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 @Component({
   selector: 'app-settings',
@@ -45,7 +46,8 @@ export class SettingsPage {
     private api: ApiService,
     private tanpura: TanpuraPlayerService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private analytics: AnalyticsService
   ) {
     addIcons({
       moonOutline, flashOutline, musicalNoteOutline, notificationsOutline,
@@ -61,6 +63,7 @@ export class SettingsPage {
   toggleTheme(event: Event): void {
     const checked = (event as CustomEvent).detail.checked as boolean;
     this.themeService.setTheme(checked ? 'dark' : 'light');
+    this.analytics.logEvent('theme_changed', { theme: checked ? 'dark' : 'light' });
     this.persistPreference({ theme: checked ? 'dark' : 'light' });
   }
 
@@ -68,6 +71,7 @@ export class SettingsPage {
     if (instrument === this.selectedInstrument) return;
     this.selectedInstrument = instrument;
     this.tanpura.setInstrument(instrument);
+    this.analytics.logEvent('instrument_changed', { instrument });
     this.persistPreference({ instrument });
     this.cdr.markForCheck();
   }

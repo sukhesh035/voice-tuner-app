@@ -78,6 +78,7 @@ export const environment = {
     guruClassroom: true,
     offlineMode:   true,
   },
+  enableAnalytics: ${isProd},
 };
 `;
 

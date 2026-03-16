@@ -26,7 +26,7 @@ import { Subscription } from 'rxjs';
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>Sruti</ion-title>
+        <ion-title>Sruthi AI</ion-title>
       </ion-toolbar>
     </ion-header>
 
