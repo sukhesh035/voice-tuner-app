@@ -16,6 +16,7 @@ import { Subject, interval, takeUntil } from 'rxjs';
 import { AuthService }   from '@voice-tuner/auth';
 import { generateSessionCode } from '@voice-tuner/shared-utils';
 import { environment }   from '../../../environments/environment';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 interface StudentResult {
   studentId:   string;
@@ -173,11 +174,12 @@ type ClassroomView = 'join' | 'teacher' | 'student-waiting' | 'student-active';
   `],
 })
 export class ClassroomPage implements OnInit, OnDestroy {
-  private http   = inject(HttpClient);
-  private auth   = inject(AuthService);
-  private router = inject(Router);
-  private cdr    = inject(ChangeDetectorRef);
-  private destroy$ = new Subject<void>();
+  private http      = inject(HttpClient);
+  private auth      = inject(AuthService);
+  private router    = inject(Router);
+  private cdr       = inject(ChangeDetectorRef);
+  private analytics = inject(AnalyticsService);
+  private destroy$  = new Subject<void>();
 
   constructor() {
     addIcons({ copyOutline, stopCircleOutline });
@@ -231,6 +233,7 @@ export class ClassroomPage implements OnInit, OnDestroy {
       next: (res) => {
         this.currentView = 'student-waiting';
         this.joining     = false;
+        this.analytics.logEvent('classroom_joined', { session_code: this.joinCode });
         this.cdr.markForCheck();
       },
       error: (err) => {
@@ -285,6 +288,10 @@ export class ClassroomPage implements OnInit, OnDestroy {
       `${environment.apiBaseUrl}/classroom/sessions/${this.session.sessionCode}`,
       { headers: { Authorization: `Bearer ${token}` } },
     ).subscribe(() => {
+      this.analytics.logEvent('classroom_ended', {
+        session_code:  this.session!.sessionCode,
+        student_count: this.students.length,
+      });
       this.router.navigate(['/home']);
     });
   }

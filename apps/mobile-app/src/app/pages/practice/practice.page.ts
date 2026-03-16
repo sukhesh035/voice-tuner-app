@@ -17,6 +17,7 @@ import {
   RagaDefinition, MelakartaChakra
 } from '@voice-tuner/training-engine';
 import { ApiService } from '../../core/services/api.service';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 /** Phases of a single Shruti round */
 export type ShrutiPhase = 'idle' | 'playing' | 'ready' | 'listening' | 'result';
@@ -814,7 +815,8 @@ export class PracticePage implements OnInit, OnDestroy {
     private tanpura: TanpuraPlayerService,
     private pitchDetection: PitchDetectionService,
     private api: ApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private analytics: AnalyticsService
   ) {
     this.liveNotes$ = this.trainingEngine.liveNotes$;
   }
@@ -847,6 +849,10 @@ export class PracticePage implements OnInit, OnDestroy {
 
   selectRaga(raga: RagaDefinition): void {
     this.selectedRaga = raga;
+    this.analytics.logEvent('raga_selected', {
+      raga_name:   raga.englishName,
+      mela_number: raga.melaNumber ?? 0,
+    });
     this.cdr.markForCheck();
   }
 
@@ -892,6 +898,7 @@ export class PracticePage implements OnInit, OnDestroy {
     this.sessionActive = true;
     this.lastResult    = null;
     this.notePool      = [];
+    this.analytics.logEvent('practice_started', { mode: this.selectedMode });
     this.cdr.markForCheck();
 
     if (this.selectedMode === 'shruti') {
@@ -939,7 +946,6 @@ export class PracticePage implements OnInit, OnDestroy {
       } else if (this.shrutiPhase === 'listening') {
         this.pitchDetection.stop();
       }
-      this.tanpura.restoreVolume();
       this.shrutiPhase = 'idle';
 
       // Persist shruti session (was previously missing — sessions were lost)
@@ -968,7 +974,6 @@ export class PracticePage implements OnInit, OnDestroy {
       } else if (this.ragaPhase === 'practice') {
         this.pitchDetection.stop();
       }
-      this.tanpura.restoreVolume();
       this.clearRagaCountdownTimer();
 
       // Persist raga session
@@ -1000,8 +1005,6 @@ export class PracticePage implements OnInit, OnDestroy {
       if (this.earPhase === 'playing') {
         this.tanpura.stopAndSilence();
       }
-      this.tanpura.restoreVolume();
-
       // Persist ear training session
       const durationSeconds = Math.round((Date.now() - this.earSessionStart) / 1000);
       if (durationSeconds > 0 && this.earRound > 0) {
@@ -1026,6 +1029,14 @@ export class PracticePage implements OnInit, OnDestroy {
     }
 
     this.sessionActive   = false;
+    this.analytics.logEvent('practice_stopped', {
+      mode:             this.selectedMode,
+      duration_seconds: this.selectedMode === 'shruti'
+        ? Math.round((Date.now() - this.shrutiSessionStart) / 1000)
+        : this.selectedMode === 'raga'
+          ? Math.round((Date.now() - this.ragaSessionStart) / 1000)
+          : Math.round((Date.now() - this.earSessionStart) / 1000),
+    });
     this.liveNote        = null;
     this.currentAccuracy = null;
     this.cdr.markForCheck();
@@ -1054,7 +1065,6 @@ export class PracticePage implements OnInit, OnDestroy {
     this.roundFeedback   = '';
     this.cdr.markForCheck();
 
-    this.tanpura.restoreVolume();
     await this.tanpura.play();
 
     this.phaseTimer = setTimeout(() => {
@@ -1122,6 +1132,11 @@ export class PracticePage implements OnInit, OnDestroy {
           );
 
           this.shrutiPhase = 'result';
+          this.analytics.logEvent('shruti_round_completed', {
+            note:     this.currentTargetNote,
+            accuracy: this.roundAccuracy,
+            correct:  this.roundSungNote === this.currentTargetNote,
+          });
           this.cdr.markForCheck();
         }, LISTEN_DURATION_MS);
 
@@ -1175,7 +1190,6 @@ export class PracticePage implements OnInit, OnDestroy {
       // Tune tanpura to this note's pitch
       const semitone = ALL_SHRUTI_NOTES.indexOf(note);
       this.tanpura.setKey(SEMITONE_TO_KEY[semitone]);
-      this.tanpura.restoreVolume();
       this.tanpura.play();
       this.cdr.markForCheck();
 
@@ -1320,6 +1334,12 @@ export class PracticePage implements OnInit, OnDestroy {
     this.ragaResultSummary = this.buildRagaSummary(samples.length, hitNotes.length, ragaUniqueNotes.length);
 
     this.ragaPhase = 'result';
+    this.analytics.logEvent('raga_practice_completed', {
+      raga_name:   this.selectedRaga.englishName,
+      accuracy:    this.ragaOverallAccuracy,
+      notes_hit:   hitNotes.length,
+      notes_total: ragaUniqueNotes.length,
+    });
     this.cdr.markForCheck();
   }
 
@@ -1388,7 +1408,6 @@ export class PracticePage implements OnInit, OnDestroy {
     // Tune tanpura to the target note's pitch
     const semitone = ALL_SHRUTI_NOTES.indexOf(this.earTargetNote);
     this.tanpura.setKey(SEMITONE_TO_KEY[semitone]);
-    this.tanpura.restoreVolume();
     await this.tanpura.play();
 
     // After PLAY_DURATION_MS, stop tanpura and transition to guess phase
@@ -1418,6 +1437,11 @@ export class PracticePage implements OnInit, OnDestroy {
     }
 
     this.earPhase = 'reveal';
+    this.analytics.logEvent('ear_training_guess', {
+      note:    note,
+      correct: this.earIsCorrect,
+      streak:  this.earStreak,
+    });
     this.cdr.markForCheck();
   }
 
@@ -1427,7 +1451,6 @@ export class PracticePage implements OnInit, OnDestroy {
 
     const semitone = ALL_SHRUTI_NOTES.indexOf(this.earTargetNote);
     this.tanpura.setKey(SEMITONE_TO_KEY[semitone]);
-    this.tanpura.restoreVolume();
     await this.tanpura.play();
 
     // Stop after PLAY_DURATION_MS
@@ -1440,6 +1463,11 @@ export class PracticePage implements OnInit, OnDestroy {
   /** Advance to the next round */
   nextEarRound(): void {
     if (!this.sessionActive) return;
+    this.analytics.logEvent('ear_training_round_completed', {
+      round:  this.earRound,
+      score:  this.earScore,
+      streak: this.earBestStreak,
+    });
     this.startEarRound();
   }
 
