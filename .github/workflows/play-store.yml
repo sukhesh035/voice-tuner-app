@@ -2,7 +2,8 @@ name: Play Store — Android
 
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*'
 
 # Never run two Android builds at the same time — queue instead of cancel
 concurrency:
@@ -21,7 +22,6 @@ jobs:
 
     env:
       APP_ID:       com.sruti.voicetuner
-      VERSION_NAME: 1.1
 
     steps:
       # ── 1. Checkout ──────────────────────────────────────────────────────
@@ -97,12 +97,15 @@ jobs:
 
       # ── 9. Set version name + version code ────────────────────────────────
       #   versionCode = github.run_number (auto-incrementing, required by Play Store)
-      #   versionName = VERSION_NAME env var above
+      #   versionName = git tag with leading 'v' stripped (e.g. v1.2.0 → 1.2.0)
       - name: Set version name and version code
         working-directory: apps/mobile-app/android
         run: |
+          TAG="${{ github.ref_name }}"
+          VERSION_NAME="${TAG#v}"
+          echo "Tag: $TAG → versionName: $VERSION_NAME"
           sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/" app/build.gradle
-          sed -i "s/versionName \"[^\"]*\"/versionName \"${{ env.VERSION_NAME }}\"/" app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${VERSION_NAME}\"/" app/build.gradle
           echo "── build.gradle versionCode / versionName ──"
           grep -E "(versionCode|versionName)" app/build.gradle
 
@@ -153,7 +156,7 @@ jobs:
           releaseFiles:                ${{ steps.aab.outputs.path }}
           track:                       internal
           status:                      completed
-          releaseName:                 "${{ env.VERSION_NAME }} (build ${{ github.run_number }})"
+          releaseName:                 "${{ github.ref_name }} (build ${{ github.run_number }})"
 
       # ── 14. Summary ───────────────────────────────────────────────────────
       - name: Summary
@@ -162,7 +165,7 @@ jobs:
           echo "## Play Store Build Uploaded" >> $GITHUB_STEP_SUMMARY
           echo ""                             >> $GITHUB_STEP_SUMMARY
           echo "**Track**: Internal Testing"  >> $GITHUB_STEP_SUMMARY
-          echo "**Version**: ${{ env.VERSION_NAME }} (build ${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ github.ref_name }} (build ${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
           echo "**Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo ""                             >> $GITHUB_STEP_SUMMARY
           echo "Check [Google Play Console](https://play.google.com/console) to manage testers." >> $GITHUB_STEP_SUMMARY

@@ -2,7 +2,8 @@ name: TestFlight — iOS
 
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*'
 
 concurrency:
   group: testflight-ios
@@ -548,7 +549,11 @@ jobs:
       - name: Set version and build number
         working-directory: apps/mobile-app/ios/App
         run: |
-          agvtool new-marketing-version 1.1
+          # Derive marketing version from the git tag (strip leading 'v')
+          TAG="${{ github.ref_name }}"
+          VERSION="${TAG#v}"
+          echo "Tag: $TAG → Version: $VERSION"
+          agvtool new-marketing-version "$VERSION"
           agvtool new-version -all ${{ github.run_number }}
 
       # ── 12. Diagnostics (helps debug if safe-area issue persists) ──────
@@ -708,7 +713,7 @@ jobs:
         run: |
           echo "## TestFlight Build Uploaded" >> $GITHUB_STEP_SUMMARY
           echo ""                             >> $GITHUB_STEP_SUMMARY
-          echo "**Version**: 1.1 (build ${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ github.ref_name }} (build ${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
           echo "**Commit**: \`${{ github.sha }}\`"                 >> $GITHUB_STEP_SUMMARY
           echo ""                             >> $GITHUB_STEP_SUMMARY
           echo "Apple takes ~5-15 min to process. Check [App Store Connect](https://appstoreconnect.apple.com)." >> $GITHUB_STEP_SUMMARY
