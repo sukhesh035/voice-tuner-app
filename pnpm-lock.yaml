@@ -89,6 +89,9 @@ importers:
       '@ionic/angular-toolkit':
         specifier: ^12.0.0
         version: 12.3.0(chokidar@4.0.3)
+      '@ionic/pwa-elements':
+        specifier: ^3.4.0
+        version: 3.4.0
       aws-amplify:
         specifier: ^6.0.0
         version: 6.16.3
@@ -2864,6 +2867,10 @@ packages:
   '@ionic/core@8.8.1':
     resolution: {integrity: sha512-ksOUHyOEqoyUIVWcwCNSFZVGwNfP1DKrUVeN/Cdk/Xl9Rdd/5MLHGsrOQpWQfoCf3Csdnw+KHHPrXz/2fzMkMA==}
     engines: {node: '>= 16'}
+
+  '@ionic/pwa-elements@3.4.0':
+    resolution: {integrity: sha512-WmL7An4NOsvJvct4V/A8hudr+yXgLBHYmxzqWGsetZmzN7C6suLRS/KIh2P1t8cSYCYL7HRrbv8NrIChPkh6Ow==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
 
   '@ionic/utils-array@2.1.6':
     resolution: {integrity: sha512-0JZ1Zkp3wURnv8oq6Qt7fMPo5MpjbLoUoa9Bu2Q4PJuSDWM8H8gwF3dQO7VTeUj3/0o1IB1wGkFWZZYgUXZMUg==}
@@ -14535,6 +14542,8 @@ snapshots:
       '@stencil/core': 4.43.0
       ionicons: 8.0.13
       tslib: 2.8.1
+
+  '@ionic/pwa-elements@3.4.0': {}
 
   '@ionic/utils-array@2.1.6':
     dependencies:

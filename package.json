@@ -67,6 +67,7 @@
     "@capgo/capacitor-updater": "^7.43.3",
     "@ionic/angular": "^8.0.0",
     "@ionic/angular-toolkit": "^12.0.0",
+    "@ionic/pwa-elements": "^3.4.0",
     "aws-amplify": "^6.0.0",
     "aws-jwt-verify": "^5.1.1",
     "chart.js": "^4.4.0",
