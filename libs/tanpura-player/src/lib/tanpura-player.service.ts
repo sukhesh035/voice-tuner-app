@@ -88,6 +88,14 @@ export class TanpuraPlayerService {
     if (!this.loadedSamples) {
       await this.preloadSamples();
     }
+    // Restore master gain in case it was silenced by stop() or stopAndSilence().
+    const gain = this.audioEngine.masterGainNode;
+    const ctx  = this.audioEngine.context;
+    if (gain && ctx) {
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(this.state.volume, ctx.currentTime + 0.05);
+    }
     this.nextPluckTime  = this.audioEngine.currentTime + 0.05;
     this.nextStringIndex = 0;
     this.patchState({ isPlaying: true, currentString: 0 });
@@ -100,6 +108,15 @@ export class TanpuraPlayerService {
       this.scheduleTimer = null;
     }
     this.patchState({ isPlaying: false });
+    // Silence in-flight oscillator nodes that would otherwise keep decaying
+    // for several seconds after the scheduler stops.
+    const gain = this.audioEngine.masterGainNode;
+    const ctx  = this.audioEngine.context;
+    if (gain && ctx) {
+      gain.gain.cancelScheduledValues(ctx.currentTime);
+      gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.03);
+    }
   }
 
   /**

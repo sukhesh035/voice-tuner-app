@@ -24,4 +24,5 @@ export const environment = {
     aiCoach:     true,
     offlineMode: true,
   },
+  enableAnalytics: false,
 };

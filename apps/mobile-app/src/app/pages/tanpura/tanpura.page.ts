@@ -10,6 +10,7 @@ import { addIcons } from 'ionicons';
 import { playCircle, stopCircle, musicalNote, volumeMedium, speedometer } from 'ionicons/icons';
 import { TanpuraPlayerService, MusicalKey, StringConfig, TanpuraState, Instrument } from '@voice-tuner/tanpura-player';
 import { AudioEngineService } from '@voice-tuner/audio-engine';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 const ALL_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const KEY_DISPLAY: Record<MusicalKey, string> = {
@@ -206,7 +207,8 @@ export class TanpuraPage implements OnInit, OnDestroy {
 
   constructor(
     private tanpura: TanpuraPlayerService,
-    private audioEngine: AudioEngineService
+    private audioEngine: AudioEngineService,
+    private analytics: AnalyticsService
   ) {
     addIcons({ playCircle, stopCircle, musicalNote, volumeMedium, speedometer });
   }
@@ -214,10 +216,17 @@ export class TanpuraPage implements OnInit, OnDestroy {
   ngOnInit(): void {}
 
   async togglePlay(): Promise<void> {
+    const wasPlaying = this.tanpura.state.isPlaying;
     await this.tanpura.toggle();
+    if (!wasPlaying) {
+      this.analytics.logEvent('tanpura_played', { key: this.tanpura.state.key });
+    }
   }
 
-  setKey(key: MusicalKey):   void { this.tanpura.setKey(key); }
+  setKey(key: MusicalKey):   void {
+    this.tanpura.setKey(key);
+    this.analytics.logEvent('tanpura_key_changed', { key });
+  }
   setTempo(event: Event):   void {
     const v = (event as CustomEvent).detail.value;
     this.tanpura.setTempo(Math.round(v * 10));

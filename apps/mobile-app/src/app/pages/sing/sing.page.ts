@@ -15,6 +15,7 @@ import { PitchDetectionService, PitchResult, IndianNote } from '@voice-tuner/pit
 import { TanpuraPlayerService } from '@voice-tuner/tanpura-player';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 @Component({
   selector: 'app-sing',
@@ -227,7 +228,8 @@ export class SingPage implements OnInit, OnDestroy {
     private pitchDetection: PitchDetectionService,
     private tanpura: TanpuraPlayerService,
     private api: ApiService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private analytics: AnalyticsService
   ) {
     addIcons({ mic, micOff, musicalNotes, statsChart });
   }
@@ -251,6 +253,10 @@ export class SingPage implements OnInit, OnDestroy {
       this.sessionStats = stats as any;
       this.isActive = false;
       this.micError = null;
+      this.analytics.logEvent('mic_stopped', {
+        duration_seconds: Math.round(stats.sessionDuration),
+        stability_score:  Math.round(stats.stabilityScore),
+      });
 
       // Persist session to backend (fire-and-forget — don't block UI)
       const tanpuraState = this.tanpura.state;
@@ -269,6 +275,7 @@ export class SingPage implements OnInit, OnDestroy {
           stabilityScore: Math.round(stats.stabilityScore),
           noteAccuracies,
         }).then(() => {
+          this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
           this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).catch(() => {});
         }).catch(err => console.warn('[SingPage] Failed to save session:', err));
       }
@@ -278,10 +285,13 @@ export class SingPage implements OnInit, OnDestroy {
         this.detectedNotes.clear();
         this.isActive = true;
         this.micError = null;
+        this.analytics.logEvent('mic_started');
       } catch (err: any) {
-        this.micError = err?.name === 'NotAllowedError'
+        const isDenied = err?.name === 'NotAllowedError';
+        this.micError = isDenied
           ? 'Microphone permission denied. Please allow access and try again.'
           : 'Could not start microphone. Please try again.';
+        if (isDenied) this.analytics.logEvent('mic_permission_denied');
       }
     }
     this.cdr.markForCheck();

@@ -1,0 +1,146 @@
+name: Play Store — Android
+
+on:
+  push:
+    branches: [main]
+
+# Never run two Android builds at the same time — queue instead of cancel
+concurrency:
+  group: play-store-android
+  cancel-in-progress: false
+
+jobs:
+  build-and-upload:
+    name: Build & Upload to Play Store (Internal Testing)
+    runs-on: ubuntu-latest
+
+    environment: prod
+
+    permissions:
+      contents: read
+
+    env:
+      APP_ID:       com.sruti.voicetuner
+      VERSION_NAME: 1.1
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      # ── 2. Node + pnpm ───────────────────────────────────────────────────
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4.3.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # ── 3. Install JS dependencies ────────────────────────────────────────
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── 4. AWS credentials (for generate-env to read CloudFormation outputs) ─
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.3
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            us-east-1
+
+      # ── 5. Generate environment.prod.ts from live stack outputs ───────────
+      - name: Generate environment.prod.ts
+        run: pnpm generate-env:prod
+
+      # ── 6. Build PWA (production) ─────────────────────────────────────────
+      - name: Build PWA
+        run: pnpm build:mobile
+
+      # ── 7. Set up Java 17 (required for Android Gradle build) ─────────────
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      # ── 8. Add & sync Capacitor Android platform ──────────────────────────
+      #   android/ is gitignored — regenerated fresh every CI run, same as ios/.
+      - name: Add & sync Capacitor Android platform
+        working-directory: apps/mobile-app
+        run: |
+          ../../node_modules/.bin/cap add android
+          ../../node_modules/.bin/cap sync android
+
+      # ── 9. Set version name + version code ────────────────────────────────
+      #   versionCode = github.run_number (auto-incrementing, required by Play Store)
+      #   versionName = VERSION_NAME env var above
+      - name: Set version name and version code
+        working-directory: apps/mobile-app/android
+        run: |
+          sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/" app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"${{ env.VERSION_NAME }}\"/" app/build.gradle
+          echo "── build.gradle versionCode / versionName ──"
+          grep -E "(versionCode|versionName)" app/build.gradle
+
+      # ── 10. Decode keystore ───────────────────────────────────────────────
+      #   ANDROID_KEYSTORE_BASE64 = base64-encoded .jks / .keystore file
+      - name: Decode release keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 --decode > $RUNNER_TEMP/release.keystore
+
+      # ── 11. Build release AAB ─────────────────────────────────────────────
+      #   We build an Android App Bundle (.aab) — required for new Play Store apps.
+      #   Signing is done inline via Gradle properties passed as flags.
+      - name: Build release AAB
+        working-directory: apps/mobile-app/android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS:         ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD:      ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$RUNNER_TEMP/release.keystore \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD" \
+            --no-daemon \
+            --stacktrace
+
+      # ── 12. Locate AAB ────────────────────────────────────────────────────
+      - name: Locate AAB
+        id: aab
+        run: |
+          AAB=$(find apps/mobile-app/android/app/build/outputs/bundle/release -name "*.aab" | head -1)
+          echo "path=$AAB" >> $GITHUB_OUTPUT
+          echo "Found AAB: $AAB"
+          ls -lh "$AAB"
+
+      # ── 13. Upload to Play Store (Internal Testing track) ─────────────────
+      #   Uses the official google-github-actions/upload-google-play action.
+      #   GOOGLE_PLAY_SERVICE_ACCOUNT_JSON = contents of your service account JSON key.
+      #   The app is uploaded to the "internal" track (equivalent to TestFlight).
+      - name: Upload to Play Store — Internal Testing
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName:                 ${{ env.APP_ID }}
+          releaseFiles:                ${{ steps.aab.outputs.path }}
+          track:                       internal
+          status:                      completed
+          releaseName:                 "${{ env.VERSION_NAME }} (build ${{ github.run_number }})"
+
+      # ── 14. Summary ───────────────────────────────────────────────────────
+      - name: Summary
+        if: success()
+        run: |
+          echo "## Play Store Build Uploaded" >> $GITHUB_STEP_SUMMARY
+          echo ""                             >> $GITHUB_STEP_SUMMARY
+          echo "**Track**: Internal Testing"  >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ env.VERSION_NAME }} (build ${{ github.run_number }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo ""                             >> $GITHUB_STEP_SUMMARY
+          echo "Check [Google Play Console](https://play.google.com/console) to manage testers." >> $GITHUB_STEP_SUMMARY

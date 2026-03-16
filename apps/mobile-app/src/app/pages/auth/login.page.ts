@@ -10,6 +10,7 @@ import { addIcons } from 'ionicons';
 import { arrowBackOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
 import { AuthService } from '@voice-tuner/auth';
 import { ApiService } from '../../core/services/api.service';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 type LoginView = 'signin' | 'forgot';
 
@@ -36,7 +37,8 @@ export class LoginPage {
     private authService: AuthService,
     private api: ApiService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private analytics: AnalyticsService
   ) {
     addIcons({ arrowBackOutline, eyeOutline, eyeOffOutline });
   }
@@ -50,6 +52,7 @@ export class LoginPage {
       await this.authService.signIn(this.email, this.password);
       // Ensure user record exists in DynamoDB (auto-provisions on first login)
       this.api.getProfile().catch(() => {});
+      this.analytics.logEvent('login', { method: 'email' });
       await this.router.navigate(['/home']);
     } catch (err: any) {
       if (err.name === 'UserNotConfirmedException') {
@@ -57,6 +60,7 @@ export class LoginPage {
         this.errorMsg = 'Your email address hasn\'t been confirmed yet.';
       } else {
         this.errorMsg = err.message ?? 'Sign in failed. Please try again.';
+        this.analytics.logEvent('login_error', { error: err.name ?? 'unknown' });
       }
     } finally {
       this.isLoading = false;
@@ -72,6 +76,7 @@ export class LoginPage {
       await this.authService.signUp(this.email, this.password);
       // Provision user record in DynamoDB immediately after sign-up
       this.api.getProfile().catch(() => {});
+      this.analytics.logEvent('sign_up', { method: 'email' });
       await this.router.navigate(['/home']);
     } catch (err: any) {
       this.errorMsg = err.message ?? 'Sign up failed.';
@@ -97,6 +102,7 @@ export class LoginPage {
         await svc.resetPassword(this.email);
       }
       this.successMsg = 'Password reset email sent. Check your inbox.';
+      this.analytics.logEvent('forgot_password_sent');
     } catch (err: any) {
       this.errorMsg = err.message ?? 'Could not send reset email.';
     } finally {
@@ -137,6 +143,7 @@ export class LoginPage {
   }
 
   continueAsGuest(): void {
+    this.analytics.logEvent('continue_as_guest');
     this.router.navigate(['/home']);
   }
 }
