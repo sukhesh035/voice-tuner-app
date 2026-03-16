@@ -213,7 +213,7 @@ export class SrutiStack extends cdk.Stack {
     const makeFn = (id: string, entry: string) =>
       new lambda.Function(this, id, {
         ...lambdaDefaults as lambda.FunctionProps,
-        handler: `${entry}.handler.handler`,
+        handler: `${entry}.handler`,
         code: lambda.Code.fromAsset(distDir),
         functionName: `${prefix}-${entry}`,
       });
