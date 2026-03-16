@@ -31,6 +31,7 @@ export interface UserProfile {
   stats:        UserStats;
   favoriteRagas: string[];
   preferences:  UserPreferences;
+  photoUrl?:    string;
 }
 
 export interface StreaksResponse {
@@ -110,6 +111,23 @@ export class ApiService {
   updatePreferences(prefs: Partial<UserPreferences>): Promise<{ updated: boolean; updatedAt: string }> {
     return firstValueFrom(
       this.http.put<{ updated: boolean; updatedAt: string }>(`${this.base}/api/users/me`, { preferences: prefs })
+    );
+  }
+
+  /** Get a presigned S3 upload URL for the user's profile photo. */
+  getUploadUrl(contentType = 'image/jpeg'): Promise<{ uploadUrl: string; cdnUrl: string; key: string }> {
+    return firstValueFrom(
+      this.http.post<{ uploadUrl: string; cdnUrl: string; key: string }>(
+        `${this.base}/api/users/me/upload-url`,
+        { contentType },
+      )
+    );
+  }
+
+  /** Save the CDN photo URL to the user profile. */
+  updatePhotoUrl(photoUrl: string): Promise<{ updated: boolean; updatedAt: string }> {
+    return firstValueFrom(
+      this.http.put<{ updated: boolean; updatedAt: string }>(`${this.base}/api/users/me`, { photoUrl })
     );
   }
 }

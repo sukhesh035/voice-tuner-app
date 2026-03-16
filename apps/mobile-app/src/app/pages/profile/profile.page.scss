@@ -30,7 +30,24 @@
   padding: $spacing-6 0 $spacing-2;
 }
 
-.avatar {
+.avatar-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.avatar-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(var(--sruti-primary-rgb), 0.45);
+}
+
+.avatar-initial {
   width: 72px;
   height: 72px;
   border-radius: 50%;
@@ -41,8 +58,34 @@
   font-size: 28px;
   font-weight: 800;
   color: white;
-  flex-shrink: 0;
   box-shadow: 0 8px 24px rgba(var(--sruti-primary-rgb), 0.45);
+}
+
+.avatar-edit-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--sruti-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--sruti-bg-page);
+  ion-icon {
+    font-size: 12px;
+    color: white;
+  }
+}
+
+.avatar-spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 32px;
+  height: 32px;
+  --color: white;
 }
 
 .profile-name  { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }

@@ -118,8 +118,9 @@ app.get(   '/v1/api/sessions/:id', (req, res) => invoke(sessionsHandler,  req, r
 app.put(   '/v1/api/sessions/:id', (req, res) => invoke(sessionsHandler,  req, res));
 
 // Users
-app.get(   '/v1/api/users/me',     (req, res) => invoke(usersHandler,     req, res));
-app.put(   '/v1/api/users/me',     (req, res) => invoke(usersHandler,     req, res));
+app.get(   '/v1/api/users/me',            (req, res) => invoke(usersHandler,     req, res));
+app.put(   '/v1/api/users/me',            (req, res) => invoke(usersHandler,     req, res));
+app.post(  '/v1/api/users/me/upload-url', (req, res) => invoke(usersHandler,     req, res));
 
 // Streaks
 app.get(   '/v1/api/streaks',          (req, res) => invoke(streaksHandler, req, res));

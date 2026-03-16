@@ -191,6 +191,34 @@ export class SrutiStack extends cdk.Stack {
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // NA + EU — cheapest
     });
 
+    // ─── User Uploads (profile photos, etc.) ─────────────────────────────────
+    const uploadsBucket = new s3.Bucket(this, 'UploadsBucket', {
+      bucketName:        `${prefix}-user-uploads-use1`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      versioned:         false,
+      cors: [{
+        allowedOrigins: ['*'],
+        allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.PUT],
+        allowedHeaders: ['*'],
+        maxAge: 3600,
+      }],
+      removalPolicy: stage === 'dev' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
+      autoDeleteObjects: stage === 'dev',
+    });
+
+    const uploadsOac = new cloudfront.S3OriginAccessControl(this, 'UploadsOAC');
+    const uploadsCdn = new cloudfront.Distribution(this, 'UploadsCDN', {
+      comment: `${prefix} user uploads (profile photos)`,
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(uploadsBucket, { originAccessControl: uploadsOac }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+        compress: true,
+      },
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+    });
+
     // ─── PWA Web Hosting ─────────────────────────────────────────────────────
     const webBucket = new s3.Bucket(this, 'WebBucket', {
       bucketName:        `${prefix}-web-use1`,
@@ -226,6 +254,8 @@ export class SrutiStack extends cdk.Stack {
       STREAKS_TABLE:        streaksTable.tableName,
       CLASSROOM_TABLE:      classroomTable.tableName,
       STUDENTS_TABLE:       studentsTable.tableName,
+      UPLOADS_BUCKET:       uploadsBucket.bucketName,
+      UPLOADS_CDN_URL:      `https://${uploadsCdn.distributionDomainName}`,
       // Allow requests from the PWA CloudFront domain; dev stays open
       CORS_ORIGIN: stage === 'prod'
         ? `https://${webCdn.distributionDomainName}`
@@ -263,6 +293,9 @@ export class SrutiStack extends cdk.Stack {
     streaksTable.grantReadWriteData(streaksLambda);
     classroomTable.grantReadWriteData(classroomLambda);
     studentsTable.grantReadWriteData(classroomLambda);
+
+    // Grant S3 upload permission for profile photos
+    uploadsBucket.grantPut(usersLambda);
 
     // ─── HTTP API Gateway ─────────────────────────────────────────────────────
     const api = new apigwv2.HttpApi(this, 'SrutiApi', {
@@ -306,6 +339,7 @@ export class SrutiStack extends cdk.Stack {
     addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], '/v1/api/sessions',          sessionsLambda);
     addRoute([apigwv2.HttpMethod.GET],                          '/v1/api/sessions/{id}',     sessionsLambda);
     addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT],  '/v1/api/users/me',          usersLambda);
+    addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/users/me/upload-url', usersLambda);
     addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], '/v1/api/streaks',            streaksLambda);
     addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/streaks/checkin',   streaksLambda);
     addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/classroom/sessions',      classroomLambda);
@@ -325,6 +359,8 @@ export class SrutiStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'UpdatesCdnUrl',       { value: `https://${updatesCdn.distributionDomainName}` });
     new cdk.CfnOutput(this, 'UpdatesBucketName',   { value: updatesBucket.bucketName });
     new cdk.CfnOutput(this, 'UpdatesDistributionId', { value: updatesCdn.distributionId });
+    new cdk.CfnOutput(this, 'UploadsCdnUrl',         { value: `https://${uploadsCdn.distributionDomainName}` });
+    new cdk.CfnOutput(this, 'UploadsBucketName',     { value: uploadsBucket.bucketName });
     new cdk.CfnOutput(this, 'AwsRegion',           { value: this.region });
   }
 }

@@ -3,18 +3,21 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner,
-  ViewWillEnter
+  ViewWillEnter, ActionSheetController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   personCircle, trendingUp, flame, musicalNote,
   settingsOutline, chevronForward, logOutOutline,
-  checkmarkCircle, school, mic
+  checkmarkCircle, school, mic, cameraOutline
 } from 'ionicons/icons';
 import { filter, take } from 'rxjs/operators';
+import { Capacitor } from '@capacitor/core';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { AuthService } from '@voice-tuner/auth';
 import { ApiService, UserProfile, StreaksResponse } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
+import { compressProfilePhoto } from '../../core/utils/image-compress';
 
 interface Achievement {
   icon: string;
@@ -55,7 +58,14 @@ interface Achievement {
 
             <!-- Avatar + Name -->
             <div class="profile-hero">
-              <div class="avatar">{{ user.name?.[0]?.toUpperCase() ?? 'U' }}</div>
+              <div class="avatar-wrap" (click)="changePhoto()">
+                <img *ngIf="profile?.photoUrl" [src]="profile.photoUrl" class="avatar-img" alt="Profile photo" />
+                <div *ngIf="!profile?.photoUrl" class="avatar-initial">{{ user.name?.[0]?.toUpperCase() ?? 'U' }}</div>
+                <div class="avatar-edit-badge">
+                  <ion-icon name="camera-outline"></ion-icon>
+                </div>
+                <ion-spinner *ngIf="uploading" name="crescent" class="avatar-spinner"></ion-spinner>
+              </div>
               <div class="profile-info">
                 <div class="profile-name">{{ user.name }}</div>
                 <div class="profile-email">{{ user.email }}</div>
@@ -234,6 +244,7 @@ interface Achievement {
 export class ProfilePage implements OnInit, ViewWillEnter {
   resendLoading = false;
   loading = false;
+  uploading = false;
 
   profile: UserProfile | null = null;
   streaks: StreaksResponse | null = null;
@@ -306,12 +317,13 @@ export class ProfilePage implements OnInit, ViewWillEnter {
     public authService: AuthService,
     private api: ApiService,
     private cdr: ChangeDetectorRef,
-    private analytics: AnalyticsService
+    private analytics: AnalyticsService,
+    private actionSheet: ActionSheetController,
   ) {
     addIcons({
       personCircle, trendingUp, flame, musicalNote,
       settingsOutline, chevronForward, logOutOutline,
-      checkmarkCircle, school, mic
+      checkmarkCircle, school, mic, cameraOutline
     });
   }
 
@@ -349,6 +361,86 @@ export class ProfilePage implements OnInit, ViewWillEnter {
       console.error('[ProfilePage] loadData error', err);
     } finally {
       this.loading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async changePhoto(): Promise<void> {
+    if (this.uploading) return;
+
+    // On native, show action sheet with Camera + Gallery; on web, use gallery only
+    const isNative = Capacitor.isNativePlatform();
+
+    let source: CameraSource;
+    if (isNative) {
+      const sheet = await this.actionSheet.create({
+        header: 'Profile Photo',
+        buttons: [
+          { text: 'Take Photo',          icon: 'camera-outline', data: CameraSource.Camera },
+          { text: 'Choose from Gallery',  icon: 'image-outline',  data: CameraSource.Photos },
+          { text: 'Cancel', role: 'cancel' },
+        ],
+      });
+      await sheet.present();
+      const result = await sheet.onDidDismiss();
+      if (result.role === 'cancel' || result.data === undefined) return;
+      source = result.data;
+    } else {
+      source = CameraSource.Photos;
+    }
+
+    try {
+      // Capture / pick image as a base64 data URI
+      const photo = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: true,
+        resultType: CameraResultType.DataUrl,
+        source,
+        width: 512,   // cap source to prevent huge images
+        height: 512,
+      });
+
+      if (!photo.dataUrl) return;
+
+      this.uploading = true;
+      this.cdr.markForCheck();
+
+      // Compress to a small JPEG (256px max, ~0.7 quality → ~10-30 KB)
+      const blob = await compressProfilePhoto(photo.dataUrl, {
+        maxSize: 256,
+        quality: 0.7,
+      });
+
+      // Get presigned upload URL from backend
+      const { uploadUrl, cdnUrl } = await this.api.getUploadUrl('image/jpeg');
+
+      // Upload directly to S3 via presigned URL
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'image/jpeg' },
+        body: blob,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`S3 upload failed: ${uploadRes.status}`);
+      }
+
+      // Cache-bust: append timestamp to CDN URL
+      const photoUrl = `${cdnUrl}?t=${Date.now()}`;
+
+      // Save photoUrl to user profile in DynamoDB
+      await this.api.updatePhotoUrl(photoUrl);
+
+      // Update local state
+      if (this.profile) {
+        this.profile = { ...this.profile, photoUrl };
+      }
+
+      this.analytics.logEvent('profile_photo_updated');
+    } catch (err) {
+      console.error('[ProfilePage] changePhoto error', err);
+    } finally {
+      this.uploading = false;
       this.cdr.markForCheck();
     }
   }
