@@ -102,7 +102,108 @@ jobs:
           ../../node_modules/.bin/cap add ios
           ../../node_modules/.bin/cap sync ios
 
-      # ── 8b. Inject MainViewController + patch Main.storyboard & pbxproj ─
+      # ── 8b. Create shared Xcode scheme ────────────────────────────────
+      #   Capacitor's template does not include a .xcscheme file.
+      #   Xcode 26 requires a shared scheme with explicit platform support
+      #   for xcodebuild archive -destination "generic/platform=iOS" to work.
+      #   We write the scheme XML ourselves so CI is self-contained.
+      - name: Create shared Xcode scheme
+        run: |
+          SCHEMES_DIR="apps/mobile-app/ios/App/App.xcodeproj/xcshareddata/xcschemes"
+          mkdir -p "$SCHEMES_DIR"
+          cat > "$SCHEMES_DIR/App.xcscheme" << 'ENDSCHEME'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Scheme
+             LastUpgradeVersion = "1600"
+             version = "1.7">
+             <BuildAction
+                parallelizeBuildables = "YES"
+                buildImplicitDependencies = "YES">
+                <BuildActionEntries>
+                   <BuildActionEntry
+                      buildForTesting = "YES"
+                      buildForRunning = "YES"
+                      buildForProfiling = "YES"
+                      buildForArchiving = "YES"
+                      buildForAnalyzing = "YES">
+                      <BuildableReference
+                         BuildableIdentifier = "primary"
+                         BlueprintIdentifier = "504EC3031FED79650016851F"
+                         BuildableName = "App.app"
+                         BlueprintName = "App"
+                         ReferencedContainer = "container:App.xcodeproj">
+                      </BuildableReference>
+                   </BuildActionEntry>
+                </BuildActionEntries>
+             </BuildAction>
+             <TestAction
+                buildConfiguration = "Debug"
+                selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+                selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+                shouldUseLaunchSchemeArgsEnv = "YES">
+                <Testables>
+                </Testables>
+             </TestAction>
+             <LaunchAction
+                buildConfiguration = "Debug"
+                selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+                selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+                launchStyle = "0"
+                useCustomWorkingDirectory = "NO"
+                ignoresPersistentStateOnLaunch = "NO"
+                debugDocumentVersioning = "YES"
+                debugServiceExtension = "internal"
+                allowLocationSimulation = "YES">
+                <BuildableProductRunnable
+                   runnableDebuggingMode = "0">
+                   <BuildableReference
+                      BuildableIdentifier = "primary"
+                      BlueprintIdentifier = "504EC3031FED79650016851F"
+                      BuildableName = "App.app"
+                      BlueprintName = "App"
+                      ReferencedContainer = "container:App.xcodeproj">
+                   </BuildableReference>
+                </BuildableProductRunnable>
+             </LaunchAction>
+             <ProfileAction
+                buildConfiguration = "Release"
+                shouldUseLaunchSchemeArgsEnv = "YES"
+                savedToolIdentifier = ""
+                useCustomWorkingDirectory = "NO"
+                debugDocumentVersioning = "YES">
+                <BuildableProductRunnable
+                   runnableDebuggingMode = "0">
+                   <BuildableReference
+                      BuildableIdentifier = "primary"
+                      BlueprintIdentifier = "504EC3031FED79650016851F"
+                      BuildableName = "App.app"
+                      BlueprintName = "App"
+                      ReferencedContainer = "container:App.xcodeproj">
+                   </BuildableReference>
+                </BuildableProductRunnable>
+             </ProfileAction>
+             <AnalyzeAction
+                buildConfiguration = "Debug">
+             </AnalyzeAction>
+             <ArchiveAction
+                buildConfiguration = "Release"
+                revealArchiveInOrganizer = "YES">
+                <BuildableReference
+                   BuildableIdentifier = "primary"
+                   BlueprintIdentifier = "504EC3031FED79650016851F"
+                   BuildableName = "App.app"
+                   BlueprintName = "App"
+                   ReferencedContainer = "container:App.xcodeproj">
+                </BuildableReference>
+             </ArchiveAction>
+          </Scheme>
+          ENDSCHEME
+          echo "── Scheme written ──"
+          cat "$SCHEMES_DIR/App.xcscheme"
+          echo "── xcodebuild -list ──"
+          xcodebuild -project "apps/mobile-app/ios/App/App.xcodeproj" -list
+
+      # ── 8c. Inject MainViewController + patch Main.storyboard & pbxproj ─
       #   The default Capacitor template uses CAPBridgeViewController directly,
       #   which doesn't extend the webView to the screen edges. Our local dev
       #   project has a custom MainViewController subclass that:
@@ -361,7 +462,14 @@ jobs:
             DEVELOPMENT_TEAM="$TEAM_ID" \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="swara-ai-appstore" \
-            | xcpretty || true
+            2>&1 | tee /tmp/xcodebuild-archive.log | xcpretty; \
+            STATUS=${PIPESTATUS[0]}; \
+            if [ $STATUS -ne 0 ]; then \
+              echo ""; \
+              echo "── xcodebuild raw output (last 100 lines) ──"; \
+              tail -100 /tmp/xcodebuild-archive.log; \
+              exit $STATUS; \
+            fi
 
       # ── 17. Export IPA ─────────────────────────────────────────────────
       - name: Export IPA
