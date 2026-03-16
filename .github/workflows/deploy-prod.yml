@@ -138,10 +138,23 @@ jobs:
             --distribution-id ${{ steps.stack.outputs.distribution_id }} \
             --paths "/*"
 
-      # ── 13. Summary ───────────────────────────────────────────────────────────
+      # ── 13. Publish live update bundle (Capgo self-hosted) ───────────────────
+      #   Zips the freshly-built PWA, uploads it to the updates S3 bucket,
+      #   writes manifest.json, and invalidates CloudFront so all installed
+      #   native apps pick up the new JS bundle on next foreground.
+      #   Version = 1.1.<run_number> — matches the native build number set by
+      #   testflight.yml / play-store.yml so versions stay in sync.
+      - name: Publish live update
+        id: live_update
+        run: node scripts/publish-update.mjs prod 1.1.${{ github.run_number }}
+
+      # ── 14. Summary ───────────────────────────────────────────────────────────
       - name: Deployment summary
         run: |
-          echo "## 🚀 Prod Deployment Complete" >> $GITHUB_STEP_SUMMARY
-          echo ""                               >> $GITHUB_STEP_SUMMARY
-          echo "🌐 **URL**: ${{ steps.stack.outputs.web_url }}"  >> $GITHUB_STEP_SUMMARY
-          echo "🔀 **Commit**: \`${{ github.sha }}\`"            >> $GITHUB_STEP_SUMMARY
+          echo "## Prod Deployment Complete"                                         >> $GITHUB_STEP_SUMMARY
+          echo ""                                                                     >> $GITHUB_STEP_SUMMARY
+          echo "**PWA**: ${{ steps.stack.outputs.web_url }}"                         >> $GITHUB_STEP_SUMMARY
+          echo "**Live update**: v1.1.${{ github.run_number }} pushed to all devices" >> $GITHUB_STEP_SUMMARY
+          echo "**Privacy Policy**: https://sukhesh035.github.io/voice-tuner-app/privacy-policy.html" >> $GITHUB_STEP_SUMMARY
+          echo "**Terms of Service**: https://sukhesh035.github.io/voice-tuner-app/terms-of-service.html" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit**: \`${{ github.sha }}\`"                                   >> $GITHUB_STEP_SUMMARY
