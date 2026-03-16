@@ -81,6 +81,20 @@ jobs:
           ../../node_modules/.bin/cap add android
           ../../node_modules/.bin/cap sync android
 
+      # ── 8a. Decode google-services.json (Firebase native SDK) ─────────────
+      #   @capacitor-firebase/analytics auto-calls FirebaseApp.configure() on
+      #   Android, which requires google-services.json in the app module.
+      #   Download from Firebase Console → Project settings → Android app,
+      #   base64-encode it, and store as GOOGLE_SERVICES_JSON_BASE64 secret.
+      - name: Decode google-services.json
+        env:
+          GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICES_JSON_B64" | base64 --decode \
+            > apps/mobile-app/android/app/google-services.json
+          echo "── google-services.json written ──"
+          cat apps/mobile-app/android/app/google-services.json | python3 -m json.tool
+
       # ── 9. Set version name + version code ────────────────────────────────
       #   versionCode = github.run_number (auto-incrementing, required by Play Store)
       #   versionName = VERSION_NAME env var above

@@ -102,6 +102,20 @@ jobs:
           ../../node_modules/.bin/cap add ios
           ../../node_modules/.bin/cap sync ios
 
+      # ── 8a. Decode GoogleService-Info.plist (Firebase native SDK) ──────
+      #   @capacitor-firebase/analytics auto-calls FirebaseApp.configure()
+      #   on iOS, which requires GoogleService-Info.plist in the app bundle.
+      #   Download the plist from Firebase Console → Project settings → iOS app,
+      #   base64-encode it, and store as GOOGLE_SERVICE_INFO_PLIST_BASE64 secret.
+      - name: Decode GoogleService-Info.plist
+        env:
+          GOOGLE_SERVICE_INFO_B64: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          echo "$GOOGLE_SERVICE_INFO_B64" | base64 --decode \
+            > apps/mobile-app/ios/App/App/GoogleService-Info.plist
+          echo "── GoogleService-Info.plist written ──"
+          plutil -p apps/mobile-app/ios/App/App/GoogleService-Info.plist
+
       # ── 8b. Create shared Xcode scheme ────────────────────────────────
       #   Capacitor's template does not include a .xcscheme file.
       #   Xcode 26 requires a shared scheme with explicit platform support
@@ -266,26 +280,47 @@ jobs:
 
           FILE_REF = "A1B2C3D400000000DEADBEEF"
           BUILD_REF = "A1B2C3D400000001DEADBEEF"
+          GSERVICE_FILE_REF = "B1C2D3E4F5A6B7C8D9E0F1A1"
+          GSERVICE_BUILD_REF = "B1C2D3E4F5A6B7C8D9E0F1A2"
 
           # 1) PBXBuildFile section — add after AppDelegate build file
           anchor = '504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };'
           insert_build = f'\t\t{BUILD_REF} /* MainViewController.swift in Sources */ = {{isa = PBXBuildFile; fileRef = {FILE_REF} /* MainViewController.swift */; }};'
-          content = content.replace(anchor, anchor + "\n" + insert_build)
+          insert_gservice_build = f'\t\t{GSERVICE_BUILD_REF} /* GoogleService-Info.plist in Resources */ = {{isa = PBXBuildFile; fileRef = {GSERVICE_FILE_REF} /* GoogleService-Info.plist */; }};'
+          content = content.replace(anchor, anchor + "\n" + insert_build + "\n" + insert_gservice_build)
 
           # 2) PBXFileReference section — add after AppDelegate file reference
           anchor2 = '504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };'
           insert_fileref = f'\t\t{FILE_REF} /* MainViewController.swift */ = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; }};'
-          content = content.replace(anchor2, anchor2 + "\n" + insert_fileref)
+          insert_gservice_fileref = f'\t\t{GSERVICE_FILE_REF} /* GoogleService-Info.plist */ = {{isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; }};'
+          content = content.replace(anchor2, anchor2 + "\n" + insert_fileref + "\n" + insert_gservice_fileref)
 
           # 3) PBXGroup — add file ref after AppDelegate.swift in the App group children
           group_anchor = '504EC3071FED79650016851F /* AppDelegate.swift */,'
           group_insert = f'\t\t\t\t{FILE_REF} /* MainViewController.swift */,'
-          content = content.replace(group_anchor, group_anchor + "\n" + group_insert, 1)
+          group_insert_gservice = f'\t\t\t\t{GSERVICE_FILE_REF} /* GoogleService-Info.plist */,'
+          content = content.replace(group_anchor, group_anchor + "\n" + group_insert + "\n" + group_insert_gservice, 1)
 
           # 4) PBXSourcesBuildPhase — add after AppDelegate in sources list
           sources_anchor = '504EC3081FED79650016851F /* AppDelegate.swift in Sources */,'
           sources_insert = f'\t\t\t\t{BUILD_REF} /* MainViewController.swift in Sources */,'
           content = content.replace(sources_anchor, sources_anchor + "\n" + sources_insert, 1)
+
+          # 5) PBXResourcesBuildPhase — add GoogleService-Info.plist to resources
+          # Find an existing resource entry to anchor on. Capacitor templates include
+          # Assets.xcassets and storyboard files in the resources phase. We search for
+          # the "Resources" build phase and inject our plist build ref.
+          resources_phase_match = re.search(
+              r'/\* Resources \*/ = \{[^}]*isa = PBXResourcesBuildPhase;[^}]*files = \(',
+              content
+          )
+          if resources_phase_match:
+              insert_pos = resources_phase_match.end()
+              resources_inject = f'\n\t\t\t\t{GSERVICE_BUILD_REF} /* GoogleService-Info.plist in Resources */,'
+              content = content[:insert_pos] + resources_inject + content[insert_pos:]
+              print("Added GoogleService-Info.plist to PBXResourcesBuildPhase")
+          else:
+              print("WARNING: Could not find PBXResourcesBuildPhase — GoogleService-Info.plist NOT added to resources")
 
           # ── SPM signing fix ──────────────────────────────────────────────
           # Xcode 26 propagates PROVISIONING_PROFILE_SPECIFIER from the project
@@ -456,6 +491,9 @@ jobs:
           echo ""
           echo "── pbxproj signing settings (Release configs) ──"
           grep -n -E "(CODE_SIGN|PROVISIONING_PROFILE|DEVELOPMENT_TEAM|ProvisioningStyle)" "$PBXPROJ" || true
+          echo ""
+          echo "── pbxproj GoogleService-Info.plist references ──"
+          grep -n "GoogleService-Info" "$PBXPROJ" || echo "WARNING: GoogleService-Info.plist not found in pbxproj!"
 
       # ── 9. Generate iOS native assets (icons + splash) ─────────────────
       - name: Generate iOS native assets
