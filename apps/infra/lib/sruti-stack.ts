@@ -159,6 +159,38 @@ export class SrutiStack extends cdk.Stack {
       },
     });
 
+    // ─── Live Update Bundles (Capgo self-hosted) ────────────────────────────
+    // Stores zipped JS/CSS bundles and a manifest.json that the native app
+    // fetches on launch to check for OTA updates.
+    const updatesBucket = new s3.Bucket(this, 'UpdatesBucket', {
+      bucketName:        `${prefix}-updates-use1`,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      versioned:         true,  // keep previous bundles for rollback
+      cors: [{
+        allowedOrigins: ['*'],
+        allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.HEAD],
+        allowedHeaders: ['*'],
+        maxAge: 3600,
+      }],
+      removalPolicy: stage === 'dev' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
+      autoDeleteObjects: stage === 'dev',
+    });
+
+    const updatesOac = new cloudfront.S3OriginAccessControl(this, 'UpdatesOAC');
+    const updatesCdn = new cloudfront.Distribution(this, 'UpdatesCDN', {
+      comment: `${prefix} live-update bundles`,
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(updatesBucket, { originAccessControl: updatesOac }),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        // manifest.json must never be cached so devices always see the latest version.
+        // Bundle zips are versioned by filename so caching them is fine.
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+        compress: true,
+      },
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100, // NA + EU — cheapest
+    });
+
     // ─── PWA Web Hosting ─────────────────────────────────────────────────────
     const webBucket = new s3.Bucket(this, 'WebBucket', {
       bucketName:        `${prefix}-web-use1`,
@@ -290,6 +322,9 @@ export class SrutiStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'WebUrl',              { value: `https://${webCdn.distributionDomainName}` });
     new cdk.CfnOutput(this, 'WebBucketName',       { value: webBucket.bucketName });
     new cdk.CfnOutput(this, 'WebDistributionId',   { value: webCdn.distributionId });
+    new cdk.CfnOutput(this, 'UpdatesCdnUrl',       { value: `https://${updatesCdn.distributionDomainName}` });
+    new cdk.CfnOutput(this, 'UpdatesBucketName',   { value: updatesBucket.bucketName });
+    new cdk.CfnOutput(this, 'UpdatesDistributionId', { value: updatesCdn.distributionId });
     new cdk.CfnOutput(this, 'AwsRegion',           { value: this.region });
   }
 }

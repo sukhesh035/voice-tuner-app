@@ -3,6 +3,7 @@ import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { ThemeService } from './core/services/theme.service';
 import { AuthService } from '@voice-tuner/auth';
 import { ApiService } from './core/services/api.service';
+import { LiveUpdateService } from './core/services/live-update.service';
 
 // On a real device over cellular/WiFi, Cognito's fetchAuthSession can take
 // 300–800ms. Cap the wait so a slow or offline network never freezes the app.
@@ -23,10 +24,15 @@ export class AppComponent implements OnInit {
     private themeService: ThemeService,
     private authService: AuthService,
     private api: ApiService,
+    private liveUpdate: LiveUpdateService,
   ) {}
 
   ngOnInit(): void {
     this.themeService.initialize();
+
+    // Start live-update check early (non-blocking). On the web this is a no-op.
+    this.liveUpdate.initialize();
+
     // Race auth init against a timeout so a slow/offline Cognito call never
     // blocks the whole app from rendering.
     const timeout = new Promise<void>(resolve => setTimeout(resolve, AUTH_INIT_TIMEOUT_MS));

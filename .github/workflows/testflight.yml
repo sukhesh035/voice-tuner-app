@@ -370,9 +370,11 @@ jobs:
           # and inject into the buildSettings block.
           def patch_build_settings(content, config_guid, settings_to_inject):
               """
-              Find the XCBuildConfiguration block for config_guid and inject
-              key = value; lines into its buildSettings dict, before the closing }.
-              Uses a balanced-brace approach to find the right closing brace.
+              Find the XCBuildConfiguration block for config_guid and upsert
+              key = value; lines into its buildSettings dict.
+              - If a key already exists in the block, its value is replaced in-place.
+              - If a key is absent, it is appended before the closing }.
+              Uses a balanced-brace approach to isolate the buildSettings dict.
               """
               # Find the start of this config block
               block_start_match = re.search(
@@ -401,37 +403,113 @@ jobs:
                   pos += 1
               closing_brace_pos = pos - 1  # position of the matching }
 
-              # Build injection string
-              injection = ''
-              for key, value in settings_to_inject.items():
-                  injection += f'\n\t\t\t\t{key} = {value};'
+              # Extract just the buildSettings block content (between { and })
+              bs_content = content[brace_pos:closing_brace_pos + 1]
 
-              # Insert before closing brace
-              content = content[:closing_brace_pos] + injection + '\n\t\t\t' + content[closing_brace_pos:]
-              return content
+              # For each setting: replace in-place if key exists, otherwise append
+              keys_to_append = {}
+              for key, value in settings_to_inject.items():
+                  # Match: optional whitespace, KEY, whitespace, =, whitespace, <anything>, ;
+                  pattern = rf'(\s+{re.escape(key)}\s*=\s*)[^;]+(;)'
+                  replacement = rf'\g<1>{value}\2'
+                  new_bs_content, n_replacements = re.subn(pattern, replacement, bs_content)
+                  if n_replacements > 0:
+                      bs_content = new_bs_content
+                      print(f"  Replaced {key} = {value}")
+                  else:
+                      keys_to_append[key] = value
+
+              # Rebuild content with updated buildSettings block
+              content = content[:brace_pos] + bs_content[:-1]  # strip the closing }
+
+              # Append any keys that weren't already present
+              for key, value in keys_to_append.items():
+                  content += f'\n\t\t\t\t{key} = {value};'
+                  print(f"  Appended {key} = {value}")
+
+              content += '\n\t\t\t' + '}'  # re-add closing }
+              content += content[closing_brace_pos + 1:]  # remainder of file... wait
+
+              # Oops - need to reconstruct properly. Let's redo this cleanly.
+              # Actually the above double-appends the rest of file. Fix:
+              return None  # signal to use the corrected approach below
+
+          def patch_build_settings_v2(content, config_guid, settings_to_inject):
+              """
+              Upsert key=value pairs into a specific XCBuildConfiguration's buildSettings.
+              Replaces existing keys in-place; appends missing keys before closing brace.
+              """
+              block_start_match = re.search(
+                  rf'{config_guid}\s*/\*[^*]*\*/\s*=\s*\{{\s*isa\s*=\s*XCBuildConfiguration',
+                  content
+              )
+              if not block_start_match:
+                  print(f"ERROR: Could not find XCBuildConfiguration block for {config_guid}")
+                  return content
+
+              bs_start = content.find('buildSettings = {', block_start_match.start())
+              if bs_start == -1:
+                  print(f"ERROR: No buildSettings in config {config_guid}")
+                  return content
+
+              brace_pos = content.index('{', bs_start + len('buildSettings ='))
+              depth = 1
+              pos = brace_pos + 1
+              while pos < len(content) and depth > 0:
+                  if content[pos] == '{':
+                      depth += 1
+                  elif content[pos] == '}':
+                      depth -= 1
+                  pos += 1
+              closing_brace_pos = pos - 1
+
+              # Work on just the region from brace_pos to closing_brace_pos (inclusive)
+              before = content[:brace_pos + 1]        # up to and including opening {
+              middle = content[brace_pos + 1:closing_brace_pos]  # contents
+              after  = content[closing_brace_pos:]    # } and everything after
+
+              keys_to_append = {}
+              for key, value in settings_to_inject.items():
+                  pattern = rf'(\s+{re.escape(key)}\s*=\s*)[^;]+(;)'
+                  replacement = rf'\g<1>{value}\2'
+                  new_middle, n = re.subn(pattern, replacement, middle)
+                  if n > 0:
+                      middle = new_middle
+                      print(f"  Replaced {key} = {value}")
+                  else:
+                      keys_to_append[key] = value
+
+              injection = ''
+              for key, value in keys_to_append.items():
+                  injection += f'\n\t\t\t\t{key} = {value};'
+                  print(f"  Appended {key} = {value}")
+
+              return before + middle + injection + '\n\t\t\t' + after
 
           # Disable all signing at project level — SPM targets inherit this
+          print("Patching project-level Release config:")
           project_release_settings = {
-              'CODE_SIGN_IDENTITY':        '""',
-              'CODE_SIGN_STYLE':           'Manual',
-              'CODE_SIGNING_REQUIRED':     'NO',
-              'CODE_SIGNING_ALLOWED':      'NO',
+              'CODE_SIGN_IDENTITY':             '""',
+              'CODE_SIGN_STYLE':                'Manual',
+              'CODE_SIGNING_REQUIRED':          'NO',
+              'CODE_SIGNING_ALLOWED':           'NO',
               'PROVISIONING_PROFILE_SPECIFIER': '""',
           }
-          content = patch_build_settings(content, proj_release_guid, project_release_settings)
-          print("Patched project-level Release config: signing disabled")
+          content = patch_build_settings_v2(content, proj_release_guid, project_release_settings)
+          print("→ project-level Release config: signing disabled")
 
           # Enable Manual signing on the App target — overrides project defaults
+          print("Patching App target-level Release config:")
           target_release_settings = {
-              'CODE_SIGN_IDENTITY':        '"Apple Distribution"',
-              'CODE_SIGN_STYLE':           'Manual',
-              'CODE_SIGNING_REQUIRED':     'YES',
-              'CODE_SIGNING_ALLOWED':      'YES',
-              'DEVELOPMENT_TEAM':          '"334BUFYVP9"',
+              'CODE_SIGN_IDENTITY':             '"Apple Distribution"',
+              'CODE_SIGN_STYLE':                'Manual',
+              'CODE_SIGNING_REQUIRED':          'YES',
+              'CODE_SIGNING_ALLOWED':           'YES',
+              'DEVELOPMENT_TEAM':               '"334BUFYVP9"',
               'PROVISIONING_PROFILE_SPECIFIER': '"swara-ai-appstore"',
           }
-          content = patch_build_settings(content, target_release_guid, target_release_settings)
-          print("Patched App target-level Release config: Manual signing with swara-ai-appstore")
+          content = patch_build_settings_v2(content, target_release_guid, target_release_settings)
+          print("→ App target-level Release config: Manual signing with swara-ai-appstore")
 
           with open(pbx_path, "w") as f:
               f.write(content)

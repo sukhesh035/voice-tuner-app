@@ -71,6 +71,9 @@ importers:
       '@capacitor/status-bar':
         specifier: ^7.0.0
         version: 7.0.5(@capacitor/core@7.6.0)
+      '@capgo/capacitor-updater':
+        specifier: ^7.43.3
+        version: 7.43.3(@capacitor/core@7.6.0)
       '@ionic/angular':
         specifier: ^8.0.0
         version: 8.8.1(fec64f01dc875751c2607a8eeb3ca3b9)
@@ -1460,6 +1463,11 @@ packages:
 
   '@capacitor/status-bar@7.0.5':
     resolution: {integrity: sha512-d0DI/Usy4RrNiV5xfnypXNRLmWYMixC2yAUAwe6sCQQ0HF7oskDf4RpCxcZqbxnpc4H4A0qqiOSltfJLFAYshg==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+
+  '@capgo/capacitor-updater@7.43.3':
+    resolution: {integrity: sha512-vKBDRwqnQv500rlaBPhlVJGDR/J6qiOS/YRQQLJkRNg803ZnSmAw+YHZckNfRkt2Bpplt4SK6Glf860DEgSadg==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
 
@@ -12916,6 +12924,10 @@ snapshots:
       '@capacitor/core': 7.6.0
 
   '@capacitor/status-bar@7.0.5(@capacitor/core@7.6.0)':
+    dependencies:
+      '@capacitor/core': 7.6.0
+
+  '@capgo/capacitor-updater@7.43.3(@capacitor/core@7.6.0)':
     dependencies:
       '@capacitor/core': 7.6.0
 

@@ -115,6 +115,22 @@
         "command": "npx cap open android",
         "cwd": "apps/mobile-app"
       }
+    },
+    "publish-update-dev": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node ../../scripts/publish-update.mjs dev {args.version}",
+        "cwd": "apps/mobile-app"
+      }
+    },
+    "publish-update-prod": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node ../../scripts/publish-update.mjs prod {args.version}",
+        "cwd": "apps/mobile-app"
+      }
     }
   }
 }
