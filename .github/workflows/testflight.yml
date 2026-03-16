@@ -311,8 +311,8 @@ jobs:
           print(f"Project buildConfigurationList GUID: {proj_cfg_list_guid}")
 
           proj_cfg_list_block_match = re.search(
-              rf'{proj_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
-              content, re.DOTALL
+              rf'^\s*{proj_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
+              content, re.DOTALL | re.MULTILINE
           )
           if not proj_cfg_list_block_match:
               print("ERROR: Could not find project XCConfigurationList block")
@@ -336,8 +336,8 @@ jobs:
           print(f"App target buildConfigurationList GUID: {target_cfg_list_guid}")
 
           target_cfg_list_block_match = re.search(
-              rf'{target_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
-              content, re.DOTALL
+              rf'^\s*{target_cfg_list_guid}\s*/\*.*?\*/\s*=\s*\{{.*?buildConfigurations\s*=\s*\((.*?)\);',
+              content, re.DOTALL | re.MULTILINE
           )
           if not target_cfg_list_block_match:
               print("ERROR: Could not find App target XCConfigurationList block")
