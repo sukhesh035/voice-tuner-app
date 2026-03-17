@@ -60,12 +60,17 @@ jobs:
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           pnpm exec cdk bootstrap aws://${ACCOUNT_ID}/${{ env.AWS_REGION }} --ci
 
-      # ── 5a. Write Resend API key to SSM (idempotent) ────────────────────────
-      - name: Write Resend API key to SSM
+      # ── 5a. Write Gmail credentials to SSM (idempotent) ─────────────────────
+      - name: Write Gmail credentials to SSM
         run: |
           aws ssm put-parameter \
-            --name "/sruti/dev/resend-api-key" \
-            --value "${{ secrets.RESEND_API_KEY }}" \
+            --name "/sruti/dev/gmail-user" \
+            --value "${{ secrets.GMAIL_USER }}" \
+            --type SecureString \
+            --overwrite
+          aws ssm put-parameter \
+            --name "/sruti/dev/gmail-app-password" \
+            --value "${{ secrets.GMAIL_APP_PASSWORD }}" \
             --type SecureString \
             --overwrite
 

@@ -6,15 +6,17 @@
  *  - event.request.userAttributes.email
  *  - event.request.code   — the one-time code, KMS-encrypted with the CMK
  *
- * We decrypt the code, pick a template, then send via Resend.
+ * We decrypt the code, pick a template, then send via Gmail SMTP (Nodemailer).
  *
  * Required env vars:
- *  RESEND_API_KEY_PARAM  — SSM SecureString path for the Resend API key
- *  KMS_KEY_ID            — ARN/ID of the CMK used by Cognito to encrypt the code
+ *  GMAIL_USER_PARAM  — SSM SecureString path for the Gmail address
+ *  GMAIL_PASS_PARAM  — SSM SecureString path for the Gmail app password
+ *  KMS_KEY_ID        — ARN/ID of the CMK used by Cognito to encrypt the code
  */
 
 import { KMSClient, DecryptCommand } from '@aws-sdk/client-kms';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import * as nodemailer from 'nodemailer';
 
 const kms = new KMSClient({});
 const ssm = new SSMClient({});
@@ -29,17 +31,21 @@ interface CognitoCustomEmailSenderEvent {
   response: Record<string, unknown>;
 }
 
-// Cache the Resend key within the Lambda execution environment
-let cachedResendKey: string | null = null;
+// Cache Gmail credentials within the Lambda execution environment
+let cachedGmailUser: string | null = null;
+let cachedGmailPass: string | null = null;
 
-async function getResendKey(): Promise<string> {
-  if (cachedResendKey) return cachedResendKey;
-  const resp = await ssm.send(new GetParameterCommand({
-    Name:           process.env['RESEND_API_KEY_PARAM']!,
-    WithDecryption: true,
-  }));
-  cachedResendKey = resp.Parameter!.Value!;
-  return cachedResendKey;
+async function getGmailCredentials(): Promise<{ user: string; pass: string }> {
+  if (cachedGmailUser && cachedGmailPass) {
+    return { user: cachedGmailUser, pass: cachedGmailPass };
+  }
+  const [userResp, passResp] = await Promise.all([
+    ssm.send(new GetParameterCommand({ Name: process.env['GMAIL_USER_PARAM']!, WithDecryption: true })),
+    ssm.send(new GetParameterCommand({ Name: process.env['GMAIL_PASS_PARAM']!, WithDecryption: true })),
+  ]);
+  cachedGmailUser = userResp.Parameter!.Value!;
+  cachedGmailPass = passResp.Parameter!.Value!;
+  return { user: cachedGmailUser, pass: cachedGmailPass };
 }
 
 async function decryptCode(encryptedCode: string): Promise<string> {
@@ -57,27 +63,18 @@ interface EmailPayload {
   html:    string;
 }
 
-async function sendEmail(payload: EmailPayload, apiKey: string): Promise<void> {
-  const body = {
-    from:    'noreply@sruti.in',
+async function sendEmail(payload: EmailPayload): Promise<void> {
+  const { user, pass } = await getGmailCredentials();
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
+  });
+  await transporter.sendMail({
+    from: `"Sruti" <${user}>`,
     to:      payload.to,
     subject: payload.subject,
     html:    payload.html,
-  };
-
-  const res = await fetch('https://api.resend.com/emails', {
-    method:  'POST',
-    headers: {
-      Authorization:  `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
   });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`Resend error ${res.status}: ${text}`);
-  }
 }
 
 function buildVerificationEmail(email: string, code: string): EmailPayload {
@@ -145,7 +142,6 @@ export const handler = async (event: CognitoCustomEmailSenderEvent): Promise<voi
 
   // Decrypt the code that Cognito encrypted with the CMK
   const code = await decryptCode(request.code);
-  const apiKey = await getResendKey();
 
   let payload: EmailPayload;
 
@@ -160,6 +156,6 @@ export const handler = async (event: CognitoCustomEmailSenderEvent): Promise<voi
     payload = buildVerificationEmail(email, code);
   }
 
-  await sendEmail(payload, apiKey);
+  await sendEmail(payload);
   console.log(`customEmailSender: sent "${triggerSource}" email to ${email}`);
 };
