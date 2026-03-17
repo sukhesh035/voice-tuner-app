@@ -5,12 +5,16 @@ on:
     inputs:
       title:
         description: 'Notification title'
-        required: true
+        required: false
         type: string
       body:
         description: 'Notification body'
-        required: true
+        required: false
         type: string
+      clearBadge:
+        description: 'Set to true to send badge=0 to all device tokens (one-off)'
+        required: false
+        type: boolean
 
 env:
   AWS_REGION: us-east-1
@@ -29,12 +33,16 @@ jobs:
 
       - name: Invoke notifications Lambda
         run: |
-          PAYLOAD=$(jq -n --arg t "${{ inputs.title }}" --arg b "${{ inputs.body }}" \
-            '{title: $t, body: $b}')
+          # Build JSON payload. If clearBadge is true, include that flag and
+          # omit title/body if not provided. This invokes the Lambda with
+          # { clearBadge: true } which will send badge=0 to all tokens.
+          PAYLOAD=$(jq -n \
+            --argjson cb "${{ inputs.clearBadge }}" \
+            --arg t "${{ inputs.title }}" \
+            --arg b "${{ inputs.body }}" \
+            'reduce ["$cb","$t","$b"] as $i ({}; .) | if $i[0] == "true" then {clearBadge: true} else {title: $i[1], body: $i[2]} end')
 
-          echo "Sending notification:"
-          echo "  Title: ${{ inputs.title }}"
-          echo "  Body:  ${{ inputs.body }}"
+          echo "Invoking notifications Lambda with payload: $PAYLOAD"
 
           aws lambda invoke \
             --function-name sruti-prod-notifications \
