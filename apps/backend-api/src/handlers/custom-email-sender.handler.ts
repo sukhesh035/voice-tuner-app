@@ -6,15 +6,17 @@
  *  - event.request.userAttributes.email
  *  - event.request.code   — the one-time code, KMS-encrypted with the CMK
  *
- * We decrypt the code, pick a template, then send via SendGrid.
+ * We decrypt the code, pick a template, then send via Gmail SMTP (Nodemailer).
  *
  * Required env vars:
- *  SENDGRID_API_KEY_PARAM  — SSM SecureString path for the SendGrid API key
- *  KMS_KEY_ID              — ARN/ID of the CMK used by Cognito to encrypt the code
+ *  GMAIL_USER_PARAM  — SSM SecureString path for the Gmail address
+ *  GMAIL_PASS_PARAM  — SSM SecureString path for the Gmail app password
+ *  KMS_KEY_ID        — ARN/ID of the CMK used by Cognito to encrypt the code
  */
 
 import { KMSClient, DecryptCommand } from '@aws-sdk/client-kms';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import * as nodemailer from 'nodemailer';
 
 const kms = new KMSClient({});
 const ssm = new SSMClient({});
@@ -29,17 +31,21 @@ interface CognitoCustomEmailSenderEvent {
   response: Record<string, unknown>;
 }
 
-// Cache the SendGrid key within the Lambda execution environment
-let cachedSgKey: string | null = null;
+// Cache Gmail credentials within the Lambda execution environment
+let cachedGmailUser: string | null = null;
+let cachedGmailPass: string | null = null;
 
-async function getSendGridKey(): Promise<string> {
-  if (cachedSgKey) return cachedSgKey;
-  const resp = await ssm.send(new GetParameterCommand({
-    Name:           process.env['SENDGRID_API_KEY_PARAM']!,
-    WithDecryption: true,
-  }));
-  cachedSgKey = resp.Parameter!.Value!;
-  return cachedSgKey;
+async function getGmailCredentials(): Promise<{ user: string; pass: string }> {
+  if (cachedGmailUser && cachedGmailPass) {
+    return { user: cachedGmailUser, pass: cachedGmailPass };
+  }
+  const [userResp, passResp] = await Promise.all([
+    ssm.send(new GetParameterCommand({ Name: process.env['GMAIL_USER_PARAM']!, WithDecryption: true })),
+    ssm.send(new GetParameterCommand({ Name: process.env['GMAIL_PASS_PARAM']!, WithDecryption: true })),
+  ]);
+  cachedGmailUser = userResp.Parameter!.Value!;
+  cachedGmailPass = passResp.Parameter!.Value!;
+  return { user: cachedGmailUser, pass: cachedGmailPass };
 }
 
 async function decryptCode(encryptedCode: string): Promise<string> {
@@ -57,27 +63,18 @@ interface EmailPayload {
   html:    string;
 }
 
-async function sendEmail(payload: EmailPayload, apiKey: string): Promise<void> {
-  const body = {
-    personalizations: [{ to: [{ email: payload.to }] }],
-    from:    { email: 'noreply@sruti.in', name: 'Sruti' },
-    subject: payload.subject,
-    content: [{ type: 'text/html', value: payload.html }],
-  };
-
-  const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
-    method:  'POST',
-    headers: {
-      Authorization:  `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
+async function sendEmail(payload: EmailPayload): Promise<void> {
+  const { user, pass } = await getGmailCredentials();
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
   });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`SendGrid error ${res.status}: ${text}`);
-  }
+  await transporter.sendMail({
+    from: `"Sruti" <${user}>`,
+    to:      payload.to,
+    subject: payload.subject,
+    html:    payload.html,
+  });
 }
 
 function buildVerificationEmail(email: string, code: string): EmailPayload {
@@ -145,7 +142,6 @@ export const handler = async (event: CognitoCustomEmailSenderEvent): Promise<voi
 
   // Decrypt the code that Cognito encrypted with the CMK
   const code = await decryptCode(request.code);
-  const apiKey = await getSendGridKey();
 
   let payload: EmailPayload;
 
@@ -160,6 +156,6 @@ export const handler = async (event: CognitoCustomEmailSenderEvent): Promise<voi
     payload = buildVerificationEmail(email, code);
   }
 
-  await sendEmail(payload, apiKey);
+  await sendEmail(payload);
   console.log(`customEmailSender: sent "${triggerSource}" email to ${email}`);
 };
