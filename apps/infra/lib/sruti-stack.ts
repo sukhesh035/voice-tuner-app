@@ -256,9 +256,9 @@ export class SrutiStack extends cdk.Stack {
       STUDENTS_TABLE:       studentsTable.tableName,
       UPLOADS_BUCKET:       uploadsBucket.bucketName,
       UPLOADS_CDN_URL:      `https://${uploadsCdn.distributionDomainName}`,
-      // Allow requests from the PWA CloudFront domain; dev stays open
+      // Allow requests from the PWA and native Capacitor apps; dev stays open
       CORS_ORIGIN: stage === 'prod'
-        ? `https://${webCdn.distributionDomainName}`
+        ? `https://app.sruti.in,https://${webCdn.distributionDomainName},capacitor://localhost,http://localhost`
         : '*',
     };
 
@@ -309,7 +309,9 @@ export class SrutiStack extends cdk.Stack {
           apigwv2.CorsHttpMethod.DELETE,
           apigwv2.CorsHttpMethod.OPTIONS,
         ],
-        allowOrigins:  stage === 'prod' ? ['https://app.sruti.in'] : ['*'],
+        allowOrigins:  stage === 'prod'
+          ? ['https://app.sruti.in', 'capacitor://localhost', 'http://localhost']
+          : ['*'],
         maxAge:         cdk.Duration.days(1),
       },
     });

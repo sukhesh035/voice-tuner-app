@@ -16,7 +16,7 @@ import {
 import { generateSessionCode } from '@voice-tuner/shared-utils';
 import {
   verifyToken, unauthorized, ok, created,
-  badRequest, notFound, serverError,
+  badRequest, notFound, serverError, setCorsOrigin,
 } from '../middleware/auth.middleware';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
@@ -51,6 +51,7 @@ export const handler = async (
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
   try {
+    setCorsOrigin(event);
     const auth = await verifyToken(event);
     if (!auth) return unauthorized();
 

@@ -10,7 +10,7 @@ import {
   QueryCommand, UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import {
-  verifyToken, unauthorized, ok, created, badRequest, serverError,
+  verifyToken, unauthorized, ok, created, badRequest, serverError, setCorsOrigin,
 } from '../middleware/auth.middleware';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
@@ -33,6 +33,7 @@ export const handler = async (
   event: APIGatewayProxyEventV2,
 ): Promise<APIGatewayProxyResultV2> => {
   try {
+    setCorsOrigin(event);
     const auth = await verifyToken(event);
     if (!auth) return unauthorized();
 
