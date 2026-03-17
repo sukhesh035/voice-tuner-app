@@ -1,13 +1,13 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { IonHeader, IonToolbar, IonTitle, IonContent, IonToggle, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   moonOutline, flashOutline, musicalNoteOutline, notificationsOutline,
   informationCircleOutline, documentTextOutline, shieldCheckmarkOutline,
-  heartOutline, chevronForwardOutline, micOutline
+  heartOutline, chevronForwardOutline, micOutline, lockClosedOutline
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { ApiService, UserPreferences } from '../../core/services/api.service';
@@ -55,12 +55,13 @@ export class SettingsPage {
     private tanpura: TanpuraPlayerService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
-    private analytics: AnalyticsService
+    private analytics: AnalyticsService,
+    private router: Router,
   ) {
     addIcons({
       moonOutline, flashOutline, musicalNoteOutline, notificationsOutline,
       informationCircleOutline, documentTextOutline, shieldCheckmarkOutline,
-      heartOutline, chevronForwardOutline, micOutline
+      heartOutline, chevronForwardOutline, micOutline, lockClosedOutline
     });
   }
 
@@ -119,6 +120,20 @@ export class SettingsPage {
 
   async openAppSettings(): Promise<void> {
     await this.permissionsService.openAppSettings();
+  }
+
+  get isAuthenticated$() { return this.authService.isAuthenticated$; }
+
+  async changePassword(): Promise<void> {
+    const email = this.authService.currentUser?.email;
+    if (!email) return;
+    try {
+      await this.authService.resetPassword(email);
+      this.analytics.logEvent('change_password_requested');
+      this.router.navigate(['/reset-password'], { state: { email } });
+    } catch (err) {
+      console.error('[SettingsPage] changePassword error', err);
+    }
   }
 
   private async loadPermissions(): Promise<void> {

@@ -16,6 +16,7 @@ import { TanpuraPlayerService } from '@voice-tuner/tanpura-player';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
+import { AuthService } from '@voice-tuner/auth';
 
 @Component({
   selector: 'app-sing',
@@ -229,7 +230,8 @@ export class SingPage implements OnInit, OnDestroy {
     private tanpura: TanpuraPlayerService,
     private api: ApiService,
     private cdr: ChangeDetectorRef,
-    private analytics: AnalyticsService
+    private analytics: AnalyticsService,
+    private authService: AuthService,
   ) {
     addIcons({ mic, micOff, musicalNotes, statsChart });
   }
@@ -259,9 +261,10 @@ export class SingPage implements OnInit, OnDestroy {
       });
 
       // Persist session to backend (fire-and-forget — don't block UI)
+      // Only save if the user's email is verified; unverified users cannot save sessions.
       const tanpuraState = this.tanpura.state;
       const durationSeconds = Math.round(stats.sessionDuration);
-      if (durationSeconds > 0) {
+      if (durationSeconds > 0 && this.authService.currentUser?.emailVerified) {
         const noteAccuracies: Record<string, number> = {};
         for (const [note, acc] of Object.entries(stats.noteAccuracies)) {
           noteAccuracies[note] = acc as number;
