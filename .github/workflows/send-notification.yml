@@ -1,0 +1,47 @@
+name: Send Push Notification
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: 'Notification title'
+        required: true
+        type: string
+      body:
+        description: 'Notification body'
+        required: true
+        type: string
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  send:
+    name: Send notification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.3
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Invoke notifications Lambda
+        run: |
+          PAYLOAD=$(jq -n --arg t "${{ inputs.title }}" --arg b "${{ inputs.body }}" \
+            '{title: $t, body: $b}')
+
+          echo "Sending notification:"
+          echo "  Title: ${{ inputs.title }}"
+          echo "  Body:  ${{ inputs.body }}"
+
+          aws lambda invoke \
+            --function-name sruti-prod-notifications \
+            --payload "$PAYLOAD" \
+            --cli-binary-format raw-in-base64-out \
+            --region ${{ env.AWS_REGION }} \
+            /tmp/response.json
+
+          echo "Lambda response:"
+          cat /tmp/response.json
