@@ -5,12 +5,16 @@ on:
     inputs:
       title:
         description: 'Notification title'
-        required: true
+        required: false
         type: string
       body:
         description: 'Notification body'
-        required: true
+        required: false
         type: string
+      clearBadge:
+        description: 'Set to true to send badge=0 to all device tokens (one-off)'
+        required: false
+        type: boolean
 
 env:
   AWS_REGION: us-east-1
@@ -29,13 +33,16 @@ jobs:
 
       - name: Invoke notifications Lambda
         run: |
-          PAYLOAD=$(jq -n --arg t "${{ inputs.title }}" --arg b "${{ inputs.body }}" \
-            '{title: $t, body: $b}')
-          PAYLOAD_B64=$(echo -n "$PAYLOAD" | base64)
+          # Build JSON payload. If clearBadge is true, use a simple static
+          # payload. Otherwise build title/body via jq. Using plain bash
+          # avoids complex jq expression interpolation issues.
+          if [ "${{ inputs.clearBadge }}" = "true" ]; then
+            PAYLOAD='{"clearBadge":true}'
+          else
+            PAYLOAD=$(jq -n --arg t "${{ inputs.title }}" --arg b "${{ inputs.body }}" '{title: $t, body: $b}')
+          fi
 
-          echo "Sending notification:"
-          echo "  Title: ${{ inputs.title }}"
-          echo "  Body:  ${{ inputs.body }}"
+          echo "Invoking notifications Lambda with payload: $PAYLOAD"
 
           aws lambda invoke \
             --function-name sruti-prod-notifications \
