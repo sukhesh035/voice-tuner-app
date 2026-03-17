@@ -11,6 +11,9 @@ import * as s3      from 'aws-cdk-lib/aws-s3';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as iam     from 'aws-cdk-lib/aws-iam';
+import * as events  from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as ssm     from 'aws-cdk-lib/aws-ssm';
 
 export interface SrutiStackProps extends cdk.StackProps {
   stage:        'dev' | 'prod';
@@ -297,6 +300,40 @@ export class SrutiStack extends cdk.Stack {
     // Grant S3 upload permission for profile photos
     uploadsBucket.grantPut(usersLambda);
 
+    // ─── Notifications Lambda (scheduled daily push reminders) ────────────────
+    const firebaseSaKeyParam = `/${prefix}/firebase-sa-key`;
+
+    const notificationsLambda = new lambda.Function(this, 'NotificationsFn', {
+      functionName: `${prefix}-notifications`,
+      runtime:      lambda.Runtime.NODEJS_22_X,
+      architecture: lambda.Architecture.ARM_64,
+      memorySize:   256,
+      timeout:      cdk.Duration.seconds(60),
+      handler:      'notifications.handler',
+      code:         lambda.Code.fromAsset(distDir),
+      environment: {
+        USERS_TABLE:           usersTable.tableName,
+        FCM_PROJECT_ID:        'swara-ai-4caf4',
+        FIREBASE_SA_KEY_PARAM: firebaseSaKeyParam,
+      },
+    });
+
+    usersTable.grantReadData(notificationsLambda);
+
+    notificationsLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions:   ['ssm:GetParameter'],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter${firebaseSaKeyParam}`,
+      ],
+    }));
+
+    // EventBridge cron: 3:00 AM UTC ≈ 8:30 AM IST — daily practice reminder
+    const dailyReminderRule = new events.Rule(this, 'DailyReminderRule', {
+      ruleName: `${prefix}-daily-reminder`,
+      schedule: events.Schedule.cron({ hour: '3', minute: '0' }),
+    });
+    dailyReminderRule.addTarget(new targets.LambdaFunction(notificationsLambda));
+
     // ─── HTTP API Gateway ─────────────────────────────────────────────────────
     const api = new apigwv2.HttpApi(this, 'SrutiApi', {
       apiName:        `${prefix}-api`,
@@ -343,6 +380,8 @@ export class SrutiStack extends cdk.Stack {
     addRoute([apigwv2.HttpMethod.GET],                          '/v1/api/sessions/{id}',     sessionsLambda);
     addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.PUT],  '/v1/api/users/me',          usersLambda);
     addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/users/me/upload-url', usersLambda);
+    addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/users/me/device-token', usersLambda);
+    addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/users/me/device-token/remove', usersLambda);
     addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], '/v1/api/streaks',            streaksLambda);
     addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/streaks/checkin',   streaksLambda);
     addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/classroom/sessions',      classroomLambda);

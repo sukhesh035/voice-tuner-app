@@ -559,6 +559,60 @@ jobs:
           # it just tells iOS "this is a modern app, no scaling needed".
           /usr/libexec/PlistBuddy -c "Add :UILaunchScreen dict" "$PLIST" 2>/dev/null || true
 
+          # ── Push Notifications ──
+          # Enable remote-notification background mode for silent/background pushes
+          /usr/libexec/PlistBuddy -c "Delete :UIBackgroundModes" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes array" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :UIBackgroundModes:0 string remote-notification" "$PLIST"
+
+      # ── 10a. Add Push Notifications Entitlement ────────────────────────
+      #   Capacitor doesn't generate entitlements by default. We create the
+      #   .entitlements file and wire it into the Xcode project so APNs works.
+      - name: Add Push Notifications entitlement
+        run: |
+          ENTITLEMENTS="apps/mobile-app/ios/App/App/App.entitlements"
+          cat > "$ENTITLEMENTS" << 'ENDPLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>aps-environment</key>
+            <string>production</string>
+          </dict>
+          </plist>
+          ENDPLIST
+
+          # Wire entitlements file into pbxproj — add CODE_SIGN_ENTITLEMENTS
+          # to the App target Release build config
+          PBXPROJ="apps/mobile-app/ios/App/App.xcodeproj/project.pbxproj"
+          python3 << 'ENDPY'
+          import re
+
+          pbx_path = "apps/mobile-app/ios/App/App.xcodeproj/project.pbxproj"
+          with open(pbx_path, "r") as f:
+              content = f.read()
+
+          # Find the App target Release build config (has PROVISIONING_PROFILE_SPECIFIER = "swara-ai-appstore")
+          # We patched this earlier, so look for our signature setting
+          anchor = 'PROVISIONING_PROFILE_SPECIFIER = "swara-ai-appstore";'
+          entitlements_line = '\n\t\t\t\tCODE_SIGN_ENTITLEMENTS = App/App.entitlements;'
+
+          if 'CODE_SIGN_ENTITLEMENTS' not in content:
+              content = content.replace(anchor, anchor + entitlements_line)
+              print("Added CODE_SIGN_ENTITLEMENTS to App target Release config")
+          else:
+              print("CODE_SIGN_ENTITLEMENTS already present")
+
+          with open(pbx_path, "w") as f:
+              f.write(content)
+          ENDPY
+
+          echo "── Entitlements file ──"
+          cat "$ENTITLEMENTS"
+          echo ""
+          echo "── pbxproj entitlements references ──"
+          grep -n "ENTITLEMENTS" "$PBXPROJ" || echo "WARNING: Entitlements not found in pbxproj!"
+
       # ── 11. Set version + build number ─────────────────────────────────
       - name: Set version and build number
         working-directory: apps/mobile-app/ios/App
