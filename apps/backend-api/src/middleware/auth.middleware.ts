@@ -7,6 +7,34 @@ const verifier = CognitoJwtVerifier.create({
   clientId:    process.env['COGNITO_CLIENT_ID']!,
 });
 
+// Allowed origins parsed once at cold start from comma-separated env var.
+// If CORS_ORIGIN is '*' or unset, all origins are allowed.
+const CORS_ORIGIN_RAW = process.env['CORS_ORIGIN'] ?? '*';
+const ALLOWED_ORIGINS = CORS_ORIGIN_RAW === '*' ? null : CORS_ORIGIN_RAW.split(',').map(o => o.trim());
+
+// Stores the current request's origin so response helpers can echo it back.
+let _currentOrigin = '*';
+
+export interface AuthContext {
+  userId: string;
+  email: string;
+  username: string;
+}
+
+/** Call at the top of every handler to capture the request origin for CORS. */
+export function setCorsOrigin(event: APIGatewayProxyEventV2): void {
+  const origin = event.headers['origin'] ?? '';
+  if (!ALLOWED_ORIGINS) {
+    // Wildcard mode — echo the request origin (or '*' if none)
+    _currentOrigin = origin || '*';
+  } else if (ALLOWED_ORIGINS.includes(origin)) {
+    _currentOrigin = origin;
+  } else {
+    // Origin not in allow-list — use first allowed origin (preflight will block)
+    _currentOrigin = ALLOWED_ORIGINS[0];
+  }
+}
+
 export interface AuthContext {
   userId: string;
   email: string;
@@ -81,7 +109,7 @@ export function serverError(err: unknown): APIGatewayProxyResultV2 {
 function corsHeaders(): Record<string, string> {
   return {
     'Content-Type':                'application/json',
-    'Access-Control-Allow-Origin': process.env['CORS_ORIGIN'] ?? '*',
+    'Access-Control-Allow-Origin': _currentOrigin,
     'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type,Authorization',
   };
