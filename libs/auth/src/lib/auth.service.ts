@@ -14,9 +14,10 @@ import {
 } from 'aws-amplify/auth';
 
 export interface AppUser {
-  id:    string;
-  email: string;
-  name:  string;
+  id:            string;
+  email:         string;
+  name:          string;
+  emailVerified: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -51,11 +52,13 @@ export class AuthService {
       }
       const user = await getCurrentUser();
       const email = session.tokens.idToken.payload['email'] as string ?? user.username;
+      const emailVerified = session.tokens.idToken.payload['email_verified'] === true;
       this.userSubject.next({
         id:    user.userId,
         email,
         name:  (session.tokens.idToken.payload['name'] as string)
                ?? email.split('@')[0],
+        emailVerified,
       });
     } catch {
       this.userSubject.next(null);
@@ -71,9 +74,11 @@ export class AuthService {
     try { await amplifySignOut(); } catch { /* ignore */ }
     const { isSignedIn } = await amplifySignIn({ username: email, password });
     if (isSignedIn) {
+      const session = await fetchAuthSession({ forceRefresh: false });
       const user = await getCurrentUser();
+      const emailVerified = session.tokens?.idToken?.payload['email_verified'] === true;
       this.pendingConfirmationSubject.next(null);
-      this.userSubject.next({ id: user.userId, email, name: email.split('@')[0] });
+      this.userSubject.next({ id: user.userId, email, name: email.split('@')[0], emailVerified });
     }
   }
 

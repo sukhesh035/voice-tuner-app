@@ -18,6 +18,7 @@ import {
 } from '@voice-tuner/training-engine';
 import { ApiService } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
+import { AuthService } from '@voice-tuner/auth';
 
 /** Phases of a single Shruti round */
 export type ShrutiPhase = 'idle' | 'playing' | 'ready' | 'listening' | 'result';
@@ -816,7 +817,8 @@ export class PracticePage implements OnInit, OnDestroy {
     private pitchDetection: PitchDetectionService,
     private api: ApiService,
     private cdr: ChangeDetectorRef,
-    private analytics: AnalyticsService
+    private analytics: AnalyticsService,
+    private authService: AuthService,
   ) {
     this.liveNotes$ = this.trainingEngine.liveNotes$;
   }
@@ -954,7 +956,7 @@ export class PracticePage implements OnInit, OnDestroy {
       const avgScore = scores.length
         ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
         : 0;
-      if (durationSeconds > 0 && scores.length > 0) {
+      if (durationSeconds > 0 && scores.length > 0 && this.authService.currentUser?.emailVerified) {
         const tanpuraState = this.tanpura.state;
         this.api.createSession({
           duration:       durationSeconds,
@@ -982,7 +984,7 @@ export class PracticePage implements OnInit, OnDestroy {
       const avgScore = scores.length
         ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
         : 0;
-      if (durationSeconds > 0 && scores.length > 0) {
+      if (durationSeconds > 0 && scores.length > 0 && this.authService.currentUser?.emailVerified) {
         const tanpuraState = this.tanpura.state;
         this.api.createSession({
           duration:       durationSeconds,
@@ -1007,7 +1009,7 @@ export class PracticePage implements OnInit, OnDestroy {
       }
       // Persist ear training session
       const durationSeconds = Math.round((Date.now() - this.earSessionStart) / 1000);
-      if (durationSeconds > 0 && this.earRound > 0) {
+      if (durationSeconds > 0 && this.earRound > 0 && this.authService.currentUser?.emailVerified) {
         const avgScore = this.earRound > 0
           ? Math.round((this.earScore / this.earRound) * 100)
           : 0;

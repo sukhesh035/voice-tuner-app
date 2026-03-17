@@ -143,6 +143,20 @@
       </div>
     </div>
 
+    <!-- ── Account ────────────────────────────────────────────────────────── -->
+    <div class="settings-group" *ngIf="isAuthenticated$ | async">
+      <div class="group-label">
+        <ion-icon name="lock-closed-outline"></ion-icon> Account
+      </div>
+      <div class="settings-row sruti-card link-row" (click)="changePassword()">
+        <div class="setting-info">
+          <div class="setting-name">Change Password</div>
+          <div class="setting-sub">Send a reset code to your email</div>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
+      </div>
+    </div>
+
     <!-- ── About ──────────────────────────────────────────────────────── -->
     <div class="settings-group">
       <div class="group-label">
