@@ -130,4 +130,18 @@ export class ApiService {
       this.http.put<{ updated: boolean; updatedAt: string }>(`${this.base}/api/users/me`, { photoUrl })
     );
   }
+
+  /** Register a push notification device token with the backend. */
+  registerDeviceToken(token: string, platform: 'ios' | 'android'): Promise<{ registered: boolean }> {
+    return firstValueFrom(
+      this.http.post<{ registered: boolean }>(`${this.base}/api/users/me/device-token`, { token, platform })
+    );
+  }
+
+  /** Remove a push notification device token from the backend. */
+  deleteDeviceToken(token: string): Promise<{ deleted: boolean }> {
+    return firstValueFrom(
+      this.http.post<{ deleted: boolean }>(`${this.base}/api/users/me/device-token/remove`, { token })
+    );
+  }
 }

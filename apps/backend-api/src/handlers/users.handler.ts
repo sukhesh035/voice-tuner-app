@@ -45,6 +45,13 @@ export interface UserProfile {
   favoriteRagas: string[];
   guruCode?: string;        // set if user is a teacher
   photoUrl?: string;        // CloudFront URL to profile photo
+  deviceTokens?: DeviceToken[];
+}
+
+export interface DeviceToken {
+  token: string;
+  platform: 'ios' | 'android';
+  createdAt: string;
 }
 
 const DEFAULT_PREFS: UserProfile['preferences'] = {
@@ -160,6 +167,71 @@ export const handler = async (
       const cdnUrl = `${UPLOADS_CDN}/${key}`;
 
       return ok({ uploadUrl, cdnUrl, key });
+    }
+
+    // POST /users/me/device-token — register a push notification device token
+    if (method === 'POST' && event.rawPath.endsWith('/device-token') && !event.rawPath.endsWith('/remove')) {
+      const body = JSON.parse(event.body ?? '{}');
+      const { token, platform } = body;
+      if (!token || !platform) {
+        return badRequest('token and platform are required');
+      }
+
+      const now = new Date().toISOString();
+      const newToken: DeviceToken = { token, platform, createdAt: now };
+
+      // Get existing tokens, replace if same token exists, or append
+      const existing = await ddb.send(new GetCommand({
+        TableName: TABLE,
+        Key: { userId: auth.userId },
+        ProjectionExpression: 'deviceTokens',
+      }));
+
+      const tokens: DeviceToken[] = (existing.Item?.['deviceTokens'] as DeviceToken[]) ?? [];
+      const filtered = tokens.filter(t => t.token !== token);
+      filtered.push(newToken);
+
+      // Keep max 5 tokens per user (covers multiple devices)
+      const trimmed = filtered.slice(-5);
+
+      await ddb.send(new UpdateCommand({
+        TableName: TABLE,
+        Key: { userId: auth.userId },
+        UpdateExpression: 'SET deviceTokens = :tokens, #updatedAt = :now',
+        ExpressionAttributeNames: { '#updatedAt': 'updatedAt' },
+        ExpressionAttributeValues: { ':tokens': trimmed, ':now': now },
+      }));
+
+      return ok({ registered: true });
+    }
+
+    // POST /users/me/device-token/remove — remove a device token
+    if (method === 'POST' && event.rawPath.endsWith('/device-token/remove')) {
+      const body = JSON.parse(event.body ?? '{}');
+      const { token } = body;
+      if (!token) {
+        return badRequest('token is required');
+      }
+
+      const now = new Date().toISOString();
+      const existing = await ddb.send(new GetCommand({
+        TableName: TABLE,
+        Key: { userId: auth.userId },
+        ProjectionExpression: 'deviceTokens',
+      }));
+
+      const tokens: DeviceToken[] = (existing.Item?.['deviceTokens'] as DeviceToken[]) ?? [];
+      const filtered = tokens.filter(t => t.token !== token);
+
+      await ddb.send(new UpdateCommand({
+        TableName: TABLE,
+        Key: { userId: auth.userId },
+        UpdateExpression: 'SET deviceTokens = :tokens, #updatedAt = :now',
+        ExpressionAttributeNames: { '#updatedAt': 'updatedAt' },
+        ExpressionAttributeValues: { ':tokens': filtered, ':now': now },
+      }));
+
+      return ok({ deleted: true });
     }
 
     return badRequest('Unknown route');

@@ -11,6 +11,7 @@ import {
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { ApiService, UserPreferences } from '../../core/services/api.service';
+import { PushNotificationService } from '../../core/services/push-notification.service';
 import { TanpuraPlayerService, Instrument } from '@voice-tuner/tanpura-player';
 import { AuthService } from '@voice-tuner/auth';
 import { filter, take } from 'rxjs/operators';
@@ -45,6 +46,7 @@ export class SettingsPage {
   constructor(
     public themeService: ThemeService,
     private api: ApiService,
+    private pushNotification: PushNotificationService,
     private tanpura: TanpuraPlayerService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
@@ -81,6 +83,15 @@ export class SettingsPage {
     const checked = (event as CustomEvent).detail.checked as boolean;
     this.dailyReminder = checked;
     this.persistPreference({ notificationsEnabled: checked });
+    if (checked) {
+      this.pushNotification.initialize().catch((err) =>
+        console.error('[Settings] Push registration failed', err)
+      );
+    } else {
+      this.pushNotification.unregister().catch((err) =>
+        console.error('[Settings] Push unregister failed', err)
+      );
+    }
   }
 
   private loadPreferences(): void {

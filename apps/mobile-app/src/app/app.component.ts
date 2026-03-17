@@ -4,6 +4,7 @@ import { ThemeService } from './core/services/theme.service';
 import { AuthService } from '@voice-tuner/auth';
 import { ApiService } from './core/services/api.service';
 import { LiveUpdateService } from './core/services/live-update.service';
+import { PushNotificationService } from './core/services/push-notification.service';
 
 // On a real device over cellular/WiFi, Cognito's fetchAuthSession can take
 // 300–800ms. Cap the wait so a slow or offline network never freezes the app.
@@ -25,6 +26,7 @@ export class AppComponent implements OnInit {
     private authService: AuthService,
     private api: ApiService,
     private liveUpdate: LiveUpdateService,
+    private pushNotification: PushNotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -40,6 +42,10 @@ export class AppComponent implements OnInit {
       if (this.authService.currentUser) {
         // Ensure user record exists in DynamoDB after session restore
         this.api.getProfile().catch(() => {});
+        // Register for push notifications on native platforms
+        this.pushNotification.initialize().catch((err) =>
+          console.error('[App] Push notification init failed', err)
+        );
       }
     });
   }
