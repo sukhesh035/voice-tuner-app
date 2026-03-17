@@ -73,11 +73,19 @@ export class LoginPage {
     this.errorMsg   = '';
     this.successMsg = '';
     try {
-      await this.authService.signUp(this.email, this.password);
-      // Provision user record in DynamoDB immediately after sign-up
-      this.api.getProfile().catch(() => {});
+      const result = await this.authService.signUp(this.email, this.password);
       this.analytics.logEvent('sign_up', { method: 'email' });
-      await this.router.navigate(['/home']);
+      if (result === 'CONFIRM_SIGN_UP') {
+        // Navigate to verify-email page, passing credentials so the page can
+        // sign the user in automatically after successful verification.
+        await this.router.navigate(['/verify-email'], {
+          state: { email: this.email, password: this.password },
+        });
+      } else {
+        // Auto-confirmed (should not happen in normal flow)
+        this.api.getProfile().catch(() => {});
+        await this.router.navigate(['/home']);
+      }
     } catch (err: any) {
       this.errorMsg = err.message ?? 'Sign up failed.';
     } finally {
@@ -96,13 +104,12 @@ export class LoginPage {
     this.errorMsg   = '';
     this.successMsg = '';
     try {
-      // AuthService may not have resetPassword — use a best-effort approach
-      const svc = this.authService as any;
-      if (typeof svc.resetPassword === 'function') {
-        await svc.resetPassword(this.email);
-      }
-      this.successMsg = 'Password reset email sent. Check your inbox.';
+      await this.authService.resetPassword(this.email);
       this.analytics.logEvent('forgot_password_sent');
+      // Navigate to reset-password page so user can enter the code
+      await this.router.navigate(['/reset-password'], {
+        state: { email: this.email },
+      });
     } catch (err: any) {
       this.errorMsg = err.message ?? 'Could not send reset email.';
     } finally {

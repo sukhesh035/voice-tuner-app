@@ -14,6 +14,7 @@ import * as iam     from 'aws-cdk-lib/aws-iam';
 import * as events  from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as ssm     from 'aws-cdk-lib/aws-ssm';
+import * as kms     from 'aws-cdk-lib/aws-kms';
 
 export interface SrutiStackProps extends cdk.StackProps {
   stage:        'dev' | 'prod';
@@ -29,21 +30,49 @@ export class SrutiStack extends cdk.Stack {
 
     // ─── Cognito User Pool ────────────────────────────────────────────────────
 
-    // Pre Sign-up trigger: auto-confirm & auto-verify so users can sign in
-    // immediately after registration without clicking a confirmation email.
-    const preSignUpFn = new lambda.Function(this, 'PreSignUpFn', {
-      functionName: `${prefix}-pre-signup`,
+    // KMS Customer Managed Key — Cognito encrypts OTP codes with this key
+    // before passing them to the customEmailSender Lambda.
+    const emailCmk = new kms.Key(this, 'EmailCmk', {
+      description:    `${prefix} Cognito custom email sender CMK`,
+      enableKeyRotation: true,
+      removalPolicy:  stage === 'dev'
+        ? cdk.RemovalPolicy.DESTROY
+        : cdk.RemovalPolicy.RETAIN,
+    });
+
+    const sendGridKeyParam = `/${prefix}/sendgrid-api-key`;
+
+    const distDir = path.join(__dirname, '../../../dist/apps/backend-api');
+
+    // Custom Email Sender Lambda — receives Cognito email events and sends
+    // them via SendGrid so we can use branded, styled emails.
+    const customEmailSenderFn = new lambda.Function(this, 'CustomEmailSenderFn', {
+      functionName: `${prefix}-custom-email-sender`,
       runtime:      lambda.Runtime.NODEJS_22_X,
       architecture: lambda.Architecture.ARM_64,
-      handler:      'index.handler',
-      code: lambda.Code.fromInline(`
-        exports.handler = async (event) => {
-          event.response.autoConfirmUser  = true;
-          event.response.autoVerifyEmail  = true;
-          return event;
-        };
-      `),
-      timeout: cdk.Duration.seconds(5),
+      handler:      'custom-email-sender.handler',
+      code:         lambda.Code.fromAsset(distDir),
+      timeout:      cdk.Duration.seconds(15),
+      environment: {
+        SENDGRID_API_KEY_PARAM: sendGridKeyParam,
+        KMS_KEY_ID:             emailCmk.keyArn,
+      },
+    });
+
+    // Allow the Lambda to read the SendGrid key from SSM
+    customEmailSenderFn.addToRolePolicy(new iam.PolicyStatement({
+      actions:   ['ssm:GetParameter'],
+      resources: [
+        `arn:aws:ssm:${this.region}:${this.account}:parameter${sendGridKeyParam}`,
+      ],
+    }));
+
+    // Allow the Lambda to decrypt codes that Cognito encrypted with the CMK
+    emailCmk.grantDecrypt(customEmailSenderFn);
+
+    // Allow Cognito to invoke the custom email sender Lambda
+    customEmailSenderFn.addPermission('CognitoInvoke', {
+      principal: new iam.ServicePrincipal('cognito-idp.amazonaws.com'),
     });
 
     const userPool = new cognito.UserPool(this, 'UserPool', {
@@ -59,8 +88,9 @@ export class SrutiStack extends cdk.Stack {
         requireSymbols:      false,
       },
       accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
+      customSenderKmsKey: emailCmk,
       lambdaTriggers: {
-        preSignUp: preSignUpFn,
+        customEmailSender: customEmailSenderFn,
       },
       removalPolicy:   stage === 'dev'
         ? cdk.RemovalPolicy.DESTROY
@@ -272,8 +302,6 @@ export class SrutiStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(10),
       environment: commonEnv,
     } as Partial<lambda.FunctionProps>;
-
-    const distDir = path.join(__dirname, '../../../dist/apps/backend-api');
 
     const makeFn = (id: string, entry: string) =>
       new lambda.Function(this, id, {

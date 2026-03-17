@@ -7,7 +7,10 @@ import {
   signOut as amplifySignOut,
   getCurrentUser,
   fetchAuthSession,
-  resendSignUpCode
+  resendSignUpCode,
+  confirmSignUp as amplifyConfirmSignUp,
+  resetPassword as amplifyResetPassword,
+  confirmResetPassword as amplifyConfirmResetPassword,
 } from 'aws-amplify/auth';
 
 export interface AppUser {
@@ -74,9 +77,30 @@ export class AuthService {
     }
   }
 
-  async signUp(email: string, password: string): Promise<void> {
-    await amplifySignUp({ username: email, password, options: { userAttributes: { email } } });
-    // Pre-signup Lambda auto-confirms the user, so we can sign in immediately.
+  /**
+   * Register a new user. Returns 'CONFIRM_SIGN_UP' when Cognito has sent a
+   * verification code (the normal case now that auto-confirm is removed), or
+   * 'DONE' if somehow the user is already confirmed.
+   */
+  async signUp(email: string, password: string): Promise<'CONFIRM_SIGN_UP' | 'DONE'> {
+    const { nextStep } = await amplifySignUp({
+      username: email,
+      password,
+      options: { userAttributes: { email } },
+    });
+    if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
+      this.pendingConfirmationSubject.next(email);
+      return 'CONFIRM_SIGN_UP';
+    }
+    // Auto-confirmed (shouldn't happen anymore, but handle gracefully)
+    await this.signIn(email, password);
+    return 'DONE';
+  }
+
+  /** Confirm email verification code after sign-up. Then sign the user in. */
+  async confirmSignUp(email: string, code: string, password: string): Promise<void> {
+    await amplifyConfirmSignUp({ username: email, confirmationCode: code });
+    this.pendingConfirmationSubject.next(null);
     await this.signIn(email, password);
   }
 
@@ -98,4 +122,15 @@ export class AuthService {
   async resendConfirmation(email: string): Promise<void> {
     await resendSignUpCode({ username: email });
   }
+
+  /** Trigger Cognito to send a password-reset code to the user's email. */
+  async resetPassword(email: string): Promise<void> {
+    await amplifyResetPassword({ username: email });
+  }
+
+  /** Complete the forgot-password flow with the code + new password. */
+  async confirmResetPassword(email: string, code: string, newPassword: string): Promise<void> {
+    await amplifyConfirmResetPassword({ username: email, confirmationCode: code, newPassword });
+  }
 }
+
