@@ -64,12 +64,12 @@ jobs:
       - name: Write Gmail credentials to SSM
         run: |
           aws ssm put-parameter \
-            --name "/sruti/dev/gmail-user" \
+            --name "/sruti-dev/gmail-user" \
             --value "${{ secrets.GMAIL_USER }}" \
             --type SecureString \
             --overwrite
           aws ssm put-parameter \
-            --name "/sruti/dev/gmail-app-password" \
+            --name "/sruti-dev/gmail-app-password" \
             --value "${{ secrets.GMAIL_APP_PASSWORD }}" \
             --type SecureString \
             --overwrite
