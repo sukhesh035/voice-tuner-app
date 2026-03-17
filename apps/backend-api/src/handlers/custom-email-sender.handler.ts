@@ -14,12 +14,12 @@
  *  KMS_KEY_ID        — ARN/ID of the CMK used by Cognito to encrypt the code
  */
 
-import { KMSClient, DecryptCommand } from '@aws-sdk/client-kms';
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { buildClient, CommitmentPolicy, KmsKeyringNode } from '@aws-crypto/client-node';
 import * as nodemailer from 'nodemailer';
 
-const kms = new KMSClient({});
 const ssm = new SSMClient({});
+const { decrypt } = buildClient(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT);
 
 interface CognitoCustomEmailSenderEvent {
   triggerSource: string;
@@ -49,12 +49,10 @@ async function getGmailCredentials(): Promise<{ user: string; pass: string }> {
 }
 
 async function decryptCode(encryptedCode: string): Promise<string> {
+  const keyring = new KmsKeyringNode({ keyIds: [process.env['KMS_KEY_ID']!] });
   const cipherBytes = Buffer.from(encryptedCode, 'base64');
-  const resp = await kms.send(new DecryptCommand({
-    CiphertextBlob: cipherBytes,
-    KeyId:          process.env['KMS_KEY_ID'],
-  }));
-  return Buffer.from(resp.Plaintext!).toString('utf8');
+  const { plaintext } = await decrypt(keyring, cipherBytes);
+  return Buffer.from(plaintext).toString('utf8');
 }
 
 interface EmailPayload {
