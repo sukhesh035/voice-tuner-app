@@ -33,14 +33,14 @@ jobs:
 
       - name: Invoke notifications Lambda
         run: |
-          # Build JSON payload. If clearBadge is true, include that flag and
-          # omit title/body if not provided. This invokes the Lambda with
-          # { clearBadge: true } which will send badge=0 to all tokens.
-          PAYLOAD=$(jq -n \
-            --argjson cb "${{ inputs.clearBadge }}" \
-            --arg t "${{ inputs.title }}" \
-            --arg b "${{ inputs.body }}" \
-            'reduce ["$cb","$t","$b"] as $i ({}; .) | if $i[0] == "true" then {clearBadge: true} else {title: $i[1], body: $i[2]} end')
+          # Build JSON payload. If clearBadge is true, use a simple static
+          # payload. Otherwise build title/body via jq. Using plain bash
+          # avoids complex jq expression interpolation issues.
+          if [ "${{ inputs.clearBadge }}" = "true" ]; then
+            PAYLOAD='{"clearBadge":true}'
+          else
+            PAYLOAD=$(jq -n --arg t "${{ inputs.title }}" --arg b "${{ inputs.body }}" '{title: $t, body: $b}')
+          fi
 
           echo "Invoking notifications Lambda with payload: $PAYLOAD"
 
