@@ -527,9 +527,13 @@ jobs:
           /usr/libexec/PlistBuddy -c "Set :NSCameraUsageDescription 'Swara AI uses the camera to take a profile photo.'" "$PLIST" \
             || /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'Swara AI uses the camera to take a profile photo.'" "$PLIST"
 
-          # Photo library permission (profile photo)
+          # Photo library read permission (profile photo)
           /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryUsageDescription 'Swara AI accesses your photo library to choose a profile photo.'" "$PLIST" \
             || /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 'Swara AI accesses your photo library to choose a profile photo.'" "$PLIST"
+
+          # Photo library add/write permission (save captured photo)
+          /usr/libexec/PlistBuddy -c "Set :NSPhotoLibraryAddUsageDescription 'Swara AI saves photos to your library when you take a profile photo.'" "$PLIST" \
+            || /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 'Swara AI saves photos to your library when you take a profile photo.'" "$PLIST"
 
           # iPad orientations (multitasking requirement)
           /usr/libexec/PlistBuddy -c "Delete :UISupportedInterfaceOrientations~ipad" "$PLIST" 2>/dev/null || true
