@@ -62,6 +62,9 @@ importers:
       '@capacitor-firebase/analytics':
         specifier: ^7.5.0
         version: 7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)
+      '@capacitor-firebase/messaging':
+        specifier: 7.5.0
+        version: 7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)
       '@capacitor/android':
         specifier: ^7.0.0
         version: 7.6.0(@capacitor/core@7.6.0)
@@ -83,9 +86,6 @@ importers:
       '@capacitor/keyboard':
         specifier: ^7.0.0
         version: 7.0.5(@capacitor/core@7.6.0)
-      '@capacitor/push-notifications':
-        specifier: ^7.0.6
-        version: 7.0.6(@capacitor/core@7.6.0)
       '@capacitor/status-bar':
         specifier: ^7.0.0
         version: 7.0.5(@capacitor/core@7.6.0)
@@ -1591,6 +1591,15 @@ packages:
       firebase:
         optional: true
 
+  '@capacitor-firebase/messaging@7.5.0':
+    resolution: {integrity: sha512-mQ4542IX7HWyGnHZLAkOvqzYYpaH47v6ijOsBO/CdyA5hfTdGc5fbxzdS5xMYKTxfpFiecb1qgEDmB5XFWvWOA==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+      firebase: ^11.2.0
+    peerDependenciesMeta:
+      firebase:
+        optional: true
+
   '@capacitor/android@7.6.0':
     resolution: {integrity: sha512-xpfAOGcgeQnTw8C0E9nLjW15lQ6TL2ccieZks93hNiQYknnQT8FQaH2paMYkLYrQ0JfRImdBXbQ1u6sZ4kVa3w==}
     peerDependencies:
@@ -1636,11 +1645,6 @@ packages:
 
   '@capacitor/keyboard@7.0.5':
     resolution: {integrity: sha512-XGqTXvoZLx4gm5TZnH9uDKg9doy8NFhabytyjDOlXDqxNitz9IPWAANUoOyu2W4Ng9a/YaY5csCnAsoUPZesTA==}
-    peerDependencies:
-      '@capacitor/core': '>=7.0.0'
-
-  '@capacitor/push-notifications@7.0.6':
-    resolution: {integrity: sha512-zAhbHpdbc15ImuVGgoFwUZsKI+jjGxy/oO5mgfYKUx8Xl2OskndzhL79PYsCPjyGLbqUR9NRUZJthV9auVT3nw==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
 
@@ -13549,6 +13553,12 @@ snapshots:
     optionalDependencies:
       firebase: 11.10.0
 
+  '@capacitor-firebase/messaging@7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)':
+    dependencies:
+      '@capacitor/core': 7.6.0
+    optionalDependencies:
+      firebase: 11.10.0
+
   '@capacitor/android@7.6.0(@capacitor/core@7.6.0)':
     dependencies:
       '@capacitor/core': 7.6.0
@@ -13643,10 +13653,6 @@ snapshots:
       '@capacitor/core': 7.6.0
 
   '@capacitor/keyboard@7.0.5(@capacitor/core@7.6.0)':
-    dependencies:
-      '@capacitor/core': 7.6.0
-
-  '@capacitor/push-notifications@7.0.6(@capacitor/core@7.6.0)':
     dependencies:
       '@capacitor/core': 7.6.0
 
