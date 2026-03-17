@@ -40,12 +40,12 @@ export class SrutiStack extends cdk.Stack {
         : cdk.RemovalPolicy.RETAIN,
     });
 
-    const sendGridKeyParam = `/${prefix}/sendgrid-api-key`;
+    const resendKeyParam = `/${prefix}/resend-api-key`;
 
     const distDir = path.join(__dirname, '../../../dist/apps/backend-api');
 
     // Custom Email Sender Lambda — receives Cognito email events and sends
-    // them via SendGrid so we can use branded, styled emails.
+    // them via Resend so we can use branded, styled emails.
     const customEmailSenderFn = new lambda.Function(this, 'CustomEmailSenderFn', {
       functionName: `${prefix}-custom-email-sender`,
       runtime:      lambda.Runtime.NODEJS_22_X,
@@ -54,16 +54,16 @@ export class SrutiStack extends cdk.Stack {
       code:         lambda.Code.fromAsset(distDir),
       timeout:      cdk.Duration.seconds(15),
       environment: {
-        SENDGRID_API_KEY_PARAM: sendGridKeyParam,
-        KMS_KEY_ID:             emailCmk.keyArn,
+        RESEND_API_KEY_PARAM: resendKeyParam,
+        KMS_KEY_ID:           emailCmk.keyArn,
       },
     });
 
-    // Allow the Lambda to read the SendGrid key from SSM
+    // Allow the Lambda to read the Resend key from SSM
     customEmailSenderFn.addToRolePolicy(new iam.PolicyStatement({
       actions:   ['ssm:GetParameter'],
       resources: [
-        `arn:aws:ssm:${this.region}:${this.account}:parameter${sendGridKeyParam}`,
+        `arn:aws:ssm:${this.region}:${this.account}:parameter${resendKeyParam}`,
       ],
     }));
 

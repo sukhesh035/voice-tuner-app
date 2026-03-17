@@ -60,12 +60,12 @@ jobs:
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           pnpm exec cdk bootstrap aws://${ACCOUNT_ID}/${{ env.AWS_REGION }} --ci
 
-      # ── 5a. Write SendGrid API key to SSM (idempotent) ───────────────────────
-      - name: Write SendGrid API key to SSM
+      # ── 5a. Write Resend API key to SSM (idempotent) ────────────────────────
+      - name: Write Resend API key to SSM
         run: |
           aws ssm put-parameter \
-            --name "/sruti/dev/sendgrid-api-key" \
-            --value "${{ secrets.SENDGRID_API_KEY }}" \
+            --name "/sruti/dev/resend-api-key" \
+            --value "${{ secrets.RESEND_API_KEY }}" \
             --type SecureString \
             --overwrite
 

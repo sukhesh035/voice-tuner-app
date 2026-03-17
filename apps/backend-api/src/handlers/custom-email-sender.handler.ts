@@ -6,11 +6,11 @@
  *  - event.request.userAttributes.email
  *  - event.request.code   — the one-time code, KMS-encrypted with the CMK
  *
- * We decrypt the code, pick a template, then send via SendGrid.
+ * We decrypt the code, pick a template, then send via Resend.
  *
  * Required env vars:
- *  SENDGRID_API_KEY_PARAM  — SSM SecureString path for the SendGrid API key
- *  KMS_KEY_ID              — ARN/ID of the CMK used by Cognito to encrypt the code
+ *  RESEND_API_KEY_PARAM  — SSM SecureString path for the Resend API key
+ *  KMS_KEY_ID            — ARN/ID of the CMK used by Cognito to encrypt the code
  */
 
 import { KMSClient, DecryptCommand } from '@aws-sdk/client-kms';
@@ -29,17 +29,17 @@ interface CognitoCustomEmailSenderEvent {
   response: Record<string, unknown>;
 }
 
-// Cache the SendGrid key within the Lambda execution environment
-let cachedSgKey: string | null = null;
+// Cache the Resend key within the Lambda execution environment
+let cachedResendKey: string | null = null;
 
-async function getSendGridKey(): Promise<string> {
-  if (cachedSgKey) return cachedSgKey;
+async function getResendKey(): Promise<string> {
+  if (cachedResendKey) return cachedResendKey;
   const resp = await ssm.send(new GetParameterCommand({
-    Name:           process.env['SENDGRID_API_KEY_PARAM']!,
+    Name:           process.env['RESEND_API_KEY_PARAM']!,
     WithDecryption: true,
   }));
-  cachedSgKey = resp.Parameter!.Value!;
-  return cachedSgKey;
+  cachedResendKey = resp.Parameter!.Value!;
+  return cachedResendKey;
 }
 
 async function decryptCode(encryptedCode: string): Promise<string> {
@@ -59,13 +59,13 @@ interface EmailPayload {
 
 async function sendEmail(payload: EmailPayload, apiKey: string): Promise<void> {
   const body = {
-    personalizations: [{ to: [{ email: payload.to }] }],
-    from:    { email: 'noreply@sruti.in', name: 'Sruti' },
+    from:    'noreply@sruti.in',
+    to:      payload.to,
     subject: payload.subject,
-    content: [{ type: 'text/html', value: payload.html }],
+    html:    payload.html,
   };
 
-  const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
+  const res = await fetch('https://api.resend.com/emails', {
     method:  'POST',
     headers: {
       Authorization:  `Bearer ${apiKey}`,
@@ -76,7 +76,7 @@ async function sendEmail(payload: EmailPayload, apiKey: string): Promise<void> {
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`SendGrid error ${res.status}: ${text}`);
+    throw new Error(`Resend error ${res.status}: ${text}`);
   }
 }
 
@@ -145,7 +145,7 @@ export const handler = async (event: CognitoCustomEmailSenderEvent): Promise<voi
 
   // Decrypt the code that Cognito encrypted with the CMK
   const code = await decryptCode(request.code);
-  const apiKey = await getSendGridKey();
+  const apiKey = await getResendKey();
 
   let payload: EmailPayload;
 
