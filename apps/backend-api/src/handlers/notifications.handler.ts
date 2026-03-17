@@ -90,6 +90,7 @@ async function sendPush(
   deviceToken: string,
   title: string,
   body: string,
+  badge?: number,
 ): Promise<boolean> {
   const url = `https://fcm.googleapis.com/v1/projects/${FCM_PROJECT_ID}/messages:send`;
 
@@ -108,9 +109,7 @@ async function sendPush(
           notification: { sound: 'default', channel_id: 'daily_reminder' },
         },
         apns: {
-          // Do not set the app badge. The client does not persist
-          // notifications and we prefer the OS not show a stale badge.
-          payload: { aps: { sound: 'default' } },
+          payload: { aps: (badge !== undefined ? { sound: 'default', badge } : { sound: 'default' }) },
         },
       },
     }),
@@ -148,10 +147,11 @@ interface NotificationEvent {
   body?: string;
 }
 
-export const handler = async (event?: NotificationEvent): Promise<void> => {
+export const handler = async (event?: NotificationEvent & { clearBadge?: boolean }): Promise<void> => {
   const customTitle = event?.title;
   const customBody  = event?.body;
-  const isManual    = !!(customTitle && customBody);
+  const isManual    = !!(customTitle && customBody) || !!event?.clearBadge;
+  const clearBadgeOnly = !!event?.clearBadge;
 
   console.log(`[Notifications] ${isManual ? 'Manual' : 'Daily reminder'} job started`);
 
@@ -190,7 +190,10 @@ export const handler = async (event?: NotificationEvent): Promise<void> => {
         : getRandomMessage();
 
       for (const dt of user.deviceTokens) {
-        const success = await sendPush(accessToken, dt.token, msg.title, msg.body);
+        // When clearBadgeOnly is true, send an APNs payload with badge:0 to
+        // force the OS to clear the app icon badge on devices that currently
+        // show a stale number. We keep the Android payload minimal.
+        const success = await sendPush(accessToken, dt.token, msg.title ?? '', msg.body ?? '', clearBadgeOnly ? 0 : undefined);
         if (success) sent++;
         else failed++;
       }
