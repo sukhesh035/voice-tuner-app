@@ -46,10 +46,15 @@ jobs:
 
           aws lambda invoke \
             --function-name sruti-prod-notifications \
-            --payload "$PAYLOAD" \
-            --cli-binary-format raw-in-base64-out \
+            --payload "$PAYLOAD_B64" \
             --region ${{ env.AWS_REGION }} \
             /tmp/response.json
 
           echo "Lambda response:"
           cat /tmp/response.json
+
+          # Fail the job if the Lambda returned a function error
+          if grep -q '"FunctionError"' /tmp/response.json; then
+            echo "##[error]Lambda returned a function error"
+            exit 1
+          fi

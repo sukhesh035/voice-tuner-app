@@ -43,6 +43,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth/login.page').then(m => m.LoginPage)
   },
   {
+    path: 'verify-email',
+    loadComponent: () => import('./pages/auth/verify-email.page').then(m => m.VerifyEmailPage)
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./pages/auth/reset-password.page').then(m => m.ResetPasswordPage)
+  },
+  {
     path: 'classroom/:code',
     loadComponent: () => import('./pages/classroom/classroom.page').then(m => m.ClassroomPage)
   },

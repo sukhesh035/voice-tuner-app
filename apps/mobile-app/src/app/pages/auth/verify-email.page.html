@@ -1,0 +1,57 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Verify Email</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="verify-page">
+
+    <!-- ── Hero ───────────────────────────────────────────────────────────── -->
+    <div class="verify-hero">
+      <div class="verify-icon">
+        <ion-icon name="mail-outline"></ion-icon>
+      </div>
+      <div class="verify-title">Check your inbox</div>
+      <div class="verify-sub">
+        We sent a 6-digit verification code to<br>
+        <strong>{{ email }}</strong>
+      </div>
+    </div>
+
+    <!-- ── Code form ──────────────────────────────────────────────────────── -->
+    <div class="verify-form sruti-card">
+      <div class="form-group">
+        <label class="form-label">Verification Code</label>
+        <input
+          class="form-input code-input"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          maxlength="6"
+          [(ngModel)]="code"
+          placeholder="123456"
+          autocomplete="one-time-code"
+        />
+      </div>
+
+      <div class="error-msg"   *ngIf="errorMsg">{{ errorMsg }}</div>
+      <div class="success-msg" *ngIf="successMsg">{{ successMsg }}</div>
+
+      <button class="sruti-btn sruti-btn--primary verify-btn" (click)="verify()" [disabled]="isLoading">
+        {{ isLoading ? 'Verifying...' : 'Verify Email' }}
+      </button>
+
+      <div class="resend-row">
+        <span class="resend-label">Didn't receive it?</span>
+        <button class="link-btn" type="button" (click)="resend()" [disabled]="isLoading">
+          Resend code
+        </button>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

@@ -60,6 +60,15 @@ jobs:
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           pnpm exec cdk bootstrap aws://${ACCOUNT_ID}/${{ env.AWS_REGION }} --ci
 
+      # ── 5a. Write SendGrid API key to SSM (idempotent) ───────────────────────
+      - name: Write SendGrid API key to SSM
+        run: |
+          aws ssm put-parameter \
+            --name "/sruti/prod/sendgrid-api-key" \
+            --value "${{ secrets.SENDGRID_API_KEY }}" \
+            --type SecureString \
+            --overwrite
+
       # ── 6. Build Lambda bundle ────────────────────────────────────────────────
       - name: Build Lambda bundle
         run: pnpm build:api
