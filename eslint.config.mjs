@@ -1,57 +1,96 @@
 import nx from '@nx/eslint-plugin';
 
-// Root ESLint flat config for the workspace. This intentionally builds on
-// @nx/eslint-plugin's recommended baseline and applies a few pragmatic rules
-// for TypeScript/JS projects across the monorepo.
-
 export default [
-  // Nx recommended config (handles many workspace / ts settings)
-  nx.configs['recommended'],
+  // Nx base config — registers the @nx plugin and ignores .nx/
+  ...nx.configs['flat/base'],
 
-  // JS/TS generic rules
+  // Nx TypeScript config — applies @typescript-eslint/recommended to .ts files
+  ...nx.configs['flat/typescript'],
+
+  // Nx Angular config — applies angular-eslint recommended to .ts files
+  ...nx.configs['flat/angular'],
+
+  // Nx Angular template config — applies angular-eslint template rules to .html files
+  ...nx.configs['flat/angular-template'],
+
+  // ── Workspace rule overrides ──────────────────────────────────────────────
+
+  // TypeScript files
   {
-    files: ['**/*.{js,jsx,ts,tsx}'],
-    languageOptions: {
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-      },
-    },
+    files: ['**/*.ts'],
     rules: {
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // Keep warnings actionable — allow console.log in Node handlers
+      'no-console': ['warn', { allow: ['warn', 'error', 'log'] }],
       'prefer-const': 'error',
-      'no-duplicate-imports': 'error',
-      // keep import ordering readable
-      'import/order': ['warn', {
-        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-        alphabetize: { order: 'asc', caseInsensitive: true }
-      }],
-    },
-  },
 
-  // TypeScript-specific rules (parser provided by workspace deps)
-  {
-    files: ['**/*.ts', '**/*.tsx'],
-    languageOptions: {
-      parser: '@typescript-eslint/parser',
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        project: ['./tsconfig.base.json', './tsconfig.json'],
-      },
-    },
-    rules: {
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      '@typescript-eslint/explicit-function-return-type': ['warn', { allowExpressions: true, allowTypedFunctionExpressions: true }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
+
+      // Allow empty arrow functions — used for intentional fire-and-forget
+      // .catch(() => {}) patterns throughout the codebase.
+      '@typescript-eslint/no-empty-function': [
+        'error',
+        { allow: ['arrowFunctions'] },
+      ],
+
+      // Allow empty catch blocks — used for safe-access wrappers (e.g.
+      // localStorage try/catch in shared-utils).
+      'no-empty': ['error', { allowEmptyCatch: true }],
+
+      // The codebase uses constructor injection throughout; migrating to
+      // inject() is a separate effort tracked outside ESLint.
+      '@angular-eslint/prefer-inject': 'off',
+
+      // Selectors — only enforce on Angular projects (backend-api has no
+      // components so these rules are harmless no-ops there).
+      '@angular-eslint/directive-selector': [
+        'error',
+        { type: 'attribute', prefix: 'app', style: 'camelCase' },
+      ],
+      '@angular-eslint/component-selector': [
+        'error',
+        { type: 'element', prefix: 'app', style: 'kebab-case' },
+      ],
     },
   },
 
-  // Loosen a few rules for tests
+  // Angular templates (.html + inline templates extracted by the processor)
   {
-    files: ['**/*.spec.ts', '**/*.test.ts', 'test/**', 'tests/**'],
+    files: ['**/*.html'],
+    rules: {
+      // The app uses *ngIf/*ngFor throughout; migrating to @if/@for control
+      // flow is a separate effort.
+      '@angular-eslint/template/prefer-control-flow': 'off',
+
+      // Accessibility: downgrade to warnings so they don't block CI but
+      // remain visible for incremental fixes.
+      '@angular-eslint/template/click-events-have-key-events': 'warn',
+      '@angular-eslint/template/interactive-supports-focus': 'warn',
+      '@angular-eslint/template/label-has-associated-control': 'warn',
+    },
+  },
+
+  // Loosen rules for tests
+  {
+    files: ['**/*.spec.ts', '**/*.test.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },
+  },
+
+  // Global ignores
+  {
+    ignores: [
+      'node_modules/',
+      'dist/',
+      'tmp/',
+      '**/generated/**',
+      '**/ios/**',
+      '**/android/**',
+      '**/.angular/**',
+    ],
   },
 ];

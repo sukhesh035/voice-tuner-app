@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -184,7 +184,7 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
   `,
   styleUrls: ['./tanpura.page.scss']
 })
-export class TanpuraPage implements OnInit, OnDestroy {
+export class TanpuraPage implements OnDestroy {
   readonly allKeys    = ALL_KEYS;
   readonly stringConfigs: StringConfig[] = ['Sa-Pa-Sa', 'Sa-Ma-Sa', 'Sa-Ma#-Sa'];
   readonly stringLabels = ['Sa', 'Pa', 'Sa'];
@@ -212,8 +212,6 @@ export class TanpuraPage implements OnInit, OnDestroy {
   ) {
     addIcons({ playCircle, stopCircle, musicalNote, volumeMedium, speedometer });
   }
-
-  ngOnInit(): void {}
 
   async togglePlay(): Promise<void> {
     const wasPlaying = this.tanpura.state.isPlaying;
