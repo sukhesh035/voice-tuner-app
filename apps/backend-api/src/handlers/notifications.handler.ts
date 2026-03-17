@@ -139,8 +139,19 @@ function getRandomMessage(): { title: string; body: string } {
 
 // ── Handler ──────────────────────────────────────────────────────────────────
 
-export const handler = async (): Promise<void> => {
-  console.log('[Notifications] Daily reminder job started');
+interface NotificationEvent {
+  /** Custom notification title (optional — picks a random reminder if omitted) */
+  title?: string;
+  /** Custom notification body (optional) */
+  body?: string;
+}
+
+export const handler = async (event?: NotificationEvent): Promise<void> => {
+  const customTitle = event?.title;
+  const customBody  = event?.body;
+  const isManual    = !!(customTitle && customBody);
+
+  console.log(`[Notifications] ${isManual ? 'Manual' : 'Daily reminder'} job started`);
 
   let accessToken: string;
   try {
@@ -172,7 +183,10 @@ export const handler = async (): Promise<void> => {
     for (const user of users) {
       if (!user.deviceTokens?.length) continue;
 
-      const msg = getRandomMessage();
+      const msg = isManual
+        ? { title: customTitle, body: customBody }
+        : getRandomMessage();
+
       for (const dt of user.deviceTokens) {
         const success = await sendPush(accessToken, dt.token, msg.title, msg.body);
         if (success) sent++;
