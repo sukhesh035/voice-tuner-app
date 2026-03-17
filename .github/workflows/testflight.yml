@@ -727,3 +727,71 @@ jobs:
           echo "**Commit**: \`${{ github.sha }}\`"                 >> $GITHUB_STEP_SUMMARY
           echo ""                             >> $GITHUB_STEP_SUMMARY
           echo "Apple takes ~5-15 min to process. Check [App Store Connect](https://appstoreconnect.apple.com)." >> $GITHUB_STEP_SUMMARY
+
+      # ── 20. Slack — success ────────────────────────────────────────────
+      - name: Notify Slack — success
+        if: success()
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "TestFlight Build Uploaded" }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Version:*\n${{ github.ref_name }} (build ${{ github.run_number }})" },
+                    { "type": "mrkdwn", "text": "*Platform:*\niOS" },
+                    { "type": "mrkdwn", "text": "*Commit:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|`${{ github.sha }}`>" },
+                    { "type": "mrkdwn", "text": "*Triggered by:*\n${{ github.actor }}" }
+                  ]
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    { "type": "mrkdwn", "text": "Apple takes ~5-15 min to process. Check <https://appstoreconnect.apple.com|App Store Connect>." }
+                  ]
+                }
+              ]
+            }
+
+      # ── 21. Slack — failure ────────────────────────────────────────────
+      - name: Notify Slack — failure
+        if: failure()
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "TestFlight Build Failed" }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Version:*\n${{ github.ref_name }} (build ${{ github.run_number }})" },
+                    { "type": "mrkdwn", "text": "*Platform:*\niOS" },
+                    { "type": "mrkdwn", "text": "*Commit:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|`${{ github.sha }}`>" },
+                    { "type": "mrkdwn", "text": "*Triggered by:*\n${{ github.actor }}" }
+                  ]
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": { "type": "plain_text", "text": "View Workflow Run" },
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }

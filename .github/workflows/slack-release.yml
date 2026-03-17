@@ -1,0 +1,53 @@
+name: Slack — Release Notification
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  notify:
+    name: Notify Slack of new release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (for commit message)
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 1
+
+      - name: Get commit message
+        id: commit
+        run: |
+          MSG=$(git log -1 --pretty=%s)
+          echo "message=$MSG" >> $GITHUB_OUTPUT
+
+      - name: Notify Slack — new release tag
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "New Release: ${{ github.ref_name }}" }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Tag:*\n`${{ github.ref_name }}`" },
+                    { "type": "mrkdwn", "text": "*Build:*\n#${{ github.run_number }}" },
+                    { "type": "mrkdwn", "text": "*Commit:*\n${{ steps.commit.outputs.message }}" },
+                    { "type": "mrkdwn", "text": "*By:*\n${{ github.actor }}" }
+                  ]
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    { "type": "mrkdwn", "text": "TestFlight (iOS) and Play Store (Android) builds are now in progress." }
+                  ]
+                }
+              ]
+            }
