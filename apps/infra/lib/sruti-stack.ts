@@ -309,9 +309,10 @@ export class SrutiStack extends cdk.Stack {
           apigwv2.CorsHttpMethod.DELETE,
           apigwv2.CorsHttpMethod.OPTIONS,
         ],
-        allowOrigins:  stage === 'prod'
-          ? ['https://app.sruti.in', 'capacitor://localhost', 'http://localhost']
-          : ['*'],
+        // API Gateway V2 only accepts http/https origins, so use '*' here.
+        // Origin enforcement is handled by the Lambda CORS middleware which
+        // supports capacitor:// and http://localhost origins dynamically.
+        allowOrigins:  ['*'],
         maxAge:         cdk.Duration.days(1),
       },
     });
