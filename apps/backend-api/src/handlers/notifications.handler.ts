@@ -108,7 +108,9 @@ async function sendPush(
           notification: { sound: 'default', channel_id: 'daily_reminder' },
         },
         apns: {
-          payload: { aps: { sound: 'default', badge: 1 } },
+          // Do not set the app badge. The client does not persist
+          // notifications and we prefer the OS not show a stale badge.
+          payload: { aps: { sound: 'default' } },
         },
       },
     }),
