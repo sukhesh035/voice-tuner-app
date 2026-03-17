@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner,
   ViewWillEnter, ActionSheetController, AlertController
@@ -9,7 +9,7 @@ import { addIcons } from 'ionicons';
 import {
   personCircle, trendingUp, flame, musicalNote,
   settingsOutline, chevronForward, logOutOutline,
-  checkmarkCircle, school, mic, cameraOutline
+  checkmarkCircle, school, mic, cameraOutline, warningOutline
 } from 'ionicons/icons';
 import { filter, take } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
@@ -55,6 +55,16 @@ interface Achievement {
           </ng-container>
 
           <ng-template #profileLoaded>
+
+            <!-- Email not verified banner -->
+            <div *ngIf="!(user.emailVerified)" class="unverified-banner sruti-card">
+              <ion-icon name="warning-outline" class="unverified-banner__icon"></ion-icon>
+              <div class="unverified-banner__body">
+                <div class="unverified-banner__title">Email not verified</div>
+                <div class="unverified-banner__desc">Verify your email to save sessions and unlock all features.</div>
+              </div>
+              <button class="unverified-banner__btn" (click)="verifyEmail()">Verify</button>
+            </div>
 
             <!-- Avatar + Name -->
             <div class="profile-hero">
@@ -320,11 +330,12 @@ export class ProfilePage implements OnInit, ViewWillEnter {
     private analytics: AnalyticsService,
     private actionSheet: ActionSheetController,
     private alertCtrl: AlertController,
+    private router: Router,
   ) {
     addIcons({
       personCircle, trendingUp, flame, musicalNote,
       settingsOutline, chevronForward, logOutOutline,
-      checkmarkCircle, school, mic, cameraOutline
+      checkmarkCircle, school, mic, cameraOutline, warningOutline
     });
   }
 
@@ -455,6 +466,12 @@ export class ProfilePage implements OnInit, ViewWillEnter {
       this.uploading = false;
       this.cdr.markForCheck();
     }
+  }
+
+  verifyEmail(): void {
+    const email = this.authService.currentUser?.email ?? '';
+    this.authService.resendConfirmation(email).catch(() => {});
+    this.router.navigate(['/verify-email'], { state: { email } });
   }
 
   async signOut(): Promise<void> {
