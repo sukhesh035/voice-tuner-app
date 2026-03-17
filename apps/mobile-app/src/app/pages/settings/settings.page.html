@@ -94,6 +94,37 @@
       </div>
     </div>
 
+    <!-- ── Permissions ─────────────────────────────────────────────── -->
+    <div class="settings-group">
+      <div class="group-label">
+        <ion-icon name="shield-checkmark-outline"></ion-icon> Permissions
+      </div>
+      <div class="settings-row sruti-card" (click)="requestMicPermission()">
+        <div class="setting-info">
+          <div class="setting-name">Microphone Access</div>
+          <div class="setting-sub">Required for pitch detection and singing practice</div>
+        </div>
+        <span class="permission-badge" [class.granted]="micPermission === 'granted'" [class.denied]="micPermission === 'denied'">
+          {{ micPermission === 'granted' ? 'Enabled' : micPermission === 'denied' ? 'Denied' : 'Not Set' }}
+        </span>
+      </div>
+      <div class="settings-row sruti-card" (click)="requestNotificationPermission()">
+        <div class="setting-info">
+          <div class="setting-name">Push Notifications</div>
+          <div class="setting-sub">Daily Riyaz reminders and updates</div>
+        </div>
+        <span class="permission-badge" [class.granted]="notificationPermission === 'granted'" [class.denied]="notificationPermission === 'denied'">
+          {{ notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'Denied' : 'Not Set' }}
+        </span>
+      </div>
+      <div class="settings-row sruti-card hint-row" *ngIf="micPermission === 'denied' || notificationPermission === 'denied'">
+        <div class="setting-info">
+          <div class="setting-sub">Denied permissions must be enabled in your device's Settings app.</div>
+        </div>
+        <button class="open-settings-btn" (click)="openAppSettings()">Open Settings</button>
+      </div>
+    </div>
+
     <!-- ── Notifications ──────────────────────────────────────────────── -->
     <div class="settings-group">
       <div class="group-label">

@@ -5,6 +5,7 @@ import { AuthService } from '@voice-tuner/auth';
 import { ApiService } from './core/services/api.service';
 import { LiveUpdateService } from './core/services/live-update.service';
 import { PushNotificationService } from './core/services/push-notification.service';
+import { PermissionsService } from './core/services/permissions.service';
 
 // On a real device over cellular/WiFi, Cognito's fetchAuthSession can take
 // 300–800ms. Cap the wait so a slow or offline network never freezes the app.
@@ -27,6 +28,7 @@ export class AppComponent implements OnInit {
     private api: ApiService,
     private liveUpdate: LiveUpdateService,
     private pushNotification: PushNotificationService,
+    private permissions: PermissionsService,
   ) {}
 
   ngOnInit(): void {
@@ -38,14 +40,28 @@ export class AppComponent implements OnInit {
     // Race auth init against a timeout so a slow/offline Cognito call never
     // blocks the whole app from rendering.
     const timeout = new Promise<void>(resolve => setTimeout(resolve, AUTH_INIT_TIMEOUT_MS));
-    Promise.race([this.authService.initialize(), timeout]).then(() => {
+    Promise.race([this.authService.initialize(), timeout]).then(async () => {
       if (this.authService.currentUser) {
-        // Ensure user record exists in DynamoDB after session restore
-        this.api.getProfile().catch(() => {});
-        // Register for push notifications on native platforms
-        this.pushNotification.initialize().catch((err) =>
-          console.error('[App] Push notification init failed', err)
-        );
+        try {
+          // Ensure user record exists in DynamoDB after session restore
+          const profile = await this.api.getProfile();
+
+          // First launch: if mic permission was never granted, prompt both
+          // mic + notification permissions upfront
+          if (!profile.preferences?.micPermissionGranted) {
+            await this.permissions.requestAllOnFirstLaunch();
+          } else {
+            // Returning user: just sync permission state and init push if enabled
+            await this.permissions.checkPermissions();
+            if (profile.preferences?.notificationsEnabled) {
+              this.pushNotification.initialize().catch((err) =>
+                console.error('[App] Push notification init failed', err)
+              );
+            }
+          }
+        } catch (err) {
+          console.error('[App] Profile/permissions init failed', err);
+        }
       }
     });
   }

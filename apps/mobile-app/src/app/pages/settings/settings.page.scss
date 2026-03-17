@@ -89,6 +89,51 @@
   font-weight: 600;
 }
 
+// ── Permission Badges ─────────────────────────────────────
+.permission-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--sruti-text-secondary);
+  flex-shrink: 0;
+
+  &.granted {
+    background: rgba(0, 230, 118, 0.12);
+    color: #00e676;
+  }
+
+  &.denied {
+    background: rgba(255, 82, 82, 0.12);
+    color: #ff5252;
+  }
+}
+
+.hint-row {
+  padding: 10px 16px !important;
+}
+
+.open-settings-btn {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--sruti-primary);
+  background: transparent;
+  color: var(--sruti-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+
+  &:active {
+    opacity: 0.7;
+  }
+}
+
 // ── Instrument Selector Cards ─────────────────────────────
 .instrument-selector {
   display: grid;

@@ -19,6 +19,7 @@ export interface UserPreferences {
   pitchSensitivity:     number;
   theme:                'dark' | 'light';
   notificationsEnabled: boolean;
+  micPermissionGranted: boolean;
   dailyGoalMinutes:     number;
   instrument:           'tanpura' | 'keyboard' | 'guitar';
 }

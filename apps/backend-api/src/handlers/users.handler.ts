@@ -32,6 +32,7 @@ export interface UserProfile {
     pitchSensitivity: number;
     theme: 'dark' | 'light';
     notificationsEnabled: boolean;
+    micPermissionGranted: boolean;
     dailyGoalMinutes: number;
     instrument: 'tanpura' | 'keyboard' | 'guitar';
   };
@@ -60,6 +61,7 @@ const DEFAULT_PREFS: UserProfile['preferences'] = {
   pitchSensitivity:     0.85,
   theme:                'dark',
   notificationsEnabled: true,
+  micPermissionGranted: false,
   dailyGoalMinutes:     20,
   instrument:           'tanpura',
 };

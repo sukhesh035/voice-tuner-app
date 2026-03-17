@@ -7,11 +7,12 @@ import { addIcons } from 'ionicons';
 import {
   moonOutline, flashOutline, musicalNoteOutline, notificationsOutline,
   informationCircleOutline, documentTextOutline, shieldCheckmarkOutline,
-  heartOutline, chevronForwardOutline
+  heartOutline, chevronForwardOutline, micOutline
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { ApiService, UserPreferences } from '../../core/services/api.service';
 import { PushNotificationService } from '../../core/services/push-notification.service';
+import { PermissionsService, PermissionState } from '../../core/services/permissions.service';
 import { TanpuraPlayerService, Instrument } from '@voice-tuner/tanpura-player';
 import { AuthService } from '@voice-tuner/auth';
 import { filter, take } from 'rxjs/operators';
@@ -32,6 +33,9 @@ export class SettingsPage {
   showHz         = true;
   dailyReminder  = true;
 
+  micPermission: PermissionState = 'prompt';
+  notificationPermission: PermissionState = 'prompt';
+
   selectedInstrument: Instrument = 'tanpura';
   private prefsLoaded = false;
 
@@ -47,6 +51,7 @@ export class SettingsPage {
     public themeService: ThemeService,
     private api: ApiService,
     private pushNotification: PushNotificationService,
+    private permissionsService: PermissionsService,
     private tanpura: TanpuraPlayerService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef,
@@ -55,12 +60,13 @@ export class SettingsPage {
     addIcons({
       moonOutline, flashOutline, musicalNoteOutline, notificationsOutline,
       informationCircleOutline, documentTextOutline, shieldCheckmarkOutline,
-      heartOutline, chevronForwardOutline
+      heartOutline, chevronForwardOutline, micOutline
     });
   }
 
   ionViewWillEnter(): void {
     this.loadPreferences();
+    this.loadPermissions();
   }
 
   toggleTheme(event: Event): void {
@@ -92,6 +98,34 @@ export class SettingsPage {
         console.error('[Settings] Push unregister failed', err)
       );
     }
+  }
+
+  async requestMicPermission(): Promise<void> {
+    if (this.micPermission === 'granted') return;
+    const result = await this.permissionsService.requestMicPermission();
+    this.micPermission = result;
+    this.analytics.logEvent('mic_permission_requested', { result });
+    this.cdr.markForCheck();
+  }
+
+  async requestNotificationPermission(): Promise<void> {
+    if (this.notificationPermission === 'granted') return;
+    const result = await this.permissionsService.requestNotificationPermission();
+    this.notificationPermission = result;
+    this.dailyReminder = result === 'granted';
+    this.analytics.logEvent('notification_permission_requested', { result });
+    this.cdr.markForCheck();
+  }
+
+  async openAppSettings(): Promise<void> {
+    await this.permissionsService.openAppSettings();
+  }
+
+  private async loadPermissions(): Promise<void> {
+    const { mic, notification } = await this.permissionsService.checkPermissions();
+    this.micPermission = mic;
+    this.notificationPermission = notification;
+    this.cdr.markForCheck();
   }
 
   private loadPreferences(): void {
