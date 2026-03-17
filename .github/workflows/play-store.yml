@@ -66,11 +66,11 @@ jobs:
       - name: Build PWA
         run: pnpm build:mobile
 
-      # ── 7. Set up Java 17 (required for Android Gradle build) ─────────────
-      - name: Set up Java 17
+      # ── 7. Set up Java 21 (required for Capacitor 7 Android build) ─────────────
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: temurin
 
       # ── 8. Add & sync Capacitor Android platform ──────────────────────────

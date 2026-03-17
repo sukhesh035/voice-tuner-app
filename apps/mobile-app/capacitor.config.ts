@@ -46,7 +46,7 @@ const config: CapacitorConfig = {
       style: 'dark',
       resizeOnFullScreen: true,
     },
-    PushNotifications: {
+    FirebaseMessaging: {
       presentationOptions: ['badge', 'sound', 'alert'],
     },
     LocalNotifications: {

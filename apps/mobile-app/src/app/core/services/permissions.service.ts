@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
-import { PushNotifications } from '@capacitor/push-notifications';
+import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { ApiService } from './api.service';
 import { PushNotificationService } from './push-notification.service';
 
@@ -42,7 +42,7 @@ export class PermissionsService {
     // Notifications — use Capacitor plugin on native, Notification API on web
     if (Capacitor.isNativePlatform()) {
       try {
-        const result = await PushNotifications.checkPermissions();
+        const result = await FirebaseMessaging.checkPermissions();
         this.notificationPermission = result.receive === 'granted' ? 'granted'
           : result.receive === 'denied' ? 'denied'
           : 'prompt';
@@ -89,7 +89,7 @@ export class PermissionsService {
   async requestNotificationPermission(): Promise<PermissionState> {
     if (Capacitor.isNativePlatform()) {
       try {
-        const result = await PushNotifications.requestPermissions();
+        const result = await FirebaseMessaging.requestPermissions();
         this.notificationPermission = result.receive === 'granted' ? 'granted' : 'denied';
         if (this.notificationPermission === 'granted') {
           await this.pushService.initialize();

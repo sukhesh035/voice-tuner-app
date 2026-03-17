@@ -1,18 +1,18 @@
 import { Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
-import { PushNotifications, Token, ActionPerformed, PushNotificationSchema } from '@capacitor/push-notifications';
+import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { ApiService } from './api.service';
 import { AnalyticsService } from './analytics.service';
 
 /**
- * Manages push notification registration, token lifecycle, and foreground
- * notification handling via Capacitor's PushNotifications plugin.
+ * Manages push notification registration, FCM token lifecycle, and foreground
+ * notification handling via @capacitor-firebase/messaging.
  *
  * On web/PWA this is a no-op — push is only supported on native iOS/Android.
  */
 @Injectable({ providedIn: 'root' })
 export class PushNotificationService {
-  private registered = false;
+  private initialized = false;
   private currentToken: string | null = null;
 
   constructor(
@@ -21,29 +21,27 @@ export class PushNotificationService {
   ) {}
 
   /**
-   * Call once after the user is authenticated. Requests permission,
-   * registers for push, and sends the device token to the backend.
+   * Call once after the user is authenticated and notification permission is granted.
+   * Gets the FCM token and sends it to the backend.
    */
   async initialize(): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
-    if (this.registered) return;
+    if (this.initialized) return;
 
     this.addListeners();
 
-    const permResult = await PushNotifications.checkPermissions();
-    if (permResult.receive === 'prompt' || permResult.receive === 'prompt-with-rationale') {
-      const reqResult = await PushNotifications.requestPermissions();
-      if (reqResult.receive !== 'granted') {
-        console.log('[Push] Permission denied');
-        return;
-      }
-    } else if (permResult.receive !== 'granted') {
-      console.log('[Push] Permission not granted:', permResult.receive);
-      return;
+    try {
+      const { token } = await FirebaseMessaging.getToken();
+      console.log('[Push] FCM token:', token);
+      this.currentToken = token;
+      const platform = Capacitor.getPlatform() as 'ios' | 'android';
+      await this.api.registerDeviceToken(token, platform);
+      this.analytics.logEvent('push_token_registered', { platform });
+    } catch (err) {
+      console.error('[Push] Failed to get/register FCM token', err);
     }
 
-    await PushNotifications.register();
-    this.registered = true;
+    this.initialized = true;
   }
 
   /**
@@ -52,42 +50,39 @@ export class PushNotificationService {
    */
   async unregister(): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
-    if (!this.registered) return;
+    if (!this.initialized) return;
 
     try {
       if (this.currentToken) {
         await this.api.deleteDeviceToken(this.currentToken);
         this.currentToken = null;
       }
+      await FirebaseMessaging.deleteToken();
     } catch (err) {
-      console.error('[Push] Failed to delete device token', err);
+      console.error('[Push] Failed to unregister', err);
     }
 
-    await PushNotifications.removeAllListeners();
-    this.registered = false;
+    await FirebaseMessaging.removeAllListeners();
+    this.initialized = false;
   }
 
   private addListeners(): void {
-    // Token received — send to backend
-    PushNotifications.addListener('registration', async (token: Token) => {
-      console.log('[Push] Token:', token.value);
-      this.currentToken = token.value;
-      const platform = Capacitor.getPlatform() as 'ios' | 'android';
-      try {
-        await this.api.registerDeviceToken(token.value, platform);
-        this.analytics.logEvent('push_token_registered', { platform });
-      } catch (err) {
-        console.error('[Push] Failed to register token with backend', err);
+    // Token refreshed — re-register with backend
+    FirebaseMessaging.addListener('tokenReceived', async ({ token }) => {
+      console.log('[Push] Token refreshed:', token);
+      if (token !== this.currentToken) {
+        this.currentToken = token;
+        const platform = Capacitor.getPlatform() as 'ios' | 'android';
+        try {
+          await this.api.registerDeviceToken(token, platform);
+        } catch (err) {
+          console.error('[Push] Failed to register refreshed token', err);
+        }
       }
     });
 
-    // Registration error
-    PushNotifications.addListener('registrationError', (err) => {
-      console.error('[Push] Registration error:', err);
-    });
-
     // Notification received while app is in foreground
-    PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
+    FirebaseMessaging.addListener('notificationReceived', ({ notification }) => {
       console.log('[Push] Foreground notification:', notification);
       this.analytics.logEvent('push_received_foreground', {
         title: notification.title ?? '',
@@ -95,12 +90,12 @@ export class PushNotificationService {
     });
 
     // User tapped a notification
-    PushNotifications.addListener('pushNotificationActionPerformed', (action: ActionPerformed) => {
-      console.log('[Push] Notification tapped:', action.notification);
+    FirebaseMessaging.addListener('notificationActionPerformed', ({ notification }) => {
+      console.log('[Push] Notification tapped:', notification);
       this.analytics.logEvent('push_tapped', {
-        title: action.notification.title ?? '',
+        title: notification.title ?? '',
       });
-      // Future: deep-link based on action.notification.data
+      // Future: deep-link based on notification.data
     });
   }
 }
