@@ -160,6 +160,82 @@ export const RAGAS: Record<string, RagaDefinition> = {
 
 type MelaSpec = [number, string, string, IndianNote[], IndianNote];
 
+// Per-melakarta metadata: [time, mood, description]
+const MELAKARTA_META: Record<number, [string, string, string]> = {
+  1:  ['Any time',  'Peaceful, Introspective',    'The first melakarta. Foundational scale with all komal notes below Pa.'],
+  2:  ['Any time',  'Calm, Gentle',               'Uses komal Re, Ga, Dha and natural Ni. Subtle variation of mela 1.'],
+  3:  ['Any time',  'Serene, Reflective',          'Komal Re, Ga, Ni with natural Dha. Rarely heard in concert, deeply meditative.'],
+  4:  ['Any time',  'Balanced, Contemplative',     'All komal on the lower side, all natural on upper — balanced character.'],
+  5:  ['Morning',   'Devotional, Steady',          'Pa is the vadi, lending a stable, grounded quality. Early morning raga.'],
+  6:  ['Morning',   'Tranquil, Focused',           'Pa-centric with komal Re and Ga. Suited for disciplined morning practice.'],
+  7:  ['Morning',   'Melancholic, Introspective',  'Komal Re with natural Ga gives a slight tension — pensive morning mood.'],
+  8:  ['Morning',   'Solemn, Devotional',          'Parent of Todi — one of Carnatic music\'s most beloved and deep ragas.'],
+  9:  ['Morning',   'Soft, Yearning',              'Dha with komal Re produces a delicate, longing quality.'],
+  10: ['Morning',   'Bright, Hopeful',             'Natural Dha and Ni with komal Re — brighter than its siblings.'],
+  11: ['Morning',   'Meditative, Subdued',         'Pa-centric with komal Dha. Quiet introspection.'],
+  12: ['Morning',   'Gentle, Graceful',            'Natural Ni replaces komal Ni — adds a touch of brightness to mela 11.'],
+  13: ['Morning',   'Tender, Lyrical',             'Ga is vadi — emphasis on Ga gives a singing, lyrical flow.'],
+  14: ['Morning',   'Warm, Devotional',            'Komal Re with natural Ga and Ni — warm devotional quality.'],
+  15: ['Morning',   'Majestic, Solemn',            'Parent of Mayamalavagowla, among the most ancient and revered scales.'],
+  16: ['Morning',   'Longing, Bittersweet',        'Natural Dha and komal Ni create a characteristic pull.'],
+  17: ['Morning',   'Radiant, Expansive',          'All natural upper notes — open, sun-like quality. Named after the Sun.'],
+  18: ['Any time',  'Regal, Powerful',             'Pa-centric with all natural upper notes — strong, kingly character.'],
+  19: ['Any time',  'Resonant, Mysterious',        'Re-centric with komal Ga and Dha — shimmering, bell-like resonance.'],
+  20: ['Night',     'Serious, Deep',               'Parent of Natabhairavi — rich komal notes evoke depth and gravity.'],
+  21: ['Evening',   'Luminous, Serene',            'Natural Dha with komal Ni — like rays of light at dusk.'],
+  22: ['Afternoon', 'Expressive, Emotive',         'Parent of Kharaharapriya / Kafi — one of the most versatile scales.'],
+  23: ['Morning',   'Devotional, Serene',          'Pa-centric with komal Dha. Quiet morning devotion.'],
+  24: ['Evening',   'Flowing, Calm',               'Named after Varuna, god of water — smooth, flowing character.'],
+  25: ['Evening',   'Romantic, Wistful',           'Dha♭ is vadi — a unique, longing quality with komal Ga.'],
+  26: ['Evening',   'Dignified, Melancholic',      'Natural Ni with komal Ga and Dha — dignified evening mood.'],
+  27: ['Evening',   'Sweet, Graceful',             'Natural Dha with komal Ni — sweet and graceful.'],
+  28: ['Evening',   'Joyful, Festive',             'Parent of Harikambhoji / Khamaj. Natural Ga and Dha, komal Ni — celebratory.'],
+  29: ['Evening',   'Majestic, Bright',            'Parent of Shankarabharanam / Bilawal — the natural scale. Full, majestic.'],
+  30: ['Any time',  'Stable, Grounded',            'Pa-centric with all natural notes. Epitome of tonal balance.'],
+  31: ['Any time',  'Contemplative, Reserved',     'Ga-centric with komal Dha and Ni. Rarely performed — scholarly.'],
+  32: ['Evening',   'Intense, Inward',             'Natural Ni with komal Dha — an unusual, intense combination.'],
+  33: ['Evening',   'Graceful, Flowing',           'Komal Ni with natural Dha — smooth, flowing lines.'],
+  34: ['Any time',  'Assertive, Clear',            'All natural upper notes — clean, assertive character.'],
+  35: ['Night',     'Dark, Mysterious',            'Komal Dha and Ni return in mela 35 — shadowy, nocturnal quality.'],
+  36: ['Night',     'Strong, Resolute',            'Natural Ni with komal Dha — resolute and powerful.'],
+  37: ['Evening',   'Austere, Ancient',            'First prati-Ma mela. Komal Re and Ga with Ma# — ancient, austere mood.'],
+  38: ['Evening',   'Vast, Oceanic',               'Named after the ocean (Jala+Arnava). Expansive, unending quality.'],
+  39: ['Evening',   'Pensive, Unusual',            'Natural Dha with komal Ni — an uncommon, contemplative combination.'],
+  40: ['Evening',   'Sweet, Buttery',              'Named after butter (Navaneetam) — smooth, pleasing character.'],
+  41: ['Morning',   'Pure, Cleansing',             'Named after purity (Pavani). Pa-centric — clean, uplifting.'],
+  42: ['Evening',   'Devotional, Heroic',          'Named after Raghu-lineage (Raghupati). Heroic, devotional quality.'],
+  43: ['Evening',   'Deep, Resonant',              'Komal Re with natural Ga and Ma# — deep and resonant.'],
+  44: ['Evening',   'Emotive, Expressive',         'Named after bhava (emotion). Rich expressive potential.'],
+  45: ['Evening',   'Auspicious, Celebratory',     'Shubha (auspicious) in name — bright, celebratory prati-Ma scale.'],
+  46: ['Evening',   'Complex, Scholarly',          'Six-path scale — a musicological construct rarely performed publicly.'],
+  47: ['Evening',   'Shimmering, Radiant',         'Named after gold (Suvarna). Bright, golden character.'],
+  48: ['Evening',   'Luminous, Precious',          'Named after gems (Divyamani). Jewel-like, precious quality.'],
+  49: ['Evening',   'Bright, White',               'Named after white cloud (Dhavala+Ambara). Light, airy.'],
+  50: ['Evening',   'Devotional, Expansive',       'Named after Narayana. Deep devotional resonance.'],
+  51: ['Evening',   'Intense, Desire-filled',      'Named after fulfilling desires (Kama+Vardhini). Intense and longing.'],
+  52: ['Evening',   'Gentle, Devoted',             'Named after Rama. Tender devotional quality.'],
+  53: ['Evening',   'Journeying, Meditative',      'Named after the effort of a journey (Gamana+Shrama). Thoughtful.'],
+  54: ['Evening',   'All-encompassing, Majestic',  'Named after the sustainer of the universe. Broad, majestic character.'],
+  55: ['Evening',   'Dark, Alluring',              'Named after Shyamala (dark goddess). Deep, alluring quality.'],
+  56: ['Evening',   'Bright, Powerful',            'Parent of Shanmukhapriya. Popular prati-Ma scale with wide appeal.'],
+  57: ['Evening',   'Regal, Leonine',              'Named after the lion-king (Simha+Indra). Strong, regal character.'],
+  58: ['Evening',   'Golden, Radiant',             'Named after gold (Hema). Warm, radiant quality.'],
+  59: ['Evening',   'Righteous, Principled',       'Named after dharma (righteousness). Principled, upright character.'],
+  60: ['Evening',   'Ethical, Composed',           'Named after right conduct (Neeti). Composed, measured quality.'],
+  61: ['Evening',   'Jewel-like, Brilliant',       'Named after the gem of a woman (Kanta+Mani). Brilliant character.'],
+  62: ['Evening',   'Noble, Refined',              'Named after Rishabha (the bull). Strong, noble quality.'],
+  63: ['Evening',   'Lush, Trailing',              'Named after creepers (Lata). Flowing, vine-like melodic lines.'],
+  64: ['Evening',   'Eloquent, Scholarly',         'Named after Brihaspati (lord of speech). Eloquent character.'],
+  65: ['Evening',   'Expansive, Bright',           'Parent of Mechakalyani / Yaman Kalyan. Bright, expansive.'],
+  66: ['Evening',   'Vivid, Colorful',             'Named after a colorful picture (Chitra+Ambara). Vivid and rich.'],
+  67: ['Evening',   'Virtuous, Noble',             'Named after good character (Su+Charitra). Noble, upright quality.'],
+  68: ['Evening',   'Luminous, Radiant',           'Named after light personified (Jyoti+Swarupini). Radiant.'],
+  69: ['Evening',   'Building, Progressive',       'Named after building material (Dhatu+Vardhini). Progressive, growing.'],
+  70: ['Evening',   'Adorned, Graceful',           'Named after adornment of the nose. Graceful, decorative character.'],
+  71: ['Evening',   'Regal, Kingly',               'Named after the Kosala kingdom. Regal, historical resonance.'],
+  72: ['Evening',   'Joyful, Aesthetic',           'Named after the lover of aesthetics (Rasika+Priya). Joyful and refined.'],
+};
+
 const MELAKARTA_DATA: MelaSpec[] = [
   // ── Chakra 1: Indu (1–6) — Shuddha Ma, Re♭ Ga♭ ─────
   [1,  'Kanakangi',        'कनकांगी',     ['Sa','Re♭','Ga♭','Ma','Pa','Dha♭','Ni♭'], 'Ma'],
@@ -262,28 +338,29 @@ const MELAKARTA_DATA: MelaSpec[] = [
 for (const [mela, eng, hindi, notes, vadi] of MELAKARTA_DATA) {
   const ch = chakraOf(mela);
   const aroh: IndianNote[]  = [...notes, 'Sa'];
-  const avaroh: IndianNote[] = [...[...notes].reverse(), 'Sa'];
+  // notes starts with 'Sa', so reversing already ends with 'Sa' — no extra 'Sa' needed
+  const avaroh: IndianNote[] = [...notes].reverse() as IndianNote[];
 
   // Pick samvadi: Pa if vadi is not Pa, else Sa
   const samvadi: IndianNote = vadi === 'Pa' ? 'Sa' : 'Pa';
 
   const id = eng.toLowerCase().replace(/[^a-z]/g, '');
-  const hasPratiMa = notes.includes('Ma#');
+  const [time, mood, description] = MELAKARTA_META[mela] ?? ['Any time', 'Meditative', `Melakarta #${mela} (${ch} chakra).`];
 
   RAGAS[id] = {
     id,
     name:        hindi,
     englishName: eng,
     thaat:       ch,
-    time:        hasPratiMa ? 'Evening' : 'Morning',
+    time,
     notes:       notes as IndianNote[],
     aroh,
     avaroh,
     vadi:        vadi as IndianNote,
     samvadi,
     color:       CHAKRA_COLORS[ch],
-    mood:        hasPratiMa ? 'Bright, Powerful' : 'Calm, Meditative',
-    description: `Melakarta #${mela} (${ch} chakra). ${hasPratiMa ? 'Uses prati (teevra) Ma.' : 'Uses shuddha Ma.'}`,
+    mood,
+    description,
     melaNumber:  mela,
     chakra:      ch,
   };
