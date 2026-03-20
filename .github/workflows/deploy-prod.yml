@@ -162,6 +162,39 @@ jobs:
         id: live_update
         run: node scripts/publish-update.mjs prod 1.1.${{ github.run_number }}
 
+      # ── 13a. Mirror live update to legacy sruti-prod bucket ──────────────────
+      #   Installed native apps built against the old sruti-prod stack still poll
+      #   https://d36pxm4nxhwid8.cloudfront.net/manifest.json for updates.
+      #   Mirror the bundle zip and manifest.json there so those devices
+      #   self-update to the new swara-prod codebase.
+      #   Once all users are on a native build that points to swara-prod this
+      #   step can be removed.
+      - name: Mirror live update to legacy sruti-prod bucket
+        run: |
+          VERSION="1.1.${{ github.run_number }}"
+          ZIP="dist/update-${VERSION}.zip"
+          LEGACY_BUCKET="sruti-prod-updates-use1"
+          LEGACY_DIST="E3MNNB9K9P20PT"
+          LEGACY_CDN="https://d36pxm4nxhwid8.cloudfront.net"
+
+          # Upload the same zip under the same key
+          aws s3 cp "${ZIP}" "s3://${LEGACY_BUCKET}/bundles/${VERSION}.zip" --region us-east-1
+
+          # Write a manifest pointing at the LEGACY CDN url (so the URL resolves)
+          echo "{\"version\":\"${VERSION}\",\"url\":\"${LEGACY_CDN}/bundles/${VERSION}.zip\"}" \
+            > dist/manifest-legacy.json
+          aws s3 cp dist/manifest-legacy.json \
+            "s3://${LEGACY_BUCKET}/manifest.json" \
+            --region us-east-1 \
+            --content-type "application/json" \
+            --cache-control "no-cache, no-store, must-revalidate"
+
+          # Invalidate legacy CloudFront so devices see the new manifest immediately
+          aws cloudfront create-invalidation \
+            --distribution-id "${LEGACY_DIST}" \
+            --paths "/manifest.json" \
+            --region us-east-1
+
       # ── 14. Summary ───────────────────────────────────────────────────────────
       - name: Deployment summary
         run: |
