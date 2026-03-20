@@ -17,13 +17,15 @@ Amplify.configure({
   },
 });
 
-// Initialise Firebase (web SDK — required even on native for @capacitor-firebase to work)
-// Config is injected at CI time via generate-env.mjs from GitHub secrets — never hardcoded.
-const firebaseApp = initializeApp(environment.firebase);
+// Initialise Firebase only when config is present (production).
+// In dev, Firebase secrets are intentionally empty — skip init to avoid SDK errors.
+if (environment.firebase.projectId) {
+  const firebaseApp = initializeApp(environment.firebase);
 
-// Analytics web SDK: only initialise in browser contexts AND when enabled (production)
-if (!Capacitor.isNativePlatform() && environment.enableAnalytics) {
-  getAnalytics(firebaseApp);
+  // Analytics web SDK: only initialise in browser contexts AND when enabled (production)
+  if (!Capacitor.isNativePlatform() && environment.enableAnalytics) {
+    getAnalytics(firebaseApp);
+  }
 }
 
 // Register Ionic PWA Elements (provides web fallback UI for Camera, Toast, etc.)
