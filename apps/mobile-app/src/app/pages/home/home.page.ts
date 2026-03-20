@@ -14,6 +14,7 @@ import { TanpuraPlayerService, Instrument } from '@voice-tuner/tanpura-player';
 import { MELAKARTA_LIST } from '@voice-tuner/training-engine';
 import { filter, take, map } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { ViewWillEnter } from '@ionic/angular';
 
 @Component({
   selector: 'app-home',
@@ -209,7 +210,7 @@ import { Subscription } from 'rxjs';
   `,
   styleUrls: ['./home.page.scss']
 })
-export class HomePage implements OnInit, OnDestroy {
+export class HomePage implements OnInit, OnDestroy, ViewWillEnter {
   readonly weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   // Ghost bars behind the lock — randomised-looking but fixed so no flicker
   readonly lockedBarHeights = [45, 70, 30, 85, 60, 50, 20];
@@ -229,6 +230,7 @@ export class HomePage implements OnInit, OnDestroy {
   loading = false;
   droneLabel = 'Tanpura';
   private instrumentSub?: Subscription;
+  private authSub?: Subscription;
 
   // Today's stats
   todayMinutes = 0;
@@ -259,6 +261,8 @@ export class HomePage implements OnInit, OnDestroy {
     addIcons({ musicalNote, mic, flame, trendingUp, sparkles, lockClosed, personCircle });
   }
 
+  private isAuthenticated = false;
+
   ngOnInit(): void {
     // Track instrument changes for dynamic drone label
     this.instrumentSub = this.tanpuraPlayer.state$.pipe(
@@ -268,10 +272,19 @@ export class HomePage implements OnInit, OnDestroy {
       this.cdr.markForCheck();
     });
 
-    // Wait for Cognito session restore to finish, then check auth state once.
-    // Using filter+take(1) mirrors the safe pattern in ProfilePage — avoids
-    // snapping the initial false from the BehaviorSubject before initialize()
-    // completes on a real device (300–800ms network call).
+    // Wait for Cognito session restore once, then track auth state for
+    // subsequent ionViewWillEnter calls to know whether to reload.
+      this.authService.initialized$.pipe(
+        take(1)
+      ).subscribe(() => {
+        this.authSub = this.authService.isAuthenticated$.subscribe(isAuth => {
+          this.isAuthenticated = isAuth;
+        });
+      });
+  }
+
+  /** Fires every time the tab becomes visible — reload data so stats are fresh. */
+  ionViewWillEnter(): void {
     this.authService.initialized$.pipe(
       take(1)
     ).subscribe(() => {
@@ -284,6 +297,7 @@ export class HomePage implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.instrumentSub?.unsubscribe();
+    this.authSub?.unsubscribe();
   }
 
   private async loadData(): Promise<void> {
