@@ -1,5 +1,5 @@
 import { Component, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -27,7 +27,8 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
     FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonRange,
-    AsyncPipe
+    AsyncPipe,
+    DecimalPipe
   ],
   template: `
     <ion-header>
