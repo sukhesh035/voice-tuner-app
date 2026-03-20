@@ -25,10 +25,9 @@ android/
 cdk.out/
 apps/infra/cdk.out/
 
-# Environment files — generated at CI time from CDK stack outputs via generate-env.mjs
-# Never commit these; they contain Cognito pool IDs and infrastructure endpoints.
-apps/mobile-app/src/environments/environment.ts
-apps/mobile-app/src/environments/environment.prod.ts
+# Environment files — local config is never committed (contains dev endpoints).
+# environment.ts and environment.prod.ts are committed as safe stubs with empty
+# values; generate-env.mjs overwrites them in CI with real stack outputs.
 apps/mobile-app/src/environments/environment.local.ts
 .env
 .env.*
