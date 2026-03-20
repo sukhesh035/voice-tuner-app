@@ -43,24 +43,18 @@ export class AuthService {
   readonly pendingConfirmationEmail = this._pendingConfirmation.asReadonly();
 
   // ── Observable adapters (keep for components/guards still using async pipe) ─
-  get user$(): Observable<AppUser | null> {
-    return toObservable(this._user);
-  }
-  get isAuthenticated$(): Observable<boolean> {
-    return toObservable(this.isAuthenticated);
-  }
+  // These must be field initialisers (not getters) so toObservable() runs
+  // during construction — a valid injection context.
+  readonly user$: Observable<AppUser | null> = toObservable(this._user);
+  readonly isAuthenticated$: Observable<boolean> = toObservable(this.isAuthenticated);
   get currentUser(): AppUser | null { return this._user(); }
   /** Email address waiting for Cognito confirmation, or null if none. */
-  get pendingConfirmation$(): Observable<string | null> {
-    return toObservable(this._pendingConfirmation);
-  }
+  readonly pendingConfirmation$: Observable<string | null> = toObservable(this._pendingConfirmation);
   /** Emits true (exactly once) when initialize() has completed — success or failure. */
-  get initialized$(): Observable<true> {
-    return toObservable(this._initialized).pipe(
-      filter((v): v is true => v === true),
-      take(1)
-    );
-  }
+  readonly initialized$: Observable<true> = toObservable(this._initialized).pipe(
+    filter((v): v is true => v === true),
+    take(1)
+  );
 
   async initialize(): Promise<void> {
     try {
