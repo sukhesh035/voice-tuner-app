@@ -32,7 +32,8 @@ export class PushNotificationService {
 
     try {
       const { token } = await FirebaseMessaging.getToken();
-      console.log('[Push] FCM token:', token);
+      // Never log the full token — truncate to avoid leaking device identity
+      console.log('[Push] FCM token registered:', token.slice(0, 8) + '…');
       this.currentToken = token;
       const platform = Capacitor.getPlatform() as 'ios' | 'android';
       await this.api.registerDeviceToken(token, platform);
@@ -69,7 +70,7 @@ export class PushNotificationService {
   private addListeners(): void {
     // Token refreshed — re-register with backend
     FirebaseMessaging.addListener('tokenReceived', async ({ token }) => {
-      console.log('[Push] Token refreshed:', token);
+      console.log('[Push] Token refreshed:', token.slice(0, 8) + '…');
       if (token !== this.currentToken) {
         this.currentToken = token;
         const platform = Capacitor.getPlatform() as 'ios' | 'android';

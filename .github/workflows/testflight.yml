@@ -71,6 +71,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # ── 4a. Dependency security audit ──────────────────────────────────
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
+
       # ── 5. AWS credentials (for generate-env to read CloudFormation) ───
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4.0.3

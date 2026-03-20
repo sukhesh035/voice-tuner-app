@@ -25,6 +25,9 @@ export class AuthService {
   private userSubject = new BehaviorSubject<AppUser | null>(null);
   private pendingConfirmationSubject = new BehaviorSubject<string | null>(null);
   private initializedSubject = new BehaviorSubject<boolean>(false);
+  /** Ephemeral in-memory password held only during the signup → verify-email flow.
+   *  Never persisted to storage. Cleared immediately after confirmSignUp(). */
+  private pendingPassword: string | null = null;
 
   get user$(): Observable<AppUser | null> { return this.userSubject.asObservable(); }
   get isAuthenticated$(): Observable<boolean> { return this.user$.pipe(map(u => u !== null)); }
@@ -95,6 +98,8 @@ export class AuthService {
     });
     if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
       this.pendingConfirmationSubject.next(email);
+      // Hold the password in memory so verify-email page doesn't need to pass it via router state
+      this.pendingPassword = password;
       return 'CONFIRM_SIGN_UP';
     }
     // Auto-confirmed (shouldn't happen anymore, but handle gracefully)
@@ -103,7 +108,9 @@ export class AuthService {
   }
 
   /** Confirm email verification code after sign-up. Then sign the user in. */
-  async confirmSignUp(email: string, code: string, password: string): Promise<void> {
+  async confirmSignUp(email: string, code: string): Promise<void> {
+    const password = this.pendingPassword ?? '';
+    this.pendingPassword = null; // clear immediately — single use
     await amplifyConfirmSignUp({ username: email, confirmationCode: code });
     this.pendingConfirmationSubject.next(null);
     await this.signIn(email, password);

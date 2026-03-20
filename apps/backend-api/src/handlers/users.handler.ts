@@ -129,7 +129,12 @@ export const handler = async (
       }
 
       if (body.preferences && typeof body.preferences === 'object') {
+        const ALLOWED_PREF_KEYS = new Set([
+          'defaultKey', 'defaultTempo', 'pitchSensitivity', 'theme',
+          'notificationsEnabled', 'micPermissionGranted', 'dailyGoalMinutes', 'instrument',
+        ]);
         for (const [k, v] of Object.entries(body.preferences)) {
+          if (!ALLOWED_PREF_KEYS.has(k)) continue; // ignore unknown keys
           updates.push(`preferences.${k} = :pref_${k}`);
           values[`:pref_${k}`] = v;
         }
@@ -156,7 +161,11 @@ export const handler = async (
       }
 
       const body = JSON.parse(event.body ?? '{}');
+      const ALLOWED_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
       const contentType = body.contentType ?? 'image/jpeg';
+      if (!ALLOWED_CONTENT_TYPES.includes(contentType)) {
+        return badRequest('Invalid content type. Allowed: jpeg, png, webp, heic, heif');
+      }
       const key = `avatars/${auth.userId}.jpg`;
 
       const command = new PutObjectCommand({

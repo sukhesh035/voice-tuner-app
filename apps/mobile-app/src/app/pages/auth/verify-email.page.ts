@@ -26,9 +26,8 @@ export class VerifyEmailPage {
   errorMsg  = '';
   successMsg = '';
 
-  // Passed via router state from login.page after a successful signUp() call
-  readonly email:    string;
-  readonly password: string;
+  // Passed via router state from signup.page after a successful signUp() call
+  readonly email: string;
 
   constructor(
     private authService: AuthService,
@@ -40,9 +39,8 @@ export class VerifyEmailPage {
     addIcons({ arrowBackOutline, mailOutline });
 
     const nav = this.router.getCurrentNavigation();
-    const state = nav?.extras?.state as { email?: string; password?: string } | undefined;
-    this.email    = state?.email    ?? '';
-    this.password = state?.password ?? '';
+    const state = nav?.extras?.state as { email?: string } | undefined;
+    this.email = state?.email ?? '';
 
     // If we landed here without email (e.g. direct navigation), go back to login
     if (!this.email) {
@@ -60,7 +58,7 @@ export class VerifyEmailPage {
     this.errorMsg   = '';
     this.successMsg = '';
     try {
-      await this.authService.confirmSignUp(this.email, this.code.trim(), this.password);
+      await this.authService.confirmSignUp(this.email, this.code.trim());
       // Provision user record in DynamoDB after verified sign-in
       this.api.getProfile().catch(() => {});
       this.analytics.logEvent('email_verified');

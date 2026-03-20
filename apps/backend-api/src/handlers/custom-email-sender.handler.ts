@@ -17,6 +17,7 @@
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { buildClient, CommitmentPolicy, KmsKeyringNode } from '@aws-crypto/client-node';
 import * as nodemailer from 'nodemailer';
+import { createHash } from 'crypto';
 
 const ssm = new SSMClient({});
 const { decrypt } = buildClient(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT);
@@ -155,5 +156,7 @@ export const handler = async (event: CognitoCustomEmailSenderEvent): Promise<voi
   }
 
   await sendEmail(payload);
-  console.log(`customEmailSender: sent "${triggerSource}" email to ${email}`);
+  // Log a SHA-256 prefix instead of the raw email address to avoid PII in CloudWatch
+  const emailHash = createHash('sha256').update(email).digest('hex').slice(0, 12);
+  console.log(`customEmailSender: sent "${triggerSource}" email to sha256:${emailHash}`);
 };

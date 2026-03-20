@@ -55,7 +55,7 @@ export class SignupPage {
       this.analytics.logEvent('sign_up', { method: 'email' });
       if (result === 'CONFIRM_SIGN_UP') {
         await this.router.navigate(['/verify-email'], {
-          state: { email: this.email, password: this.password },
+          state: { email: this.email },
         });
       } else {
         // Auto-confirmed (rare)
