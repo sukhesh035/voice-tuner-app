@@ -18,7 +18,6 @@ import { AuthService } from '@voice-tuner/auth';
 import { ApiService, UserProfile, StreaksResponse } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { compressProfilePhoto } from '../../core/utils/image-compress';
-
 interface Achievement {
   icon: string;
   label: string;
@@ -369,6 +368,15 @@ export class ProfilePage implements OnInit, ViewWillEnter {
       if (profile?.userId) {
         this.analytics.setUserId(profile.userId);
       }
+      // Set persistent user properties for segmentation in Firebase Analytics
+      const daysSinceSignup = profile?.createdAt
+        ? Math.floor((Date.now() - new Date(profile.createdAt).getTime()) / 86_400_000)
+        : 0;
+      this.analytics.setUserProperties({
+        practice_streak:  profile?.stats?.currentStreak ?? 0,
+        subscription_tier: 'free',
+        days_since_signup: daysSinceSignup,
+      });
     } catch (err) {
       console.error('[ProfilePage] loadData error', err);
     } finally {

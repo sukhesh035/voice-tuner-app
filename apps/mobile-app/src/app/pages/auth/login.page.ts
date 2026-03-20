@@ -12,8 +12,6 @@ import { AuthService } from '@voice-tuner/auth';
 import { ApiService } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
 
-type LoginView = 'signin' | 'forgot';
-
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -23,15 +21,13 @@ type LoginView = 'signin' | 'forgot';
   styleUrls: ['./login.page.scss'],
 })
 export class LoginPage {
-  view: LoginView = 'signin';
-
   email     = '';
   password  = '';
   showPass  = false;
   isLoading = false;
   errorMsg  = '';
   successMsg = '';
-  unconfirmedEmail = '';   // set when Cognito returns UserNotConfirmedException
+  unconfirmedEmail = '';
 
   constructor(
     private authService: AuthService,
@@ -44,13 +40,12 @@ export class LoginPage {
   }
 
   async signIn(): Promise<void> {
-    this.isLoading       = true;
-    this.errorMsg        = '';
-    this.successMsg      = '';
+    this.isLoading        = true;
+    this.errorMsg         = '';
+    this.successMsg       = '';
     this.unconfirmedEmail = '';
     try {
       await this.authService.signIn(this.email, this.password);
-      // Ensure user record exists in DynamoDB (auto-provisions on first login)
       this.api.getProfile().catch(() => {});
       this.analytics.logEvent('login', { method: 'email' });
       await this.router.navigate(['/home']);
@@ -62,56 +57,6 @@ export class LoginPage {
         this.errorMsg = err.message ?? 'Sign in failed. Please try again.';
         this.analytics.logEvent('login_error', { error: err.name ?? 'unknown' });
       }
-    } finally {
-      this.isLoading = false;
-      this.cdr.markForCheck();
-    }
-  }
-
-  async signUp(): Promise<void> {
-    this.isLoading  = true;
-    this.errorMsg   = '';
-    this.successMsg = '';
-    try {
-      const result = await this.authService.signUp(this.email, this.password);
-      this.analytics.logEvent('sign_up', { method: 'email' });
-      if (result === 'CONFIRM_SIGN_UP') {
-        // Navigate to verify-email page, passing credentials so the page can
-        // sign the user in automatically after successful verification.
-        await this.router.navigate(['/verify-email'], {
-          state: { email: this.email, password: this.password },
-        });
-      } else {
-        // Auto-confirmed (should not happen in normal flow)
-        this.api.getProfile().catch(() => {});
-        await this.router.navigate(['/home']);
-      }
-    } catch (err: any) {
-      this.errorMsg = err.message ?? 'Sign up failed.';
-    } finally {
-      this.isLoading = false;
-      this.cdr.markForCheck();
-    }
-  }
-
-  async sendReset(): Promise<void> {
-    if (!this.email) {
-      this.errorMsg = 'Please enter your email address.';
-      this.cdr.markForCheck();
-      return;
-    }
-    this.isLoading  = true;
-    this.errorMsg   = '';
-    this.successMsg = '';
-    try {
-      await this.authService.resetPassword(this.email);
-      this.analytics.logEvent('forgot_password_sent');
-      // Navigate to reset-password page so user can enter the code
-      await this.router.navigate(['/reset-password'], {
-        state: { email: this.email },
-      });
-    } catch (err: any) {
-      this.errorMsg = err.message ?? 'Could not send reset email.';
     } finally {
       this.isLoading = false;
       this.cdr.markForCheck();
@@ -135,18 +80,12 @@ export class LoginPage {
     }
   }
 
-  showForgot(): void {
-    this.view       = 'forgot';
-    this.errorMsg   = '';
-    this.successMsg = '';
-    this.cdr.markForCheck();
+  goToSignUp(): void {
+    this.router.navigate(['/signup']);
   }
 
-  showSignIn(): void {
-    this.view       = 'signin';
-    this.errorMsg   = '';
-    this.successMsg = '';
-    this.cdr.markForCheck();
+  goToForgotPassword(): void {
+    this.router.navigate(['/forgot-password']);
   }
 
   continueAsGuest(): void {

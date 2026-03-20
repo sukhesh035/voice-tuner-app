@@ -3,6 +3,16 @@ import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 import { Capacitor } from '@capacitor/core';
 import { environment } from '../../../environments/environment';
 
+export type SubscriptionTier = 'free' | 'paid';
+
+export interface UserProperties {
+  preferred_key?: string;
+  practice_streak?: number;
+  subscription_tier?: SubscriptionTier;
+  platform?: 'ios' | 'android' | 'web';
+  days_since_signup?: number;
+}
+
 /**
  * Thin wrapper around @capacitor-firebase/analytics.
  *
@@ -14,6 +24,7 @@ import { environment } from '../../../environments/environment';
  * Usage:
  *   analytics.logEvent('practice_started', { mode: 'shruti' });
  *   analytics.setScreen('Practice');
+ *   analytics.setUserProperties({ preferred_key: 'C', practice_streak: 7 });
  */
 @Injectable({ providedIn: 'root' })
 export class AnalyticsService {
@@ -66,6 +77,20 @@ export class AnalyticsService {
     }
   }
 
+  /**
+   * Batch-set typed user properties.
+   * All values are coerced to strings as required by the Firebase SDK.
+   * Skips any key with undefined value.
+   */
+  async setUserProperties(props: UserProperties): Promise<void> {
+    if (!environment.enableAnalytics) return;
+    const entries = Object.entries(props) as [string, string | number | boolean | undefined][];
+    for (const [key, value] of entries) {
+      if (value === undefined) continue;
+      await this.setUserProperty(key, String(value));
+    }
+  }
+
   /** Enable / disable analytics collection (e.g. based on user consent) */
   async setEnabled(enabled: boolean): Promise<void> {
     if (!environment.firebase.projectId) return;
@@ -79,5 +104,71 @@ export class AnalyticsService {
   /** Returns true when running on a real native device (not browser) */
   get isNative(): boolean {
     return Capacitor.isNativePlatform();
+  }
+
+  // ── Typed event helpers ──────────────────────────────────────────────────────
+
+  /** Fired when a full practice session ends naturally (not abandoned) */
+  async logSessionCompleted(params: {
+    mode: string;
+    duration_seconds: number;
+    accuracy: number;
+    notes_hit: number;
+  }): Promise<void> {
+    await this.logEvent('session_completed', params);
+  }
+
+  /** Fired when the user taps "End Session" before completing a round */
+  async logPracticeAbandoned(params: {
+    mode: string;
+    time_before_stop_seconds: number;
+  }): Promise<void> {
+    await this.logEvent('practice_abandoned', params);
+  }
+
+  /** Login funnel step — call at each stage of the login flow */
+  async logLoginFunnelStep(step: 'opened' | 'email_entered' | 'submitted'): Promise<void> {
+    await this.logEvent('login_funnel_step', { step });
+  }
+
+  /** Signup funnel step — call at each stage of the signup flow */
+  async logSignupFunnelStep(step: 'opened' | 'email_entered' | 'submitted'): Promise<void> {
+    await this.logEvent('signup_funnel_step', { step });
+  }
+
+  /** Rolling note accuracy trend — call after each shruti round */
+  async logNoteAccuracyTrend(params: {
+    note: string;
+    rolling_avg: number;
+  }): Promise<void> {
+    await this.logEvent('note_accuracy_trend', params);
+  }
+
+  /** Number of sessions completed today */
+  async logDailySessionCount(count: number): Promise<void> {
+    await this.logEvent('daily_session_count', { count });
+  }
+
+  /** IAP flow events (stub — wire to real purchase flow when ready) */
+  async logPurchaseInitiated(productId: string): Promise<void> {
+    await this.logEvent('purchase_initiated', { product_id: productId });
+  }
+
+  async logPurchaseCompleted(productId: string, price: number): Promise<void> {
+    await this.logEvent('purchase_completed', { product_id: productId, price });
+  }
+
+  async logPurchaseFailed(productId: string, reason: string): Promise<void> {
+    await this.logEvent('purchase_failed', { product_id: productId, reason });
+  }
+
+  /** User dismissed a push notification banner */
+  async logNotificationDismissed(title: string): Promise<void> {
+    await this.logEvent('notification_dismissed', { title });
+  }
+
+  /** User subscribed to a push topic */
+  async logNotificationTopicSubscribed(topic: string): Promise<void> {
+    await this.logEvent('notification_topic_subscribed', { topic });
   }
 }

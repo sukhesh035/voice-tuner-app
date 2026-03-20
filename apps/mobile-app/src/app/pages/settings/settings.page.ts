@@ -124,16 +124,9 @@ export class SettingsPage {
 
   get isAuthenticated$() { return this.authService.isAuthenticated$; }
 
-  async changePassword(): Promise<void> {
-    const email = this.authService.currentUser?.email;
-    if (!email) return;
-    try {
-      await this.authService.resetPassword(email);
-      this.analytics.logEvent('change_password_requested');
-      this.router.navigate(['/reset-password'], { state: { email } });
-    } catch (err) {
-      console.error('[SettingsPage] changePassword error', err);
-    }
+  changePassword(): void {
+    this.analytics.logEvent('change_password_requested');
+    this.router.navigate(['/forgot-password']);
   }
 
   private async loadPermissions(): Promise<void> {

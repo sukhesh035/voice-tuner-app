@@ -18,6 +18,7 @@ import {
 } from '@voice-tuner/training-engine';
 import { ApiService } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
+import { PerformanceService } from '../../core/services/performance.service';
 import { AuthService } from '@voice-tuner/auth';
 
 /** Phases of a single Shruti round */
@@ -818,6 +819,7 @@ export class PracticePage implements OnInit, OnDestroy {
     private api: ApiService,
     private cdr: ChangeDetectorRef,
     private analytics: AnalyticsService,
+    private perf: PerformanceService,
     private authService: AuthService,
   ) {
     this.liveNotes$ = this.trainingEngine.liveNotes$;
@@ -1031,14 +1033,28 @@ export class PracticePage implements OnInit, OnDestroy {
     }
 
     this.sessionActive   = false;
+    const durationSeconds = this.selectedMode === 'shruti'
+      ? Math.round((Date.now() - this.shrutiSessionStart) / 1000)
+      : this.selectedMode === 'raga'
+        ? Math.round((Date.now() - this.ragaSessionStart) / 1000)
+        : Math.round((Date.now() - this.earSessionStart) / 1000);
+
     this.analytics.logEvent('practice_stopped', {
-      mode:             this.selectedMode,
-      duration_seconds: this.selectedMode === 'shruti'
-        ? Math.round((Date.now() - this.shrutiSessionStart) / 1000)
-        : this.selectedMode === 'raga'
-          ? Math.round((Date.now() - this.ragaSessionStart) / 1000)
-          : Math.round((Date.now() - this.earSessionStart) / 1000),
+      mode: this.selectedMode,
+      duration_seconds: durationSeconds,
     });
+    // Log as abandoned if stopped mid-session (before a natural result phase)
+    const isAbandoned = this.selectedMode === 'shruti'
+      ? this.shrutiPhase !== 'result' && this.shrutiPhase !== 'idle'
+      : this.selectedMode === 'raga'
+        ? this.ragaPhase !== 'result' && this.ragaPhase !== 'idle'
+        : this.earPhase !== 'reveal' && this.earPhase !== 'idle';
+    if (isAbandoned && durationSeconds > 0) {
+      this.analytics.logPracticeAbandoned({
+        mode: this.selectedMode,
+        time_before_stop_seconds: durationSeconds,
+      });
+    }
     this.liveNote        = null;
     this.currentAccuracy = null;
     this.cdr.markForCheck();
@@ -1067,7 +1083,7 @@ export class PracticePage implements OnInit, OnDestroy {
     this.roundFeedback   = '';
     this.cdr.markForCheck();
 
-    await this.tanpura.play();
+    await this.perf.trace('audio_load', () => this.tanpura.play());
 
     this.phaseTimer = setTimeout(() => {
       if (!this.sessionActive) return;
