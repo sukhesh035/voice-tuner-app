@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import { SrutiStack } from '../lib/sruti-stack';
+import { SwaraStack } from '../lib/swara-stack';
 
 const app = new cdk.App();
 
@@ -11,17 +11,17 @@ const env = {
 };
 
 // Development stack
-new SrutiStack(app, 'SrutiStackDev', {
+new SwaraStack(app, 'SwaraStackDev', {
   env,
   stage: 'dev',
-  domainPrefix: 'sruti-dev',
+  domainPrefix: 'swara-dev',
 });
 
 // Production stack (deployed from CI only)
 if (process.env['DEPLOY_PROD'] === '1') {
-  new SrutiStack(app, 'SrutiStackProd', {
+  new SwaraStack(app, 'SwaraStackProd', {
     env,
     stage: 'prod',
-    domainPrefix: 'sruti',
+    domainPrefix: 'swara',
   });
 }

@@ -1,10 +1,10 @@
 // ============================================================
-// SRUTI - Animations & Keyframes
+// SWARA - Animations & Keyframes
 // ============================================================
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(var(--sruti-primary-rgb), 0.4); }
-  50%       { box-shadow: 0 0 40px rgba(var(--sruti-primary-rgb), 0.8); }
+  0%, 100% { box-shadow: 0 0 20px rgba(var(--swara-primary-rgb), 0.4); }
+  50%       { box-shadow: 0 0 40px rgba(var(--swara-primary-rgb), 0.8); }
 }
 
 @keyframes pitch-ring {
@@ -84,9 +84,9 @@
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--sruti-bg-card) 25%,
-    var(--sruti-bg-card-hover) 50%,
-    var(--sruti-bg-card) 75%
+    var(--swara-bg-card) 25%,
+    var(--swara-bg-card-hover) 50%,
+    var(--swara-bg-card) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
@@ -102,7 +102,7 @@
 
   .bar {
     width: 4px;
-    background: var(--sruti-primary);
+    background: var(--swara-primary);
     border-radius: 2px;
     transform-origin: bottom;
     animation: wave 1.2s ease-in-out infinite;

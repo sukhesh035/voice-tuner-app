@@ -161,7 +161,9 @@ export class TanpuraPlayerService {
     const wasPlaying = this.state.isPlaying;
     if (wasPlaying) this.stop();
     this.patchState({ key });
-    if (wasPlaying) setTimeout(() => this.play(), 0);
+    // Call play() synchronously (not deferred) so only one scheduler loop starts.
+    // A deferred setTimeout here would race with any direct play() call in the caller.
+    if (wasPlaying) this.play();
   }
 
   setTempo(bpm: number): void {
@@ -192,7 +194,8 @@ export class TanpuraPlayerService {
     this.sampleBuffers.clear();
     this.loadedSamples = false;
     this.patchState({ instrument });
-    if (wasPlaying) setTimeout(() => this.play(), 0);
+    // Call play() synchronously to avoid double-scheduler race with deferred setTimeout
+    if (wasPlaying) this.play();
   }
 
   // ── Core Scheduling ────────────────────────────────────
@@ -304,6 +307,12 @@ export class TanpuraPlayerService {
 
       osc.start(when);
       osc.stop(when + res.decay * 3);
+
+      // Disconnect nodes after the oscillator finishes to prevent node accumulation
+      osc.onended = () => {
+        osc.disconnect();
+        env.disconnect();
+      };
     }
   }
 
@@ -339,6 +348,7 @@ export class TanpuraPlayerService {
     envSine.connect(masterGain);
     oscSine.start(when);
     oscSine.stop(when + decay * 3);
+    oscSine.onended = () => { oscSine.disconnect(); envSine.disconnect(); };
 
     // Triangle for warmth (one octave up, quieter)
     const oscTri = ctx.createOscillator();
@@ -352,6 +362,7 @@ export class TanpuraPlayerService {
     envTri.connect(masterGain);
     oscTri.start(when);
     oscTri.stop(when + decay * 2);
+    oscTri.onended = () => { oscTri.disconnect(); envTri.disconnect(); };
 
     // Soft 3rd harmonic for body
     const osc3 = ctx.createOscillator();
@@ -365,6 +376,7 @@ export class TanpuraPlayerService {
     env3.connect(masterGain);
     osc3.start(when);
     osc3.stop(when + decay * 1.5);
+    osc3.onended = () => { osc3.disconnect(); env3.disconnect(); };
   }
 
   /**
@@ -433,9 +445,22 @@ export class TanpuraPlayerService {
     noise.start(when);
     noise.stop(when + bufferSize / sampleRate);
 
-    // Schedule cleanup: ramp to zero and disconnect after decay
-    env.gain.setValueAtTime(env.gain.value, when + duration);
-    env.gain.linearRampToValueAtTime(0, when + duration + 0.05);
+    // Schedule cleanup: ramp to zero and disconnect all nodes after decay.
+    // The timeout breaks the feedback loop (delay→feedback→lpf) which never
+    // self-terminates because setTargetAtTime only approaches zero asymptotically.
+    const cleanupMs = (duration + 0.1 - ctx.currentTime + when) * 1000;
+    const cleanupDelay = Math.max(0, cleanupMs);
+    setTimeout(() => {
+      try {
+        env.disconnect();
+        delay.disconnect();
+        feedback.disconnect();
+        lpf.disconnect();
+        noise.disconnect();
+      } catch {
+        // Nodes may already be disconnected — safe to ignore
+      }
+    }, cleanupDelay);
   }
 
   private playSample(
@@ -463,6 +488,12 @@ export class TanpuraPlayerService {
     env.connect(masterGain);
     source.start(when);
     source.stop(when + res.decay * 4);
+
+    // Disconnect nodes after playback ends to prevent node accumulation
+    source.onended = () => {
+      source.disconnect();
+      env.disconnect();
+    };
   }
 
   // ── Frequency Calculations ─────────────────────────────

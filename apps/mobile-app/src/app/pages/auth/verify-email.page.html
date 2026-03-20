@@ -23,7 +23,7 @@
     </div>
 
     <!-- ── Code form ──────────────────────────────────────────────────────── -->
-    <div class="verify-form sruti-card">
+    <div class="verify-form swara-card">
       <div class="form-group">
         <label class="form-label">Verification Code</label>
         <input
@@ -41,7 +41,7 @@
       <div class="error-msg"   *ngIf="errorMsg">{{ errorMsg }}</div>
       <div class="success-msg" *ngIf="successMsg">{{ successMsg }}</div>
 
-      <button class="sruti-btn sruti-btn--primary verify-btn" (click)="verify()" [disabled]="isLoading">
+      <button class="swara-btn swara-btn--primary verify-btn" (click)="verify()" [disabled]="isLoading">
         {{ isLoading ? 'Verifying...' : 'Verify Email' }}
       </button>
 

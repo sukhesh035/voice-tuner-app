@@ -1,23 +1,23 @@
 // ============================================================
-// SRUTI - Reusable Component Styles
+// SWARA - Reusable Component Styles
 // ============================================================
 
 @use 'variables' as *;
 
 // ── Glass Card ─────────────────────────────────────────────
-.sruti-card {
-  background: var(--sruti-bg-card);
-  border: 1px solid var(--sruti-glass-border);
+.swara-card {
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-glass-border);
   border-radius: $radius-xl;
-  backdrop-filter: blur(var(--sruti-glass-blur));
-  -webkit-backdrop-filter: blur(var(--sruti-glass-blur));
+  backdrop-filter: blur(var(--swara-glass-blur));
+  -webkit-backdrop-filter: blur(var(--swara-glass-blur));
   box-shadow: $shadow-card;
   padding: $spacing-6;
   transition: background 0.2s ease, transform 0.2s ease;
 
   &:active {
     transform: scale(0.98);
-    background: var(--sruti-bg-card-hover);
+    background: var(--swara-bg-card-hover);
   }
 
   &--elevated {
@@ -25,19 +25,19 @@
   }
 
   &--gradient {
-    background: var(--sruti-gradient-card);
+    background: var(--swara-gradient-card);
   }
 }
 
 // ── Primary Button ─────────────────────────────────────────
-.sruti-btn {
+.swara-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: $spacing-2;
   border: none;
   border-radius: $radius-full;
-  font-family: var(--sruti-font-sans);
+  font-family: var(--swara-font-sans);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -46,26 +46,26 @@
   user-select: none;
 
   &--primary {
-    background: var(--sruti-gradient-primary);
+    background: var(--swara-gradient-primary);
     color: white;
     padding: $spacing-3 $spacing-8;
     font-size: 16px;
-    box-shadow: 0 4px 24px rgba(var(--sruti-primary-rgb), 0.45);
+    box-shadow: 0 4px 24px rgba(var(--swara-primary-rgb), 0.45);
 
     &:active { transform: scale(0.95); }
   }
 
   &--secondary {
-    background: var(--sruti-bg-card);
-    color: var(--sruti-text-primary);
-    border: 1px solid var(--sruti-border-strong);
+    background: var(--swara-bg-card);
+    color: var(--swara-text-primary);
+    border: 1px solid var(--swara-border-strong);
     padding: $spacing-3 $spacing-6;
     font-size: 15px;
   }
 
   &--ghost {
     background: transparent;
-    color: var(--sruti-primary);
+    color: var(--swara-primary);
     padding: $spacing-2 $spacing-4;
     font-size: 14px;
   }
@@ -76,8 +76,8 @@
     border-radius: $radius-md;
     font-size: 20px;
     padding: 0;
-    background: var(--sruti-bg-card);
-    border: 1px solid var(--sruti-border);
+    background: var(--swara-bg-card);
+    border: 1px solid var(--swara-border);
   }
 
   &--play {
@@ -86,16 +86,16 @@
     border-radius: $radius-full;
     font-size: 32px;
     padding: 0;
-    background: var(--sruti-gradient-primary);
-    box-shadow: 0 8px 32px rgba(var(--sruti-primary-rgb), 0.6);
+    background: var(--swara-gradient-primary);
+    box-shadow: 0 8px 32px rgba(var(--swara-primary-rgb), 0.6);
 
     &:active { transform: scale(0.92); }
-    &.is-playing { box-shadow: 0 8px 40px rgba(var(--sruti-secondary-rgb), 0.7); }
+    &.is-playing { box-shadow: 0 8px 40px rgba(var(--swara-secondary-rgb), 0.7); }
   }
 }
 
 // ── Circular Meter ────────────────────────────────────────
-.sruti-pitch-meter {
+.swara-pitch-meter {
   position: relative;
   width: 240px;
   height: 240px;
@@ -107,7 +107,7 @@
 
     .meter-bg {
       fill: none;
-      stroke: var(--sruti-border);
+      stroke: var(--swara-border);
       stroke-width: 12;
     }
 
@@ -119,9 +119,9 @@
       stroke-dashoffset: 628;
       transition: stroke-dashoffset 0.1s linear, stroke 0.15s ease;
 
-      &.in-tune    { stroke: var(--sruti-pitch-perfect); filter: drop-shadow(0 0 8px var(--sruti-pitch-perfect)); }
-      &.slightly-off { stroke: var(--sruti-pitch-close); }
-      &.off        { stroke: var(--sruti-pitch-off); }
+      &.in-tune    { stroke: var(--swara-pitch-perfect); filter: drop-shadow(0 0 8px var(--swara-pitch-perfect)); }
+      &.slightly-off { stroke: var(--swara-pitch-close); }
+      &.off        { stroke: var(--swara-pitch-off); }
     }
   }
 
@@ -137,32 +137,32 @@
     .note-display {
       font-size: 52px;
       font-weight: 700;
-      font-family: var(--sruti-font-display);
+      font-family: var(--swara-font-display);
       line-height: 1;
-      color: var(--sruti-text-primary);
+      color: var(--swara-text-primary);
       transition: color 0.15s ease;
     }
 
     .hz-display {
       font-size: 14px;
-      color: var(--sruti-text-secondary);
-      font-family: var(--sruti-font-mono);
+      color: var(--swara-text-secondary);
+      font-family: var(--swara-font-mono);
       letter-spacing: 0.05em;
     }
 
     .deviation-display {
       font-size: 13px;
       font-weight: 600;
-      font-family: var(--sruti-font-mono);
+      font-family: var(--swara-font-mono);
       padding: 2px 8px;
       border-radius: $radius-full;
-      background: var(--sruti-bg-card);
+      background: var(--swara-bg-card);
     }
   }
 }
 
 // ── Tuner Needle ─────────────────────────────────────────
-.sruti-tuner {
+.swara-tuner {
   width: 100%;
   max-width: 320px;
 
@@ -174,17 +174,17 @@
 
     span {
       font-size: 10px;
-      color: var(--sruti-text-tertiary);
-      font-family: var(--sruti-font-mono);
+      color: var(--swara-text-tertiary);
+      font-family: var(--swara-font-mono);
     }
   }
 
   .tuner-gauge {
     position: relative;
     height: 60px;
-    background: var(--sruti-bg-card);
+    background: var(--swara-bg-card);
     border-radius: $radius-md;
-    border: 1px solid var(--sruti-border);
+    border: 1px solid var(--swara-border);
     overflow: hidden;
 
     .tuner-center-line {
@@ -193,7 +193,7 @@
       bottom: 0;
       left: 50%;
       width: 1px;
-      background: var(--sruti-border-strong);
+      background: var(--swara-border-strong);
     }
 
     .tuner-needle {
@@ -202,15 +202,15 @@
       left: 50%;
       width: 3px;
       height: 48px;
-      background: var(--sruti-primary);
+      background: var(--swara-primary);
       border-radius: $radius-full;
       transform-origin: bottom center;
       transform: translateX(-50%) rotate(0deg);
       transition: transform 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      box-shadow: 0 0 8px rgba(var(--sruti-primary-rgb), 0.8);
+      box-shadow: 0 0 8px rgba(var(--swara-primary-rgb), 0.8);
 
       &.in-tune {
-        background: var(--sruti-pitch-perfect);
+        background: var(--swara-pitch-perfect);
         box-shadow: 0 0 12px rgba(0, 230, 118, 0.9);
       }
     }
@@ -218,7 +218,7 @@
 }
 
 // ── Knob Control ─────────────────────────────────────────
-.sruti-knob {
+.swara-knob {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -229,10 +229,10 @@
     height: 60px;
     border-radius: 50%;
     background: conic-gradient(
-      var(--sruti-primary) calc(var(--knob-pct, 50) * 1%),
-      var(--sruti-bg-card) 0
+      var(--swara-primary) calc(var(--knob-pct, 50) * 1%),
+      var(--swara-bg-card) 0
     );
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 4px 16px rgba(var(--sruti-primary-rgb), 0.3);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 4px 16px rgba(var(--swara-primary-rgb), 0.3);
     cursor: grab;
 
     &:active { cursor: grabbing; }
@@ -240,7 +240,7 @@
 
   .knob-label {
     font-size: 11px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     text-align: center;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -249,13 +249,13 @@
   .knob-value {
     font-size: 13px;
     font-weight: 600;
-    font-family: var(--sruti-font-mono);
-    color: var(--sruti-text-primary);
+    font-family: var(--swara-font-mono);
+    color: var(--swara-text-primary);
   }
 }
 
 // ── Note Grid ─────────────────────────────────────────────
-.sruti-note-grid {
+.swara-note-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: $spacing-2;
@@ -267,21 +267,21 @@
     justify-content: center;
     height: 56px;
     border-radius: $radius-md;
-    border: 1px solid var(--sruti-border);
-    background: var(--sruti-bg-card);
+    border: 1px solid var(--swara-border);
+    background: var(--swara-bg-card);
     font-size: 14px;
     font-weight: 700;
     transition: all 0.15s ease;
     cursor: pointer;
 
     .note-name  { font-size: 16px; font-weight: 800; }
-    .note-label { font-size: 9px;  color: var(--sruti-text-tertiary); }
+    .note-label { font-size: 9px;  color: var(--swara-text-tertiary); }
 
     &.active {
-      background: var(--note-color, var(--sruti-primary));
+      background: var(--note-color, var(--swara-primary));
       border-color: transparent;
       color: white;
-      box-shadow: 0 4px 16px rgba(var(--note-color-rgb, var(--sruti-primary-rgb)), 0.5);
+      box-shadow: 0 4px 16px rgba(var(--note-color-rgb, var(--swara-primary-rgb)), 0.5);
     }
 
     &.disallowed {
@@ -291,18 +291,18 @@
 }
 
 // ── Stat Card ─────────────────────────────────────────────
-.sruti-stat-card {
-  background: var(--sruti-bg-card);
+.swara-stat-card {
+  background: var(--swara-bg-card);
   border-radius: $radius-lg;
-  border: 1px solid var(--sruti-border);
+  border: 1px solid var(--swara-border);
   padding: $spacing-4;
   text-align: center;
 
   .stat-value {
     font-size: 32px;
     font-weight: 800;
-    font-family: var(--sruti-font-display);
-    background: var(--sruti-gradient-primary);
+    font-family: var(--swara-font-display);
+    background: var(--swara-gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -310,7 +310,7 @@
 
   .stat-label {
     font-size: 12px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     margin-top: 2px;
@@ -319,8 +319,8 @@
 
 // ── Toolbar ──────────────────────────────────────────────
 ion-toolbar {
-  --background: var(--sruti-glass-bg);
-  --border-color: var(--sruti-border);
+  --background: var(--swara-glass-bg);
+  --border-color: var(--swara-border);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 
@@ -332,23 +332,23 @@ ion-toolbar {
 }
 
 // ── Progress Bar ─────────────────────────────────────────
-.sruti-progress-bar {
+.swara-progress-bar {
   height: 6px;
-  background: var(--sruti-border);
+  background: var(--swara-border);
   border-radius: $radius-full;
   overflow: hidden;
 
   .progress-fill {
     height: 100%;
     border-radius: $radius-full;
-    background: var(--sruti-gradient-primary);
+    background: var(--swara-gradient-primary);
     transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow: 0 0 8px rgba(var(--sruti-primary-rgb), 0.7);
+    box-shadow: 0 0 8px rgba(var(--swara-primary-rgb), 0.7);
   }
 }
 
 // ── Streak Badge ─────────────────────────────────────────
-.sruti-streak-badge {
+.swara-streak-badge {
   display: inline-flex;
   align-items: center;
   gap: $spacing-1;

@@ -15,7 +15,7 @@
 
   .hero-icon {
     font-size: 48px;
-    color: var(--sruti-primary);
+    color: var(--swara-primary);
     margin-bottom: 12px;
     opacity: 0.9;
   }
@@ -23,20 +23,20 @@
   h1 {
     font-size: 24px;
     font-weight: 800;
-    color: var(--sruti-text-primary);
+    color: var(--swara-text-primary);
     margin: 0 0 6px;
   }
 }
 
 .meta {
   font-size: 13px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   margin: 0;
 }
 
 .intro {
   font-size: 14px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   line-height: 1.6;
   margin-bottom: 8px;
   text-align: center;
@@ -44,7 +44,7 @@
 
 .section {
   padding: 20px 0;
-  border-bottom: 1px solid var(--sruti-border);
+  border-bottom: 1px solid var(--swara-border);
 
   &:last-of-type {
     border-bottom: none;
@@ -53,13 +53,13 @@
   h2 {
     font-size: 15px;
     font-weight: 700;
-    color: var(--sruti-text-primary);
+    color: var(--swara-text-primary);
     margin-bottom: 10px;
   }
 
   p {
     font-size: 14px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     line-height: 1.65;
     margin-bottom: 8px;
 
@@ -76,11 +76,11 @@
 
   li {
     font-size: 14px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     line-height: 1.5;
 
     strong {
-      color: var(--sruti-text-primary);
+      color: var(--swara-text-primary);
       font-weight: 600;
     }
   }
@@ -93,18 +93,18 @@
   .contact-title {
     font-size: 15px;
     font-weight: 700;
-    color: var(--sruti-text-primary);
+    color: var(--swara-text-primary);
     margin-bottom: 8px;
   }
 
   p {
     font-size: 14px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     line-height: 1.5;
     margin: 0;
 
     strong {
-      color: var(--sruti-primary);
+      color: var(--swara-primary);
     }
   }
 }

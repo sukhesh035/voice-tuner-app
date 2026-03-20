@@ -23,7 +23,7 @@
 .login-title {
   font-size: 36px;
   font-weight: 900;
-  background: var(--sruti-gradient-primary);
+  background: var(--swara-gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -31,7 +31,7 @@
 
 .login-sub {
   font-size: 15px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 }
 
 // ── Form Card ─────────────────────────────────────────────────────────────────
@@ -52,22 +52,22 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 }
 
 .form-input {
   padding: 12px 16px;
-  background: var(--sruti-bg-input);
-  border: 1px solid var(--sruti-border);
+  background: var(--swara-bg-input);
+  border: 1px solid var(--swara-border);
   border-radius: 10px;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
   font-size: 16px;
   outline: none;
   width: 100%;
   box-sizing: border-box;
 
   &:focus {
-    border-color: var(--sruti-primary);
+    border-color: var(--swara-primary);
   }
 }
 
@@ -88,7 +88,7 @@
   background: none;
   border: none;
   padding: 4px;
-  color: var(--sruti-text-muted);
+  color: var(--swara-text-muted);
   cursor: pointer;
   font-size: 20px;
   line-height: 1;
@@ -107,7 +107,7 @@
   background: none;
   border: none;
   padding: 0;
-  color: var(--sruti-primary);
+  color: var(--swara-primary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -117,7 +117,7 @@
 // ── Forgot desc ───────────────────────────────────────────────────────────────
 .forgot-desc {
   font-size: 14px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   line-height: 1.5;
   margin: 0;
 }
@@ -132,13 +132,13 @@
 // ── Messages ─────────────────────────────────────────────────────────────────
 .error-msg {
   font-size: 13px;
-  color: var(--sruti-pitch-off);
+  color: var(--swara-pitch-off);
   text-align: center;
 }
 
 .success-msg {
   font-size: 13px;
-  color: var(--sruti-pitch-perfect, #4caf50);
+  color: var(--swara-pitch-perfect, #4caf50);
   text-align: center;
 }
 
@@ -147,7 +147,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   font-size: 13px;
 
   &::before,
@@ -155,6 +155,6 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--sruti-border);
+    background: var(--swara-border);
   }
 }

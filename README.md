@@ -1,4 +1,4 @@
-# Sruti — Indian Classical Music Practice App
+# Swara — Indian Classical Music Practice App
 
 > A production-ready **Tanpura + Singing Trainer** built with Nx 21, Ionic 8, Angular 21, Capacitor 7, and a fully serverless AWS backend.
 
@@ -39,11 +39,11 @@
 │  Cognito User Pool ──► JWT Authorizer ──► Lambda                        │
 │                                                                          │
 │  DynamoDB (on-demand)                                                    │
-│  ├── sruti-users                                                         │
-│  ├── sruti-sessions   (TTL 1yr, LSI: mode-index)                        │
-│  ├── sruti-streaks    (TTL 1yr)                                          │
-│  ├── sruti-classroom  (TTL 24h, GSI: teacherId-index)                   │
-│  └── sruti-students                                                      │
+│  ├── swara-users                                                         │
+│  ├── swara-sessions   (TTL 1yr, LSI: mode-index)                        │
+│  ├── swara-streaks    (TTL 1yr)                                          │
+│  ├── swara-classroom  (TTL 24h, GSI: teacherId-index)                   │
+│  └── swara-students                                                      │
 │                                                                          │
 │  S3 Bucket  ──► CloudFront CDN  (audio samples)                         │
 └──────────────────────────────────────────────────────────────────────────┘
@@ -80,7 +80,7 @@ voice-tuner-app/
 │   │       └── middleware/    # auth (Cognito JWT verify)
 │   └── infra/                 # AWS CDK v2
 │       ├── bin/app.ts
-│       ├── lib/sruti-stack.ts
+│       ├── lib/swara-stack.ts
 │       └── cdk.json
 ├── libs/
 │   ├── audio-engine/          # AudioContext, mic, worklet loader
@@ -99,7 +99,7 @@ voice-tuner-app/
 
 ## DynamoDB Schema
 
-### `sruti-users`
+### `swara-users`
 | Attribute            | Type    | Notes                              |
 |---------------------|---------|------------------------------------|
 | `userId` (PK)       | String  | Cognito `sub`                     |
@@ -110,7 +110,7 @@ voice-tuner-app/
 | `favoriteRagas`     | List    | raga IDs                           |
 | `createdAt`         | String  | ISO timestamp                      |
 
-### `sruti-sessions`
+### `swara-sessions`
 | Attribute         | Type    | Notes                              |
 |------------------|---------|------------------------------------|
 | `pk` (PK)        | String  | `userId`                          |
@@ -123,7 +123,7 @@ voice-tuner-app/
 
 **LSI**: `mode-index` (PK=`pk`, SK=`mode`) for filtering by practice mode.
 
-### `sruti-streaks`
+### `swara-streaks`
 | Attribute         | Type   | Notes          |
 |------------------|--------|----------------|
 | `pk` (PK)        | String | `userId`       |
@@ -131,7 +131,7 @@ voice-tuner-app/
 | `durationMinutes`| Number | total that day |
 | `sessionsCount`  | Number |                |
 
-### `sruti-classroom`
+### `swara-classroom`
 | Attribute      | Type    | Notes                       |
 |---------------|---------|-----------------------------|
 | `sessionCode` (PK) | String | e.g. `YAMAN-X7`       |
@@ -141,7 +141,7 @@ voice-tuner-app/
 
 **GSI**: `teacherId-index` (PK=`teacherId`, SK=`createdAt`).
 
-### `sruti-students`
+### `swara-students`
 | Attribute      | Type   | Notes               |
 |---------------|--------|---------------------|
 | `sessionCode` (PK) | String |                |
@@ -266,11 +266,11 @@ All styles live in `apps/mobile-app/src/styles/`. No `.css` files — SCSS only.
 
 | Token                    | Value                    |
 |--------------------------|--------------------------|
-| `--sruti-primary`        | `#7C4DFF` (violet)       |
-| `--sruti-secondary`      | `#00E5C2` (teal)         |
-| `--sruti-accent`         | `#FF6B35` (coral)        |
-| `--sruti-bg-primary`     | `#0A0A1B` (near-black)   |
-| `--sruti-surface`        | `#12122A`                |
+| `--swara-primary`        | `#7C4DFF` (violet)       |
+| `--swara-secondary`      | `#00E5C2` (teal)         |
+| `--swara-accent`         | `#FF6B35` (coral)        |
+| `--swara-bg-primary`     | `#0A0A1B` (near-black)   |
+| `--swara-surface`        | `#12122A`                |
 | Glass card blur          | `20px`                   |
 | Glass card bg            | `rgba(255,255,255,0.04)` |
 

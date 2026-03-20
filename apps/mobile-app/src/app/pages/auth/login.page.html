@@ -13,12 +13,12 @@
     <!-- ── Hero ───────────────────────────────────────────────────────── -->
     <div class="login-hero">
       <div class="login-logo">🎵</div>
-      <div class="login-title">Sruti</div>
+      <div class="login-title">Swara</div>
       <div class="login-sub">Indian Classical Music Companion</div>
     </div>
 
     <!-- ── Sign In / Sign Up form ─────────────────────────────────────── -->
-    <div *ngIf="view === 'signin'" class="login-form sruti-card">
+    <div *ngIf="view === 'signin'" class="login-form swara-card">
       <div class="form-group">
         <label class="form-label">Email</label>
         <input class="form-input" type="email" [(ngModel)]="email"
@@ -41,27 +41,27 @@
 
       <div class="error-msg"  *ngIf="errorMsg">{{ errorMsg }}</div>
       <div *ngIf="unconfirmedEmail" class="resend-block">
-        <button class="sruti-btn sruti-btn--secondary login-btn" (click)="resendConfirmation()" [disabled]="isLoading">
+        <button class="swara-btn swara-btn--secondary login-btn" (click)="resendConfirmation()" [disabled]="isLoading">
           {{ isLoading ? 'Sending...' : 'Resend Confirmation Email' }}
         </button>
       </div>
       <div class="success-msg" *ngIf="successMsg">{{ successMsg }}</div>
 
-      <button class="sruti-btn sruti-btn--primary login-btn" (click)="signIn()" [disabled]="isLoading">
+      <button class="swara-btn swara-btn--primary login-btn" (click)="signIn()" [disabled]="isLoading">
         {{ isLoading ? 'Signing in...' : 'Sign In' }}
       </button>
-      <button class="sruti-btn sruti-btn--secondary login-btn" (click)="signUp()" [disabled]="isLoading">
+      <button class="swara-btn swara-btn--secondary login-btn" (click)="signUp()" [disabled]="isLoading">
         Create Account
       </button>
 
       <div class="divider"><span>or</span></div>
-      <button class="sruti-btn sruti-btn--ghost login-btn" (click)="continueAsGuest()">
+      <button class="swara-btn swara-btn--ghost login-btn" (click)="continueAsGuest()">
         Continue as Guest
       </button>
     </div>
 
     <!-- ── Forgot Password form ────────────────────────────────────────── -->
-    <div *ngIf="view === 'forgot'" class="login-form sruti-card">
+    <div *ngIf="view === 'forgot'" class="login-form swara-card">
       <p class="forgot-desc">
         Enter your email and we'll send you a 6-digit code to reset your password.
       </p>
@@ -74,10 +74,10 @@
       <div class="error-msg"  *ngIf="errorMsg">{{ errorMsg }}</div>
       <div class="success-msg" *ngIf="successMsg">{{ successMsg }}</div>
 
-      <button class="sruti-btn sruti-btn--primary login-btn" (click)="sendReset()" [disabled]="isLoading">
+      <button class="swara-btn swara-btn--primary login-btn" (click)="sendReset()" [disabled]="isLoading">
         {{ isLoading ? 'Sending...' : 'Send Reset Code' }}
       </button>
-      <button class="sruti-btn sruti-btn--ghost login-btn" (click)="showSignIn()">
+      <button class="swara-btn swara-btn--ghost login-btn" (click)="showSignIn()">
         Back to Sign In
       </button>
     </div>

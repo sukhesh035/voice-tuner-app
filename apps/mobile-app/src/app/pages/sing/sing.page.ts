@@ -46,7 +46,7 @@ import { AuthService } from '@voice-tuner/auth';
             <circle
               cx="120" cy="120" r="100"
               fill="none"
-              stroke="var(--sruti-border)"
+              stroke="var(--swara-border)"
               stroke-width="12"
               stroke-dasharray="565 628"
               stroke-dashoffset="-31"
@@ -72,7 +72,7 @@ import { AuthService } from '@voice-tuner/auth';
                 [attr.y1]="120 + 84 * sin(angle)"
                 [attr.x2]="120 + 92 * cos(angle)"
                 [attr.y2]="120 + 92 * sin(angle)"
-                stroke="var(--sruti-border)"
+                stroke="var(--swara-border)"
                 stroke-width="2"
                 stroke-linecap="round"
               />
@@ -125,7 +125,7 @@ import { AuthService } from '@voice-tuner/auth';
               {{ currentPitch ? ((currentPitch.accuracy | number:'1.0-0') + '%') : '–%' }}
             </span>
           </div>
-          <div class="sruti-progress-bar">
+          <div class="swara-progress-bar">
             <div
               class="progress-fill"
               [style.width]="(currentPitch?.accuracy ?? 0) + '%'"
@@ -137,7 +137,7 @@ import { AuthService } from '@voice-tuner/auth';
         <!-- Note Grid (which notes have been detected) -->
         <div class="note-grid-section">
           <div class="section-title">Notes Detected</div>
-          <div class="sruti-note-grid">
+          <div class="swara-note-grid">
             <div
               *ngFor="let note of allNotes; let i = index"
               class="note-chip"
@@ -169,15 +169,15 @@ import { AuthService } from '@voice-tuner/auth';
 
         <!-- Stats Row -->
         <div class="stats-row" [class.stats-hidden]="sessionStats.sampleCount === 0">
-          <div class="sruti-stat-card">
+          <div class="swara-stat-card">
             <div class="stat-value">{{ sessionStats.stabilityScore | number:'1.0-0' }}</div>
             <div class="stat-label">Stability</div>
           </div>
-          <div class="sruti-stat-card">
+          <div class="swara-stat-card">
             <div class="stat-value">{{ sessionStats.averageCentsOff | number:'1.0-0' }}¢</div>
             <div class="stat-label">Avg Deviation</div>
           </div>
-          <div class="sruti-stat-card">
+          <div class="swara-stat-card">
             <div class="stat-value">{{ sessionStats.sampleCount }}</div>
             <div class="stat-label">Notes</div>
           </div>
@@ -207,10 +207,10 @@ export class SingPage implements OnInit, OnDestroy {
 
   get isInTune():    boolean { return this.currentPitch?.isInTune ?? false; }
   get meterColor():  string {
-    if (!this.currentPitch) return 'var(--sruti-border)';
-    if (this.isInTune) return 'var(--sruti-pitch-perfect)';
-    if (Math.abs(this.currentPitch.centsOff) < 30) return 'var(--sruti-pitch-close)';
-    return 'var(--sruti-pitch-off)';
+    if (!this.currentPitch) return 'var(--swara-border)';
+    if (this.isInTune) return 'var(--swara-pitch-perfect)';
+    if (Math.abs(this.currentPitch.centsOff) < 30) return 'var(--swara-pitch-close)';
+    return 'var(--swara-pitch-off)';
   }
   get meterGradient(): string {
     return `linear-gradient(90deg, ${this.meterColor} 0%, ${this.meterColor} 100%)`;

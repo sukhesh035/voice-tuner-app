@@ -13,7 +13,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   margin-bottom: $spacing-3;
 }
 
@@ -44,21 +44,21 @@
   height: 72px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 8px 24px rgba(var(--sruti-primary-rgb), 0.45);
+  box-shadow: 0 8px 24px rgba(var(--swara-primary-rgb), 0.45);
 }
 
 .avatar-initial {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: var(--sruti-gradient-primary);
+  background: var(--swara-gradient-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
   font-weight: 800;
   color: white;
-  box-shadow: 0 8px 24px rgba(var(--sruti-primary-rgb), 0.45);
+  box-shadow: 0 8px 24px rgba(var(--swara-primary-rgb), 0.45);
 }
 
 .avatar-edit-badge {
@@ -68,11 +68,11 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--sruti-primary);
+  background: var(--swara-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--sruti-bg-page);
+  border: 2px solid var(--swara-bg-page);
   ion-icon {
     font-size: 12px;
     color: white;
@@ -89,8 +89,8 @@
 }
 
 .profile-name  { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
-.profile-email { font-size: 13px; color: var(--sruti-text-secondary); margin-top: 2px; }
-.profile-since { font-size: 12px; color: var(--sruti-text-tertiary); margin-top: 3px; }
+.profile-email { font-size: 13px; color: var(--swara-text-secondary); margin-top: 2px; }
+.profile-since { font-size: 12px; color: var(--swara-text-tertiary); margin-top: 3px; }
 
 // ── Stats Row ─────────────────────────────────────────────
 .stats-row {
@@ -111,8 +111,8 @@
   &__value {
     font-size: 26px;
     font-weight: 800;
-    font-family: var(--sruti-font-display);
-    background: var(--sruti-gradient-primary);
+    font-family: var(--swara-font-display);
+    background: var(--swara-gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -120,13 +120,13 @@
 
   &__label {
     font-size: 13px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     margin-top: 2px;
   }
 
   &__goal {
     font-size: 12px;
-    color: var(--sruti-text-tertiary);
+    color: var(--swara-text-tertiary);
     margin-top: 2px;
   }
 
@@ -153,13 +153,13 @@
     justify-content: center;
     font-size: 13px;
     font-weight: 800;
-    color: var(--sruti-text-primary);
+    color: var(--swara-text-primary);
   }
 }
 
 .time-ring-sub {
   font-size: 10px;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -176,8 +176,8 @@
   align-items: center;
   gap: $spacing-2;
   padding: $spacing-3 $spacing-3;
-  background: var(--sruti-bg-card);
-  border: 1px solid var(--sruti-border);
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-border);
   border-radius: $radius-md;
   position: relative;
   opacity: 0.45;
@@ -185,8 +185,8 @@
 
   &.unlocked {
     opacity: 1;
-    border-color: rgba(var(--sruti-primary-rgb), 0.35);
-    background: rgba(var(--sruti-primary-rgb), 0.06);
+    border-color: rgba(var(--swara-primary-rgb), 0.35);
+    background: rgba(var(--swara-primary-rgb), 0.06);
   }
 }
 
@@ -194,7 +194,7 @@
 .achievement-label { font-size: 13px; font-weight: 600; flex: 1; }
 .achievement-check {
   font-size: 14px;
-  color: var(--sruti-pitch-perfect);
+  color: var(--swara-pitch-perfect);
   flex-shrink: 0;
 }
 
@@ -210,7 +210,7 @@
   align-items: center;
   gap: $spacing-3;
   text-decoration: none;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
   padding: $spacing-4 !important;
 }
 
@@ -224,15 +224,15 @@
   align-items: center;
   justify-content: center;
 
-  &--purple { color: var(--sruti-primary);    background: rgba(var(--sruti-primary-rgb), 0.12); }
-  &--teal   { color: var(--sruti-secondary);  background: rgba(var(--sruti-secondary-rgb), 0.12); }
-  &--gray   { color: var(--sruti-text-secondary); background: var(--sruti-bg-input); }
+  &--purple { color: var(--swara-primary);    background: rgba(var(--swara-primary-rgb), 0.12); }
+  &--teal   { color: var(--swara-secondary);  background: rgba(var(--swara-secondary-rgb), 0.12); }
+  &--gray   { color: var(--swara-text-secondary); background: var(--swara-bg-input); }
 }
 
 .menu-text { flex: 1; }
 .menu-title { font-size: 15px; font-weight: 600; }
-.menu-sub   { font-size: 12px; color: var(--sruti-text-secondary); margin-top: 1px; }
-.menu-chevron { font-size: 16px; color: var(--sruti-text-tertiary); }
+.menu-sub   { font-size: 12px; color: var(--swara-text-secondary); margin-top: 1px; }
+.menu-chevron { font-size: 16px; color: var(--swara-text-tertiary); }
 
 // ── Sign Out ──────────────────────────────────────────────
 .signout-btn {
@@ -248,7 +248,7 @@
   color: #FF1744;
   font-size: 15px;
   font-weight: 600;
-  font-family: var(--sruti-font-sans);
+  font-family: var(--swara-font-sans);
   cursor: pointer;
   transition: all 0.2s ease;
 
@@ -270,8 +270,8 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: var(--sruti-bg-card);
-  border: 2px solid var(--sruti-border);
+  background: var(--swara-bg-card);
+  border: 2px solid var(--swara-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -280,11 +280,11 @@
 
 .guest-avatar-icon {
   font-size: 48px;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
 }
 
 .guest-title { font-size: 20px; font-weight: 700; }
-.guest-sub   { font-size: 14px; color: var(--sruti-text-secondary); }
+.guest-sub   { font-size: 14px; color: var(--swara-text-secondary); }
 
 // ── Upsell Card ───────────────────────────────────────────
 .upsell-card {
@@ -297,7 +297,7 @@
 .upsell-headline {
   font-size: 22px;
   font-weight: 800;
-  background: var(--sruti-gradient-primary);
+  background: var(--swara-gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -305,7 +305,7 @@
 
 .upsell-desc {
   font-size: 14px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   line-height: 1.55;
   margin: 0;
 }
@@ -322,7 +322,7 @@
   gap: $spacing-3;
   font-size: 14px;
   font-weight: 500;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
 
   span:first-child { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
 }
@@ -336,7 +336,7 @@
 
 .upsell-fine {
   font-size: 12px;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   text-align: center;
 }
 
@@ -358,12 +358,12 @@
 .preview-val {
   font-size: 28px;
   font-weight: 800;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
 }
 
 .preview-label {
   font-size: 11px;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-top: 4px;
@@ -390,17 +390,17 @@
   &__title {
     font-size: 15px;
     font-weight: 700;
-    color: var(--sruti-text-primary);
+    color: var(--swara-text-primary);
     margin-bottom: 4px;
   }
 
   &__desc {
     font-size: 13px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     line-height: 1.5;
 
     strong {
-      color: var(--sruti-text-primary);
+      color: var(--swara-text-primary);
       font-weight: 600;
     }
   }
@@ -409,7 +409,7 @@
     flex-shrink: 0;
     font-size: 13px;
     font-weight: 600;
-    color: var(--sruti-accent-purple);
+    color: var(--swara-accent-purple);
     background: none;
     border: none;
     cursor: pointer;
@@ -458,7 +458,7 @@
 
   &__desc {
     font-size: 12px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     margin-top: 2px;
   }
 

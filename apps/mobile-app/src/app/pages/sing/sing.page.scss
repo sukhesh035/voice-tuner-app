@@ -34,15 +34,15 @@
   .note-name {
     font-size: 44px;
     font-weight: 800;
-    font-family: var(--sruti-font-display);
+    font-family: var(--swara-font-display);
     line-height: 1;
     transition: color 0.15s ease;
   }
 
   .hz-value {
     font-size: 13px;
-    font-family: var(--sruti-font-mono);
-    color: var(--sruti-text-secondary);
+    font-family: var(--swara-font-mono);
+    color: var(--swara-text-secondary);
     letter-spacing: 0.04em;
     &.hidden { visibility: hidden; }
   }
@@ -50,21 +50,21 @@
   .cents-badge {
     font-size: 13px;
     font-weight: 700;
-    font-family: var(--sruti-font-mono);
+    font-family: var(--swara-font-mono);
     padding: 2px 10px;
     border-radius: $radius-full;
-    background: var(--sruti-bg-card);
+    background: var(--swara-bg-card);
     transition: all 0.15s ease;
 
     &.hidden { visibility: hidden; }
-    &.in-tune  { color: var(--sruti-pitch-perfect); background: rgba(0, 230, 118, 0.12); }
-    &.sharp    { color: var(--sruti-pitch-off); }
+    &.in-tune  { color: var(--swara-pitch-perfect); background: rgba(0, 230, 118, 0.12); }
+    &.sharp    { color: var(--swara-pitch-off); }
     &.flat     { color: #5E81F4; }
   }
 
   .no-pitch {
     font-size: 18px;
-    color: var(--sruti-text-tertiary);
+    color: var(--swara-text-tertiary);
     font-weight: 500;
     animation: pulse-glow 2s ease-in-out infinite;
   }
@@ -82,17 +82,17 @@
 
   span {
     font-size: 10px;
-    color: var(--sruti-text-tertiary);
-    font-family: var(--sruti-font-mono);
+    color: var(--swara-text-tertiary);
+    font-family: var(--swara-font-mono);
   }
 }
 
 .tuner-gauge {
   position: relative;
   height: 44px;
-  background: var(--sruti-bg-card);
+  background: var(--swara-bg-card);
   border-radius: $radius-md;
-  border: 1px solid var(--sruti-border);
+  border: 1px solid var(--swara-border);
   overflow: hidden;
 
   .tuner-center-mark {
@@ -110,20 +110,20 @@
     left: 50%;
     width: 3px;
     height: 33px;
-    background: var(--sruti-primary);
+    background: var(--swara-primary);
     border-radius: $radius-full;
     transform-origin: bottom center;
     transform: translateX(-50%) rotate(0deg);
     transition: transform 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    box-shadow: 0 0 8px rgba(var(--sruti-primary-rgb), 0.8);
+    box-shadow: 0 0 8px rgba(var(--swara-primary-rgb), 0.8);
 
     &.in-tune {
-      background: var(--sruti-pitch-perfect);
+      background: var(--swara-pitch-perfect);
       box-shadow: 0 0 12px rgba(0, 230, 118, 0.9);
     }
 
     &.idle {
-      background: var(--sruti-border);
+      background: var(--swara-border);
       box-shadow: none;
       opacity: 0.4;
     }
@@ -141,10 +141,10 @@
   margin-bottom: $spacing-2;
   font-size: 13px;
   font-weight: 600;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 
   .accuracy-value {
-    font-family: var(--sruti-font-mono);
+    font-family: var(--swara-font-mono);
     font-weight: 700;
     font-size: 15px;
     transition: color 0.15s ease;
@@ -158,7 +158,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     margin-bottom: $spacing-2;
   }
 
@@ -168,7 +168,7 @@
 
     &.current {
       animation: bounce-in 0.3s ease forwards;
-      box-shadow: 0 0 20px rgba(var(--sruti-primary-rgb), 0.5);
+      box-shadow: 0 0 20px rgba(var(--swara-primary-rgb), 0.5);
     }
   }
 }
@@ -199,9 +199,9 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  border: 2px solid var(--sruti-border);
-  background: var(--sruti-bg-card);
-  color: var(--sruti-text-secondary);
+  border: 2px solid var(--swara-border);
+  background: var(--swara-bg-card);
+  color: var(--swara-text-secondary);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   -webkit-tap-highlight-color: transparent;
@@ -210,10 +210,10 @@
   ion-icon { font-size: 28px; }
 
   &.is-active {
-    background: var(--sruti-gradient-primary);
+    background: var(--swara-gradient-primary);
     border-color: transparent;
     color: white;
-    box-shadow: 0 8px 32px rgba(var(--sruti-primary-rgb), 0.55);
+    box-shadow: 0 8px 32px rgba(var(--swara-primary-rgb), 0.55);
     animation: pulse-glow 2s ease-in-out infinite;
   }
 

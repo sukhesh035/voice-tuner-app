@@ -26,7 +26,7 @@ import { Subscription } from 'rxjs';
   template: `
     <ion-header>
       <ion-toolbar>
-        <ion-title>Sruthi AI</ion-title>
+        <ion-title>Swara AI</ion-title>
       </ion-toolbar>
     </ion-header>
 
@@ -48,14 +48,14 @@ import { Subscription } from 'rxjs';
           </div>
 
           <ng-container *ngIf="authService.isAuthenticated$ | async; else streakGuest">
-            <div class="sruti-streak-badge">
+            <div class="swara-streak-badge">
               <span class="streak-icon">🔥</span>
               <span *ngIf="!loading; else streakLoading">{{ streakLabel }}</span>
               <ng-template #streakLoading><ion-spinner name="dots" style="--color:#fff;width:24px;height:16px"></ion-spinner></ng-template>
             </div>
           </ng-container>
           <ng-template #streakGuest>
-            <a class="sruti-streak-badge sruti-streak-badge--guest" [routerLink]="['/login']">
+            <a class="swara-streak-badge swara-streak-badge--guest" [routerLink]="['/login']">
               <span class="streak-icon">🔥</span>
               <span>Sign in to track streak</span>
             </a>
@@ -66,7 +66,7 @@ import { Subscription } from 'rxjs';
         <div class="quick-actions">
           <div class="section-label">Quick Start</div>
           <div class="action-grid">
-            <a class="action-card sruti-card" [routerLink]="['/tanpura']">
+            <a class="action-card swara-card" [routerLink]="['/tanpura']">
               <div class="action-card__icon tanpura-icon">
                 <ion-icon name="musical-note"></ion-icon>
               </div>
@@ -75,7 +75,7 @@ import { Subscription } from 'rxjs';
                 <div class="action-card__sub">Drone Player</div>
               </div>
             </a>
-            <a class="action-card sruti-card" [routerLink]="['/sing']">
+            <a class="action-card swara-card" [routerLink]="['/sing']">
               <div class="action-card__icon sing-icon">
                 <ion-icon name="mic"></ion-icon>
               </div>
@@ -84,7 +84,7 @@ import { Subscription } from 'rxjs';
                 <div class="action-card__sub">Pitch Detection</div>
               </div>
             </a>
-            <a class="action-card sruti-card" [routerLink]="['/practice']">
+            <a class="action-card swara-card" [routerLink]="['/practice']">
               <div class="action-card__icon practice-icon">
                 <ion-icon name="sparkles"></ion-icon>
               </div>
@@ -101,7 +101,7 @@ import { Subscription } from 'rxjs';
         <div class="today-section">
           <div class="section-label">Today's Practice</div>
           <ng-container *ngIf="authService.isAuthenticated$ | async; else todayGuest">
-            <div class="sruti-card today-card">
+            <div class="swara-card today-card">
               <ng-container *ngIf="!loading; else todayLoading">
                 <div class="today-stats">
                   <div class="today-stat">
@@ -123,13 +123,13 @@ import { Subscription } from 'rxjs';
                   <ion-spinner name="crescent"></ion-spinner>
                 </div>
               </ng-template>
-              <a [routerLink]="['/practice']" class="sruti-btn sruti-btn--primary today-btn">
+              <a [routerLink]="['/practice']" class="swara-btn swara-btn--primary today-btn">
                 {{ todaySessions > 0 ? 'Continue' : 'Start Riyaz' }}
               </a>
             </div>
           </ng-container>
           <ng-template #todayGuest>
-            <div class="sruti-card today-card today-card--locked">
+            <div class="swara-card today-card today-card--locked">
               <div class="today-stats today-stats--blurred">
                 <div class="today-stat">
                   <div class="today-stat__value">––</div>
@@ -145,7 +145,7 @@ import { Subscription } from 'rxjs';
                 </div>
               </div>
               <div class="today-cta">
-                <a [routerLink]="['/practice']" class="sruti-btn sruti-btn--primary">
+                <a [routerLink]="['/practice']" class="swara-btn swara-btn--primary">
                   Start Riyaz
                 </a>
               </div>
@@ -156,7 +156,7 @@ import { Subscription } from 'rxjs';
         <!-- Raga of the Day -->
         <div class="raga-day-section">
           <div class="section-label">Raga of the Day</div>
-          <div class="sruti-card raga-day-card">
+          <div class="swara-card raga-day-card">
             <div class="raga-day-accent"></div>
             <div class="raga-day-content">
               <div class="raga-day-name">{{ ragaOfDay.name }}</div>
@@ -190,7 +190,7 @@ import { Subscription } from 'rxjs';
           </ng-container>
 
           <ng-template #weeklyGuest>
-            <a class="sruti-card weekly-locked-card" [routerLink]="['/login']">
+            <a class="swara-card weekly-locked-card" [routerLink]="['/login']">
               <div class="weekly-locked-bars" aria-hidden="true">
                 <div *ngFor="let h of lockedBarHeights" class="day-bar-ghost" [style.height]="h + '%'"></div>
               </div>
@@ -198,7 +198,7 @@ import { Subscription } from 'rxjs';
                 <ion-icon name="lock-closed" class="lock-icon"></ion-icon>
                 <div class="weekly-locked-title">Track Your Progress</div>
                 <div class="weekly-locked-sub">Sign in to see your weekly practice history</div>
-                <span class="sruti-btn sruti-btn--primary weekly-locked-btn">Sign In Free</span>
+                <span class="swara-btn swara-btn--primary weekly-locked-btn">Sign In Free</span>
               </div>
             </a>
           </ng-template>

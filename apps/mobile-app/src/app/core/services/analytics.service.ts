@@ -19,8 +19,9 @@ import { environment } from '../../../environments/environment';
 export class AnalyticsService {
 
   constructor() {
-    // Disable analytics collection in all non-production environments
-    if (!environment.enableAnalytics) {
+    // Disable analytics collection in all non-production environments.
+    // Only call setEnabled when Firebase was actually initialised (projectId present).
+    if (!environment.enableAnalytics && environment.firebase.projectId) {
       this.setEnabled(false);
     }
   }
@@ -67,6 +68,7 @@ export class AnalyticsService {
 
   /** Enable / disable analytics collection (e.g. based on user consent) */
   async setEnabled(enabled: boolean): Promise<void> {
+    if (!environment.firebase.projectId) return;
     try {
       await FirebaseAnalytics.setEnabled({ enabled });
     } catch (err) {

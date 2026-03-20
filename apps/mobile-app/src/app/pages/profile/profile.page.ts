@@ -57,7 +57,7 @@ interface Achievement {
           <ng-template #profileLoaded>
 
             <!-- Email not verified banner -->
-            <div *ngIf="!(user.emailVerified)" class="unverified-banner sruti-card">
+            <div *ngIf="!(user.emailVerified)" class="unverified-banner swara-card">
               <ion-icon name="warning-outline" class="unverified-banner__icon"></ion-icon>
               <div class="unverified-banner__body">
                 <div class="unverified-banner__title">Email not verified</div>
@@ -85,22 +85,22 @@ interface Achievement {
 
             <!-- Key Stats -->
             <div class="stats-row">
-              <div class="sruti-stat-card">
+              <div class="swara-stat-card">
                 <div class="stat-value">{{ profile?.stats?.totalSessions ?? 0 }}</div>
                 <div class="stat-label">Sessions</div>
               </div>
-              <div class="sruti-stat-card">
+              <div class="swara-stat-card">
                 <div class="stat-value">{{ (profile?.stats?.currentStreak ?? 0) }}🔥</div>
                 <div class="stat-label">Day Streak</div>
               </div>
-              <div class="sruti-stat-card">
+              <div class="swara-stat-card">
                 <div class="stat-value">{{ avgScoreLabel }}</div>
                 <div class="stat-label">Avg Score</div>
               </div>
             </div>
 
             <!-- Total Practice Time -->
-            <div class="sruti-card time-card">
+            <div class="swara-card time-card">
               <div class="time-card__left">
                 <div class="time-card__value">{{ practiceTimeLabel }}</div>
                 <div class="time-card__label">Total practice time</div>
@@ -110,7 +110,7 @@ interface Achievement {
                 <div class="time-ring">
                   <svg viewBox="0 0 60 60">
                     <circle cx="30" cy="30" r="24" fill="none"
-                      stroke="var(--sruti-border)" stroke-width="5"/>
+                      stroke="var(--swara-border)" stroke-width="5"/>
                     <circle cx="30" cy="30" r="24" fill="none"
                       stroke="url(#tGrad)" stroke-width="5"
                       stroke-linecap="round"
@@ -150,7 +150,7 @@ interface Achievement {
             <div class="section">
               <div class="section-label">Account</div>
               <div class="menu-list">
-                <a class="menu-row sruti-card" [routerLink]="['/progress']">
+                <a class="menu-row swara-card" [routerLink]="['/progress']">
                   <ion-icon name="trending-up" class="menu-icon menu-icon--purple"></ion-icon>
                   <div class="menu-text">
                     <div class="menu-title">My Progress</div>
@@ -158,7 +158,7 @@ interface Achievement {
                   </div>
                   <ion-icon name="chevron-forward" class="menu-chevron"></ion-icon>
                 </a>
-                <a class="menu-row sruti-card" [routerLink]="['/settings']">
+                <a class="menu-row swara-card" [routerLink]="['/settings']">
                   <ion-icon name="settings-outline" class="menu-icon menu-icon--gray"></ion-icon>
                   <div class="menu-text">
                     <div class="menu-title">Settings</div>
@@ -183,7 +183,7 @@ interface Achievement {
         <ng-template #guestView>
 
           <!-- Verify email banner (shown after sign up before confirmation) -->
-          <div *ngIf="authService.pendingConfirmationEmail as pendingEmail" class="verify-banner sruti-card">
+          <div *ngIf="authService.pendingConfirmationEmail as pendingEmail" class="verify-banner swara-card">
             <div class="verify-banner__icon">✉️</div>
             <div class="verify-banner__body">
               <div class="verify-banner__title">Check your email</div>
@@ -205,7 +205,7 @@ interface Achievement {
             <div class="guest-sub">Your progress isn't being saved</div>
           </div>
 
-          <div class="sruti-card upsell-card">
+          <div class="swara-card upsell-card">
             <div class="upsell-headline">Unlock Your Full Journey</div>
             <p class="upsell-desc">
               Sign in to save sessions, track streaks, analyse note accuracy,
@@ -220,7 +220,7 @@ interface Achievement {
               <div class="upsell-feature"><span>📱</span><span>Sync across all your devices</span></div>
             </div>
 
-            <a [routerLink]="['/login']" class="sruti-btn sruti-btn--primary upsell-cta">
+            <a [routerLink]="['/login']" class="swara-btn swara-btn--primary upsell-cta">
               Sign In — It's Free
             </a>
             <div class="upsell-fine">No credit card required · Practice offline anytime</div>
@@ -230,15 +230,15 @@ interface Achievement {
           <div class="section">
             <div class="section-label">Your stats (sign in to unlock)</div>
             <div class="preview-stats">
-              <div class="preview-stat sruti-card">
+              <div class="preview-stat swara-card">
                 <div class="preview-val">?</div>
                 <div class="preview-label">Day Streak</div>
               </div>
-              <div class="preview-stat sruti-card">
+              <div class="preview-stat swara-card">
                 <div class="preview-val">?</div>
                 <div class="preview-label">Sessions</div>
               </div>
-              <div class="preview-stat sruti-card">
+              <div class="preview-stat swara-card">
                 <div class="preview-val">?</div>
                 <div class="preview-label">Avg Score</div>
               </div>

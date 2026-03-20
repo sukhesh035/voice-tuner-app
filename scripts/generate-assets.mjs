@@ -37,7 +37,7 @@ async function resize(src, dest, w, h) {
 }
 
 async function main() {
-  console.log('\nGenerating Sruti app assets…\n');
+  console.log('\nGenerating Swara app assets…\n');
 
   // ── iOS ──────────────────────────────────────────────────────────────────
   const iosIcons  = resolve(root, 'apps/mobile-app/ios/App/App/Assets.xcassets/AppIcon.appiconset');

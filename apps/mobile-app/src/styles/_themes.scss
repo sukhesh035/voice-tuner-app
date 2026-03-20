@@ -1,5 +1,5 @@
 // ============================================================
-// SRUTI - Theme System (Dark + Light)
+// SWARA - Theme System (Dark + Light)
 // ============================================================
 
 @use 'variables' as *;
@@ -8,115 +8,115 @@
 :root,
 [data-theme="dark"] {
   // Primary Brand
-  --sruti-primary:           #7C4DFF;
-  --sruti-primary-rgb:       124, 77, 255;
-  --sruti-primary-light:     #9E6BFF;
-  --sruti-primary-dark:      #5C2FE0;
+  --swara-primary:           #7C4DFF;
+  --swara-primary-rgb:       124, 77, 255;
+  --swara-primary-light:     #9E6BFF;
+  --swara-primary-dark:      #5C2FE0;
 
   // Secondary / Accent
-  --sruti-secondary:         #00E5C2;
-  --sruti-secondary-rgb:     0, 229, 194;
-  --sruti-accent:            #FF6B6B;
-  --sruti-accent-rgb:        255, 107, 107;
+  --swara-secondary:         #00E5C2;
+  --swara-secondary-rgb:     0, 229, 194;
+  --swara-accent:            #FF6B6B;
+  --swara-accent-rgb:        255, 107, 107;
 
   // Backgrounds
-  --sruti-bg-primary:        #0A0A1B;
-  --sruti-bg-secondary:      #0F0F2A;
-  --sruti-bg-card:           rgba(255, 255, 255, 0.05);
-  --sruti-bg-card-hover:     rgba(255, 255, 255, 0.08);
-  --sruti-bg-input:          rgba(255, 255, 255, 0.07);
+  --swara-bg-primary:        #0A0A1B;
+  --swara-bg-secondary:      #0F0F2A;
+  --swara-bg-card:           rgba(255, 255, 255, 0.05);
+  --swara-bg-card-hover:     rgba(255, 255, 255, 0.08);
+  --swara-bg-input:          rgba(255, 255, 255, 0.07);
 
   // Glass
-  --sruti-glass-bg:          rgba(15, 15, 42, 0.7);
-  --sruti-glass-border:      rgba(255, 255, 255, 0.1);
-  --sruti-glass-blur:        20px;
+  --swara-glass-bg:          rgba(15, 15, 42, 0.7);
+  --swara-glass-border:      rgba(255, 255, 255, 0.1);
+  --swara-glass-blur:        20px;
 
   // Text
-  --sruti-text-primary:      #FFFFFF;
-  --sruti-text-secondary:    rgba(255, 255, 255, 0.65);
-  --sruti-text-tertiary:     rgba(255, 255, 255, 0.38);
-  --sruti-text-inverse:      #0A0A1B;
+  --swara-text-primary:      #FFFFFF;
+  --swara-text-secondary:    rgba(255, 255, 255, 0.65);
+  --swara-text-tertiary:     rgba(255, 255, 255, 0.38);
+  --swara-text-inverse:      #0A0A1B;
 
   // Borders
-  --sruti-border:            rgba(255, 255, 255, 0.1);
-  --sruti-border-strong:     rgba(255, 255, 255, 0.2);
+  --swara-border:            rgba(255, 255, 255, 0.1);
+  --swara-border-strong:     rgba(255, 255, 255, 0.2);
 
   // Gradients
-  --sruti-gradient-hero:     linear-gradient(180deg, #1A0A3B 0%, #0A0A1B 100%);
-  --sruti-gradient-card:     linear-gradient(135deg, rgba(124,77,255,0.15) 0%, rgba(0,229,194,0.08) 100%);
-  --sruti-gradient-tanpura:  linear-gradient(180deg, #1A082A 0%, #0A0A1B 100%);
-  --sruti-gradient-primary:  linear-gradient(135deg, #7C4DFF 0%, #00E5C2 100%);
+  --swara-gradient-hero:     linear-gradient(180deg, #1A0A3B 0%, #0A0A1B 100%);
+  --swara-gradient-card:     linear-gradient(135deg, rgba(124,77,255,0.15) 0%, rgba(0,229,194,0.08) 100%);
+  --swara-gradient-tanpura:  linear-gradient(180deg, #1A082A 0%, #0A0A1B 100%);
+  --swara-gradient-primary:  linear-gradient(135deg, #7C4DFF 0%, #00E5C2 100%);
 
   // Pitch Meter Colors
-  --sruti-pitch-perfect:     #00E676;
-  --sruti-pitch-close:       #FFB300;
-  --sruti-pitch-off:         #FF1744;
+  --swara-pitch-perfect:     #00E676;
+  --swara-pitch-close:       #FFB300;
+  --swara-pitch-off:         #FF1744;
 
   // Music Note Colors
-  --sruti-note-sa:           #FF6B6B;
-  --sruti-note-re:           #FF8E53;
-  --sruti-note-ga:           #FFC300;
-  --sruti-note-ma:           #4CAF50;
-  --sruti-note-pa:           #2196F3;
-  --sruti-note-dha:          #9C27B0;
-  --sruti-note-ni:           #E91E63;
+  --swara-note-sa:           #FF6B6B;
+  --swara-note-re:           #FF8E53;
+  --swara-note-ga:           #FFC300;
+  --swara-note-ma:           #4CAF50;
+  --swara-note-pa:           #2196F3;
+  --swara-note-dha:          #9C27B0;
+  --swara-note-ni:           #E91E63;
 
   // Typography
-  --sruti-font-sans:         #{$font-sans};
-  --sruti-font-mono:         #{$font-mono};
-  --sruti-font-display:      #{$font-display};
+  --swara-font-sans:         #{$font-sans};
+  --swara-font-mono:         #{$font-mono};
+  --swara-font-display:      #{$font-display};
 
   // Ionic Overrides
-  --ion-background-color:           var(--sruti-bg-primary);
-  --ion-text-color:                  var(--sruti-text-primary);
-  --ion-border-color:                var(--sruti-border);
-  --ion-toolbar-background:          var(--sruti-glass-bg);
-  --ion-color-primary:               var(--sruti-primary);
-  --ion-color-primary-rgb:           var(--sruti-primary-rgb);
-  --ion-color-secondary:             var(--sruti-secondary);
+  --ion-background-color:           var(--swara-bg-primary);
+  --ion-text-color:                  var(--swara-text-primary);
+  --ion-border-color:                var(--swara-border);
+  --ion-toolbar-background:          var(--swara-glass-bg);
+  --ion-color-primary:               var(--swara-primary);
+  --ion-color-primary-rgb:           var(--swara-primary-rgb);
+  --ion-color-secondary:             var(--swara-secondary);
   --ion-tab-bar-background:          #0A0A1B;
   --ion-tab-bar-color:               rgba(255, 255, 255, 0.45);
-  --ion-tab-bar-color-selected:      var(--sruti-primary);
+  --ion-tab-bar-color-selected:      var(--swara-primary);
 }
 
 // ── Light Theme ──────────────────────────────────────────────
 [data-theme="light"] {
-  --sruti-primary:           #6200EE;
-  --sruti-primary-rgb:       98, 0, 238;
-  --sruti-primary-light:     #7C4DFF;
-  --sruti-primary-dark:      #3700B3;
+  --swara-primary:           #6200EE;
+  --swara-primary-rgb:       98, 0, 238;
+  --swara-primary-light:     #7C4DFF;
+  --swara-primary-dark:      #3700B3;
 
-  --sruti-secondary:         #00897B;
-  --sruti-secondary-rgb:     0, 137, 123;
-  --sruti-accent:            #F44336;
+  --swara-secondary:         #00897B;
+  --swara-secondary-rgb:     0, 137, 123;
+  --swara-accent:            #F44336;
 
-  --sruti-bg-primary:        #F5F5FF;
-  --sruti-bg-secondary:      #EDEDFF;
-  --sruti-bg-card:           rgba(255, 255, 255, 0.9);
-  --sruti-bg-card-hover:     rgba(255, 255, 255, 1);
-  --sruti-bg-input:          rgba(0, 0, 0, 0.05);
+  --swara-bg-primary:        #F5F5FF;
+  --swara-bg-secondary:      #EDEDFF;
+  --swara-bg-card:           rgba(255, 255, 255, 0.9);
+  --swara-bg-card-hover:     rgba(255, 255, 255, 1);
+  --swara-bg-input:          rgba(0, 0, 0, 0.05);
 
-  --sruti-glass-bg:          rgba(245, 245, 255, 0.85);
-  --sruti-glass-border:      rgba(0, 0, 0, 0.1);
-  --sruti-glass-blur:        20px;
+  --swara-glass-bg:          rgba(245, 245, 255, 0.85);
+  --swara-glass-border:      rgba(0, 0, 0, 0.1);
+  --swara-glass-blur:        20px;
 
-  --sruti-text-primary:      #0D0D2B;
-  --sruti-text-secondary:    rgba(13, 13, 43, 0.65);
-  --sruti-text-tertiary:     rgba(13, 13, 43, 0.38);
-  --sruti-text-inverse:      #FFFFFF;
+  --swara-text-primary:      #0D0D2B;
+  --swara-text-secondary:    rgba(13, 13, 43, 0.65);
+  --swara-text-tertiary:     rgba(13, 13, 43, 0.38);
+  --swara-text-inverse:      #FFFFFF;
 
-  --sruti-border:            rgba(0, 0, 0, 0.1);
-  --sruti-border-strong:     rgba(0, 0, 0, 0.2);
+  --swara-border:            rgba(0, 0, 0, 0.1);
+  --swara-border-strong:     rgba(0, 0, 0, 0.2);
 
-  --sruti-gradient-hero:     linear-gradient(180deg, #EDE7FF 0%, #F5F5FF 100%);
-  --sruti-gradient-card:     linear-gradient(135deg, rgba(98,0,238,0.08) 0%, rgba(0,137,123,0.05) 100%);
-  --sruti-gradient-tanpura:  linear-gradient(180deg, #F3E5F5 0%, #F5F5FF 100%);
-  --sruti-gradient-primary:  linear-gradient(135deg, #6200EE 0%, #00897B 100%);
+  --swara-gradient-hero:     linear-gradient(180deg, #EDE7FF 0%, #F5F5FF 100%);
+  --swara-gradient-card:     linear-gradient(135deg, rgba(98,0,238,0.08) 0%, rgba(0,137,123,0.05) 100%);
+  --swara-gradient-tanpura:  linear-gradient(180deg, #F3E5F5 0%, #F5F5FF 100%);
+  --swara-gradient-primary:  linear-gradient(135deg, #6200EE 0%, #00897B 100%);
 
-  --ion-background-color:     var(--sruti-bg-primary);
-  --ion-text-color:           var(--sruti-text-primary);
-  --ion-toolbar-background:   var(--sruti-glass-bg);
+  --ion-background-color:     var(--swara-bg-primary);
+  --ion-text-color:           var(--swara-text-primary);
+  --ion-toolbar-background:   var(--swara-glass-bg);
   --ion-tab-bar-background:   #F5F5FF;
   --ion-tab-bar-color:        rgba(13, 13, 43, 0.45);
-  --ion-tab-bar-color-selected: var(--sruti-primary);
+  --ion-tab-bar-color-selected: var(--swara-primary);
 }

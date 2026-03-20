@@ -135,7 +135,7 @@ app.delete('/v1/api/classroom/sessions/:code',        (req, res) => invoke(class
 
 // ─── Start ────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n[Sruti local API] listening on http://localhost:${PORT}/v1`);
+  console.log(`\n[Swara local API] listening on http://localhost:${PORT}/v1`);
   console.log(`  COGNITO_USER_POOL_ID : ${process.env['COGNITO_USER_POOL_ID']}`);
   console.log(`  USERS_TABLE          : ${process.env['USERS_TABLE']}`);
   console.log(`  SESSIONS_TABLE       : ${process.env['SESSIONS_TABLE']}`);
