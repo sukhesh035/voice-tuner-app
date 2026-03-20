@@ -15,7 +15,7 @@
         <ng-container *ngIf="!loading">
 
         <!-- Overall Score -->
-        <div class="overall-card sruti-card sruti-card--gradient">
+        <div class="overall-card swara-card swara-card--gradient">
           <div class="overall-score">
             <div class="score-ring">
               <svg viewBox="0 0 120 120">
@@ -40,11 +40,11 @@
             <div class="overall-info">
               <div class="overall-title">Overall Score</div>
               <div class="overall-sub">Based on last 30 days</div>
-              <div class="sruti-streak-badge" *ngIf="authService.isAuthenticated$ | async; else streakLogin" style="margin-top: 8px">
+              <div class="swara-streak-badge" *ngIf="authService.isAuthenticated$ | async; else streakLogin" style="margin-top: 8px">
                 <span class="streak-icon">🔥</span> {{ streakDays }} Day Streak
               </div>
               <ng-template #streakLogin>
-                <a class="sruti-streak-badge sruti-streak-badge--guest" [routerLink]="['/login']" style="margin-top: 8px">
+                <a class="swara-streak-badge swara-streak-badge--guest" [routerLink]="['/login']" style="margin-top: 8px">
                   <span class="streak-icon">🔥</span> Sign in to track streak
                 </a>
               </ng-template>
@@ -56,9 +56,9 @@
         <div class="section">
           <div class="section-label">This Week</div>
           <div class="week-cards">
-            <div *ngFor="let d of weeklyData" class="week-day-card sruti-card">
+            <div *ngFor="let d of weeklyData" class="week-day-card swara-card">
               <div class="week-day-name">{{ d.day }}</div>
-              <div class="sruti-progress-bar">
+              <div class="swara-progress-bar">
                 <div class="progress-fill" [style.width]="d.accuracy + '%'"></div>
               </div>
               <div class="week-day-acc">{{ d.accuracy > 0 ? (d.accuracy + '%') : '–' }}</div>
@@ -70,7 +70,7 @@
         <div class="section">
           <div class="section-label">Note Accuracy</div>
           <div class="note-accuracy-grid">
-            <div *ngFor="let note of noteAccuracy" class="note-acc-item sruti-card">
+            <div *ngFor="let note of noteAccuracy" class="note-acc-item swara-card">
               <div class="note-acc-name">{{ note.note }}</div>
               <div class="note-acc-bar">
                 <div class="note-acc-fill" [style.width]="note.accuracy + '%'"
@@ -84,7 +84,7 @@
         <!-- AI Coach Summary -->
         <div class="section">
           <div class="section-label">AI Coach Summary</div>
-          <div class="sruti-card coach-card">
+          <div class="swara-card coach-card">
             <div class="coach-icon">🤖</div>
             <div class="coach-content">
               <div class="coach-title">Weekly Analysis</div>
@@ -106,7 +106,7 @@
         <div class="section">
           <div class="section-label">Recent Sessions</div>
           <ng-container *ngIf="recentSessions.length > 0; else noSessions">
-            <div *ngFor="let session of recentSessions" class="session-item sruti-card">
+            <div *ngFor="let session of recentSessions" class="session-item swara-card">
               <div class="session-info">
                 <div class="session-raga">{{ session.raga }}</div>
                 <div class="session-meta">{{ session.date }} · {{ session.duration }}min</div>
@@ -117,7 +117,7 @@
             </div>
           </ng-container>
           <ng-template #noSessions>
-            <div class="sruti-card no-sessions">
+            <div class="swara-card no-sessions">
               <div class="no-sessions__text">No sessions recorded yet. Start your first riyaz!</div>
             </div>
           </ng-template>

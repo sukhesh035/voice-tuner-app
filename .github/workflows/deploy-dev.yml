@@ -24,6 +24,7 @@ jobs:
       AWS_REGION: us-east-1
       STAGE:      dev
       STACK_NAME: sruti-dev
+      LAMBDA_PREFIX: sruti-dev
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
@@ -53,14 +54,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ env.AWS_REGION }}
 
-      # ── 5. CDK bootstrap (idempotent — safe to run every time) ───────────────
-      - name: Bootstrap CDK
-        working-directory: apps/infra
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          pnpm exec cdk bootstrap aws://${ACCOUNT_ID}/${{ env.AWS_REGION }} --ci
-
-      # ── 5a. Write Gmail credentials to SSM (idempotent) ─────────────────────
+      # ── 5. Write Gmail credentials to SSM (idempotent) ──────────────────────
       - name: Write Gmail credentials to SSM
         run: |
           aws ssm put-parameter \
@@ -78,9 +72,22 @@ jobs:
       - name: Build Lambda bundle
         run: pnpm build:api
 
-      # ── 7. Deploy infra (CloudFormation create-or-update — idempotent) ────────
-      - name: Deploy AWS infrastructure
-        run: pnpm nx run infra:deploy-dev
+      # ── 7. Update Lambda function code (sruti-dev stack already exists) ───────
+      #   We skip CDK deploy to avoid recreating resources. Each Lambda handler
+      #   is a separate JS file — zip and upload each one individually.
+      #   Infrastructure changes must be applied manually via CDK.
+      - name: Update Lambda function code
+        run: |
+          for FN in users sessions streaks classroom notifications custom-email-sender; do
+            JS="dist/apps/backend-api/${FN}.js"
+            ZIP="/tmp/${FN}.zip"
+            zip -j "${ZIP}" "${JS}"
+            echo "Updating ${{ env.LAMBDA_PREFIX }}-${FN}..."
+            aws lambda update-function-code \
+              --function-name "${{ env.LAMBDA_PREFIX }}-${FN}" \
+              --zip-file "fileb://${ZIP}" \
+              --no-cli-pager
+          done
 
       # ── 8. Generate environment.ts from live stack outputs ────────────────────
       - name: Generate environment.ts

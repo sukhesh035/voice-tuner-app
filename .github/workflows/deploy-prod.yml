@@ -23,7 +23,7 @@ jobs:
     env:
       AWS_REGION: us-east-1
       STAGE:      prod
-      STACK_NAME: sruti-prod
+      STACK_NAME: swara-prod
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
@@ -64,12 +64,12 @@ jobs:
       - name: Write Gmail credentials to SSM
         run: |
           aws ssm put-parameter \
-            --name "/sruti-prod/gmail-user" \
+            --name "/swara-prod/gmail-user" \
             --value "${{ secrets.GMAIL_USER }}" \
             --type SecureString \
             --overwrite
           aws ssm put-parameter \
-            --name "/sruti-prod/gmail-app-password" \
+            --name "/swara-prod/gmail-app-password" \
             --value "${{ secrets.GMAIL_APP_PASSWORD }}" \
             --type SecureString \
             --overwrite

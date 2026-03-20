@@ -1,5 +1,5 @@
 // ============================================================
-// SRUTI - Global Styles Entry Point
+// SWARA - Global Styles Entry Point
 // ============================================================
 
 @use 'variables' as *;
@@ -32,16 +32,16 @@ html {
 }
 
 body {
-  font-family: var(--sruti-font-sans);
-  background: var(--sruti-bg-primary);
-  color: var(--sruti-text-primary);
+  font-family: var(--swara-font-sans);
+  background: var(--swara-bg-primary);
+  color: var(--swara-text-primary);
   overflow: hidden;
 }
 
 ion-content {
-  --background: var(--sruti-bg-primary);
+  --background: var(--swara-bg-primary);
 }
 
 ion-page {
-  background: var(--sruti-bg-primary);
+  background: var(--swara-bg-primary);
 }

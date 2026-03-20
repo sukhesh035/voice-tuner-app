@@ -9,18 +9,18 @@
 }
 
 .mode-segment {
-  --background: var(--sruti-bg-card);
+  --background: var(--swara-bg-card);
   border-radius: $radius-lg;
-  border: 1px solid var(--sruti-border);
+  border: 1px solid var(--swara-border);
   margin-bottom: $spacing-2;
   overflow: hidden;
 
   ion-segment-button {
-    --color: var(--sruti-text-secondary);
-    --color-checked: var(--sruti-primary);
+    --color: var(--swara-text-secondary);
+    --color-checked: var(--swara-primary);
     --background: transparent;
     --background-checked: transparent;
-    --indicator-color: rgba(var(--sruti-primary-rgb), 0.15);
+    --indicator-color: rgba(var(--swara-primary-rgb), 0.15);
     --indicator-height: 100%;
     --indicator-border-radius: #{$radius-md};
     --indicator-box-shadow: none;
@@ -34,7 +34,7 @@
     &::part(native) {
       font-size: 13px;
       font-weight: 600;
-      font-family: var(--sruti-font-sans);
+      font-family: var(--swara-font-sans);
     }
   }
 }
@@ -48,7 +48,7 @@
 
 .mode-card {
   &__title { font-size: 18px; font-weight: 700; margin-bottom: $spacing-1; }
-  &__desc  { font-size: 14px; color: var(--sruti-text-secondary); }
+  &__desc  { font-size: 14px; color: var(--swara-text-secondary); }
 }
 
 .target-display {
@@ -58,8 +58,8 @@
   .target-note {
     font-size: 80px;
     font-weight: 800;
-    font-family: var(--sruti-font-display);
-    background: var(--sruti-gradient-primary);
+    font-family: var(--swara-font-display);
+    background: var(--swara-gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -68,7 +68,7 @@
 
   .target-label {
     font-size: 13px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     margin-top: $spacing-2;
@@ -77,7 +77,7 @@
 
 .live-notes-section {
   text-align: center;
-  .live-label { font-size: 12px; color: var(--sruti-text-tertiary); margin-bottom: $spacing-1; }
+  .live-label { font-size: 12px; color: var(--swara-text-tertiary); margin-bottom: $spacing-1; }
   .live-note  { font-size: 48px; font-weight: 800; transition: color 0.15s ease; }
 }
 
@@ -106,7 +106,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 }
 
 // ── Popular Ragas Row ─────────────────────────────────────
@@ -124,11 +124,11 @@
   flex-shrink: 0;
   width: 130px;
   padding: $spacing-4;
-  background: var(--sruti-bg-card);
-  border: 1px solid var(--sruti-glass-border);
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-glass-border);
   border-radius: $radius-lg;
-  color: var(--sruti-text-primary);
-  font-family: var(--sruti-font-sans);
+  color: var(--swara-text-primary);
+  font-family: var(--swara-font-sans);
   text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -153,7 +153,7 @@
 
   &__time {
     font-size: 11px;
-    color: var(--sruti-text-tertiary);
+    color: var(--swara-text-tertiary);
     margin-top: 2px;
   }
 }
@@ -166,22 +166,22 @@
     width: 100%;
     padding: $spacing-3 $spacing-4 $spacing-3 $spacing-10;
     border-radius: $radius-lg;
-    border: 1px solid var(--sruti-border);
-    background: var(--sruti-bg-card);
-    color: var(--sruti-text-primary);
+    border: 1px solid var(--swara-border);
+    background: var(--swara-bg-card);
+    color: var(--swara-text-primary);
     font-size: 15px;
-    font-family: var(--sruti-font-sans);
+    font-family: var(--swara-font-sans);
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
     box-sizing: border-box;
 
     &::placeholder {
-      color: var(--sruti-text-tertiary);
+      color: var(--swara-text-tertiary);
     }
 
     &:focus {
-      border-color: var(--sruti-primary);
-      box-shadow: 0 0 0 3px rgba(var(--sruti-primary-rgb), 0.15);
+      border-color: var(--swara-primary);
+      box-shadow: 0 0 0 3px rgba(var(--swara-primary-rgb), 0.15);
     }
   }
 
@@ -214,12 +214,12 @@
   gap: $spacing-1;
   padding: 6px $spacing-3;
   border-radius: $radius-full;
-  border: 1px solid var(--sruti-border);
-  background: var(--sruti-bg-card);
-  color: var(--sruti-text-secondary);
+  border: 1px solid var(--swara-border);
+  background: var(--swara-bg-card);
+  color: var(--swara-text-secondary);
   font-size: 12px;
   font-weight: 600;
-  font-family: var(--sruti-font-sans);
+  font-family: var(--swara-font-sans);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: all 0.15s ease;
@@ -228,8 +228,8 @@
   &:active { transform: scale(0.96); }
 
   &--active {
-    background: var(--sruti-primary);
-    border-color: var(--sruti-primary);
+    background: var(--swara-primary);
+    border-color: var(--swara-primary);
     color: white;
   }
 
@@ -253,7 +253,7 @@
 .raga-list-empty {
   text-align: center;
   padding: $spacing-8 $spacing-4;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   font-size: 14px;
 }
 
@@ -264,11 +264,11 @@
   display: flex;
   gap: $spacing-3;
   align-items: center;
-  background: var(--sruti-bg-card);
-  border: 1px solid var(--sruti-glass-border);
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-glass-border);
   border-radius: $radius-lg;
-  color: var(--sruti-text-primary);
-  font-family: var(--sruti-font-sans);
+  color: var(--swara-text-primary);
+  font-family: var(--swara-font-sans);
   width: 100%;
   text-align: left;
   -webkit-tap-highlight-color: transparent;
@@ -306,7 +306,7 @@
   }
   &__hindi {
     font-size: 11px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
   }
   &__meta {
     display: flex;
@@ -315,11 +315,11 @@
   }
   &__time {
     font-size: 10px;
-    color: var(--sruti-text-tertiary);
+    color: var(--swara-text-tertiary);
   }
   &__mood {
     font-size: 10px;
-    color: var(--sruti-text-tertiary);
+    color: var(--swara-text-tertiary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -327,7 +327,7 @@
   }
   &__arrow {
     font-size: 20px;
-    color: var(--sruti-text-tertiary);
+    color: var(--swara-text-tertiary);
     flex-shrink: 0;
     font-weight: 300;
   }
@@ -366,20 +366,20 @@
   .raga-info-name { font-size: 18px; font-weight: 700; }
   .raga-info-hindi {
     font-size: 13px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     margin-top: 1px;
   }
-  .raga-info-meta { font-size: 12px; color: var(--sruti-text-tertiary); margin-top: 2px; }
+  .raga-info-meta { font-size: 12px; color: var(--swara-text-tertiary); margin-top: 2px; }
 
   .change-raga-btn {
     margin-left: auto;
     font-size: 13px;
-    color: var(--sruti-primary);
+    color: var(--swara-primary);
     background: none;
     border: none;
     cursor: pointer;
     font-weight: 600;
-    font-family: var(--sruti-font-sans);
+    font-family: var(--swara-font-sans);
     padding: $spacing-1 $spacing-2;
     border-radius: $radius-md;
     -webkit-tap-highlight-color: transparent;
@@ -391,8 +391,8 @@
     display: inline-block;
     font-size: 11px;
     font-weight: 600;
-    color: var(--sruti-primary);
-    background: rgba(var(--sruti-primary-rgb), 0.1);
+    color: var(--swara-primary);
+    background: rgba(var(--swara-primary-rgb), 0.1);
     border-radius: $radius-full;
     padding: 3px $spacing-3;
     margin-bottom: $spacing-3;
@@ -400,7 +400,7 @@
 
   .raga-info-desc {
     font-size: 13px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     line-height: 1.5;
     margin: 0;
   }
@@ -408,8 +408,8 @@
 
 // ── Aroh / Avaroh Sequence ────────────────────────────────
 .raga-sequence-section {
-  background: var(--sruti-bg-card);
-  border: 1px solid var(--sruti-glass-border);
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-glass-border);
   border-radius: $radius-xl;
   padding: $spacing-4;
   display: flex;
@@ -428,7 +428,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   min-width: 48px;
   flex-shrink: 0;
 }
@@ -443,16 +443,16 @@
 .seq-note {
   font-size: 14px;
   font-weight: 700;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
   padding: 3px 6px;
   border-radius: $radius-sm;
   transition: all 0.15s ease;
   white-space: nowrap;
 
   &--vadi {
-    background: rgba(var(--sruti-primary-rgb), 0.15);
-    color: var(--sruti-primary);
-    border: 1px solid rgba(var(--sruti-primary-rgb), 0.3);
+    background: rgba(var(--swara-primary-rgb), 0.15);
+    color: var(--swara-primary);
+    border: 1px solid rgba(var(--swara-primary-rgb), 0.3);
   }
 
   &--samvadi {
@@ -470,7 +470,7 @@
 
 .seq-arrow {
   font-size: 11px;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   margin: 0 1px;
 }
 
@@ -478,7 +478,7 @@
   display: flex;
   gap: $spacing-4;
   padding-top: $spacing-2;
-  border-top: 1px solid var(--sruti-border);
+  border-top: 1px solid var(--swara-border);
 }
 
 .legend-item {
@@ -486,7 +486,7 @@
   align-items: center;
   gap: $spacing-1;
   font-size: 11px;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
 }
 
 .legend-dot {
@@ -495,7 +495,7 @@
   border-radius: 50%;
 
   &--vadi {
-    background: var(--sruti-primary);
+    background: var(--swara-primary);
   }
 
   &--samvadi {
@@ -508,8 +508,8 @@
   position: relative;
 
   &.vadi-highlight {
-    border-color: var(--sruti-primary) !important;
-    box-shadow: 0 0 8px rgba(var(--sruti-primary-rgb), 0.3);
+    border-color: var(--swara-primary) !important;
+    box-shadow: 0 0 8px rgba(var(--swara-primary-rgb), 0.3);
   }
 
   &.samvadi-highlight {
@@ -524,7 +524,7 @@
     font-size: 8px;
     font-weight: 800;
     line-height: 1;
-    color: var(--sruti-primary);
+    color: var(--swara-primary);
   }
 }
 
@@ -536,16 +536,16 @@
   gap: $spacing-4;
   padding: $spacing-6 $spacing-4;
   border-radius: $radius-xl;
-  border: 1px solid var(--sruti-glass-border);
-  background: var(--sruti-bg-card);
+  border: 1px solid var(--swara-glass-border);
+  background: var(--swara-bg-card);
 }
 
 .raga-live-note {
   font-size: 56px;
   font-weight: 800;
-  font-family: var(--sruti-font-display);
+  font-family: var(--swara-font-display);
   line-height: 1;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
   transition: color 0.15s ease;
 
   &.on-target {
@@ -560,7 +560,7 @@
 .raga-live-accuracy {
   font-size: 24px;
   font-weight: 700;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 }
 
 .notes-section {
@@ -569,7 +569,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     margin-bottom: $spacing-3;
   }
 }
@@ -587,8 +587,8 @@
 
 // ── BPM Tempo Control ─────────────────────────────────────
 .raga-bpm-control {
-  background: var(--sruti-bg-card);
-  border: 1px solid var(--sruti-glass-border);
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-glass-border);
   border-radius: $radius-xl;
   padding: $spacing-4;
   display: flex;
@@ -607,14 +607,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 }
 
 .bpm-value {
   font-size: 16px;
   font-weight: 800;
-  color: var(--sruti-primary);
-  font-family: var(--sruti-font-display);
+  color: var(--swara-primary);
+  font-family: var(--swara-font-display);
 }
 
 .bpm-slider {
@@ -623,7 +623,7 @@
   width: 100%;
   height: 6px;
   border-radius: $radius-full;
-  background: var(--sruti-border);
+  background: var(--swara-border);
   outline: none;
   transition: opacity 0.2s;
 
@@ -633,9 +633,9 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: var(--sruti-primary);
+    background: var(--swara-primary);
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(var(--sruti-primary-rgb), 0.35);
+    box-shadow: 0 2px 8px rgba(var(--swara-primary-rgb), 0.35);
     transition: transform 0.15s ease;
 
     &:active {
@@ -647,10 +647,10 @@
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: var(--sruti-primary);
+    background: var(--swara-primary);
     cursor: pointer;
     border: none;
-    box-shadow: 0 2px 8px rgba(var(--sruti-primary-rgb), 0.35);
+    box-shadow: 0 2px 8px rgba(var(--swara-primary-rgb), 0.35);
   }
 
   &:disabled {
@@ -667,7 +667,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -683,30 +683,30 @@
 .raga-progress-bar {
   height: 4px;
   border-radius: $radius-full;
-  background: var(--sruti-border);
+  background: var(--swara-border);
   overflow: hidden;
 }
 
 .raga-progress-fill {
   height: 100%;
   border-radius: $radius-full;
-  background: var(--sruti-primary);
+  background: var(--swara-primary);
   transition: width 0.4s ease;
 }
 
 .raga-progress-text {
   font-size: 12px;
   font-weight: 600;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   text-align: center;
 }
 
 // ── Sequence note progress highlights ─────────────────────
 .seq-note {
   &--current {
-    background: rgba(var(--sruti-primary-rgb), 0.25) !important;
-    color: var(--sruti-primary) !important;
-    border: 1.5px solid var(--sruti-primary);
+    background: rgba(var(--swara-primary-rgb), 0.25) !important;
+    color: var(--swara-primary) !important;
+    border: 1.5px solid var(--swara-primary);
     transform: scale(1.15);
     font-weight: 800;
   }
@@ -718,7 +718,7 @@
 
 .sequence-label {
   &--active {
-    color: var(--sruti-primary) !important;
+    color: var(--swara-primary) !important;
   }
 }
 
@@ -731,8 +731,8 @@
 .raga-practice-countdown {
   font-size: 20px;
   font-weight: 800;
-  font-family: var(--sruti-font-display);
-  color: var(--sruti-primary);
+  font-family: var(--swara-font-display);
+  color: var(--swara-primary);
   margin-top: $spacing-1;
 }
 
@@ -755,14 +755,14 @@
   width: 110px;
   height: 110px;
   border-radius: 50%;
-  border: 3px solid var(--sruti-border);
+  border: 3px solid var(--swara-border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
   font-weight: 800;
-  font-family: var(--sruti-font-display);
-  color: var(--sruti-text-secondary);
+  font-family: var(--swara-font-display);
+  color: var(--swara-text-secondary);
   transition: border-color 0.3s ease, color 0.3s ease;
 
   &.good {
@@ -779,15 +779,15 @@
 .raga-result-title {
   font-size: 14px;
   font-weight: 700;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 // ── Per-note Breakdown Grid ───────────────────────────────
 .raga-note-breakdown {
-  background: var(--sruti-bg-card);
-  border: 1px solid var(--sruti-glass-border);
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-glass-border);
   border-radius: $radius-xl;
   padding: $spacing-4;
 }
@@ -797,7 +797,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   margin-bottom: $spacing-3;
 }
 
@@ -814,8 +814,8 @@
   gap: 2px;
   padding: $spacing-2 $spacing-1;
   border-radius: $radius-md;
-  border: 1.5px solid var(--sruti-border);
-  background: var(--sruti-bg-card);
+  border: 1.5px solid var(--swara-border);
+  background: var(--swara-bg-card);
   transition: all 0.2s ease;
 
   &--hit {
@@ -831,14 +831,14 @@
   &__name {
     font-size: 15px;
     font-weight: 800;
-    font-family: var(--sruti-font-display);
-    color: var(--sruti-text-primary);
+    font-family: var(--swara-font-display);
+    color: var(--swara-text-primary);
   }
 
   &__accuracy {
     font-size: 13px;
     font-weight: 700;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
   }
 
   &__status {
@@ -889,7 +889,7 @@
 .raga-result-feedback {
   font-size: 14px;
   line-height: 1.55;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   text-align: center;
   padding: 0 $spacing-2;
 }
@@ -915,8 +915,8 @@
   gap: $spacing-3;
   padding: $spacing-8 $spacing-4;
   border-radius: $radius-xl;
-  border: 1px solid var(--sruti-glass-border);
-  background: var(--sruti-bg-card);
+  border: 1px solid var(--swara-glass-border);
+  background: var(--swara-bg-card);
   text-align: center;
   min-height: 220px;
   transition: border-color 0.3s ease, background 0.3s ease;
@@ -929,8 +929,8 @@
   .phase-note {
     font-size: 72px;
     font-weight: 800;
-    font-family: var(--sruti-font-display);
-    background: var(--sruti-gradient-primary);
+    font-family: var(--swara-font-display);
+    background: var(--swara-gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -940,20 +940,20 @@
   .phase-label {
     font-size: 17px;
     font-weight: 600;
-    color: var(--sruti-text-primary);
+    color: var(--swara-text-primary);
   }
 
   .phase-hint {
     font-size: 12px;
-    color: var(--sruti-text-tertiary);
+    color: var(--swara-text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
 }
 
 .phase-playing {
-  border-color: rgba(var(--sruti-primary-rgb), 0.3);
-  background: rgba(var(--sruti-primary-rgb), 0.04);
+  border-color: rgba(var(--swara-primary-rgb), 0.3);
+  background: rgba(var(--swara-primary-rgb), 0.04);
 }
 
 .phase-ready {
@@ -967,7 +967,7 @@
 }
 
 .phase-result {
-  border-color: var(--sruti-glass-border);
+  border-color: var(--swara-glass-border);
 }
 
 // Pulsing mic dot when listening
@@ -1011,7 +1011,7 @@
 .live-pitch-note {
   font-size: 52px;
   font-weight: 800;
-  font-family: var(--sruti-font-display);
+  font-family: var(--swara-font-display);
   line-height: 1;
   transition: color 0.15s ease;
   min-width: 80px;
@@ -1021,7 +1021,7 @@
 .live-pitch-accuracy {
   font-size: 20px;
   font-weight: 700;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 }
 
 // ── Result phase: note comparison row ────────────────────────────────────────
@@ -1045,15 +1045,15 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
 }
 
 .result-note-value {
   font-size: 52px;
   font-weight: 800;
-  font-family: var(--sruti-font-display);
+  font-family: var(--swara-font-display);
   line-height: 1;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
   min-width: 80px;
   text-align: center;
   transition: color 0.2s ease;
@@ -1069,16 +1069,16 @@
 
 .result-arrow {
   font-size: 24px;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   flex-shrink: 0;
 }
 
 .round-accuracy-badge {
   font-size: 22px;
   font-weight: 800;
-  color: var(--sruti-text-secondary);
-  background: var(--sruti-bg-card);
-  border: 2px solid var(--sruti-border);
+  color: var(--swara-text-secondary);
+  background: var(--swara-bg-card);
+  border: 2px solid var(--swara-border);
   border-radius: $radius-full;
   padding: $spacing-2 $spacing-4;
   min-width: 72px;
@@ -1099,7 +1099,7 @@
 .round-feedback {
   font-size: 14px;
   line-height: 1.55;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   text-align: center;
   max-width: 320px;
   padding: 0 $spacing-2;
@@ -1110,13 +1110,13 @@
   width: 110px;
   height: 110px;
   border-radius: 50%;
-  border: 3px solid var(--sruti-border);
+  border: 3px solid var(--swara-border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28px;
   font-weight: 800;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   transition: border-color 0.3s ease, color 0.3s ease;
 
   &.good {
@@ -1149,9 +1149,9 @@
   gap: $spacing-2;
   font-size: 13px;
   font-weight: 600;
-  color: var(--sruti-text-secondary);
-  background: var(--sruti-bg-card);
-  border: 1px solid var(--sruti-border);
+  color: var(--swara-text-secondary);
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-border);
   border-radius: $radius-full;
   padding: $spacing-2 $spacing-4;
 }
@@ -1164,7 +1164,7 @@
 }
 
 .playing-dot {
-  background: var(--sruti-primary);
+  background: var(--swara-primary);
   animation: blink 1.2s step-start infinite;
 }
 
@@ -1233,13 +1233,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 }
 
 .rec-item {
   font-size: 14px;
   line-height: 1.5;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
   padding: $spacing-4 !important;
 }
 
@@ -1267,8 +1267,8 @@
   &__value {
     font-size: 26px;
     font-weight: 800;
-    font-family: var(--sruti-font-display);
-    color: var(--sruti-text-primary);
+    font-family: var(--swara-font-display);
+    color: var(--swara-text-primary);
     line-height: 1;
   }
 
@@ -1277,13 +1277,13 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    color: var(--sruti-text-tertiary);
+    color: var(--swara-text-tertiary);
   }
 
   &__divider {
     width: 1px;
     height: 36px;
-    background: var(--sruti-border);
+    background: var(--swara-border);
     flex-shrink: 0;
   }
 }
@@ -1299,7 +1299,7 @@
 
   &__desc {
     font-size: 14px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     line-height: 1.55;
     margin-bottom: $spacing-5;
   }
@@ -1316,14 +1316,14 @@
   align-items: center;
   gap: $spacing-3;
   font-size: 14px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 
   &__num {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: rgba(var(--sruti-primary-rgb), 0.12);
-    color: var(--sruti-primary);
+    background: rgba(var(--swara-primary-rgb), 0.12);
+    color: var(--swara-primary);
     font-size: 12px;
     font-weight: 700;
     display: flex;
@@ -1341,15 +1341,15 @@
   gap: $spacing-3;
   padding: $spacing-8 $spacing-4;
   border-radius: $radius-xl;
-  border: 1px solid var(--sruti-glass-border);
-  background: var(--sruti-bg-card);
+  border: 1px solid var(--swara-glass-border);
+  background: var(--swara-bg-card);
   text-align: center;
   min-height: 200px;
   transition: border-color 0.3s ease, background 0.3s ease;
 
   &.phase-playing {
-    border-color: rgba(var(--sruti-primary-rgb), 0.35);
-    background: rgba(var(--sruti-primary-rgb), 0.04);
+    border-color: rgba(var(--swara-primary-rgb), 0.35);
+    background: rgba(var(--swara-primary-rgb), 0.04);
   }
 
   &.phase-guessing {
@@ -1371,12 +1371,12 @@
 .ear-phase-label {
   font-size: 17px;
   font-weight: 600;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
 }
 
 .ear-phase-hint {
   font-size: 12px;
-  color: var(--sruti-text-tertiary);
+  color: var(--swara-text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -1392,7 +1392,7 @@
     display: block;
     width: 6px;
     border-radius: $radius-full;
-    background: var(--sruti-primary);
+    background: var(--swara-primary);
     animation: ear-bar 0.8s ease-in-out infinite;
 
     &:nth-child(1) { height: 18px; animation-delay: 0s; }
@@ -1411,7 +1411,7 @@
 .ear-question-mark {
   font-size: 72px;
   font-weight: 800;
-  font-family: var(--sruti-font-display);
+  font-family: var(--swara-font-display);
   color: #FF9800;
   line-height: 1;
   animation: ear-pulse 1.4s ease-in-out infinite;
@@ -1434,8 +1434,8 @@
 .ear-reveal-note {
   font-size: 56px;
   font-weight: 800;
-  font-family: var(--sruti-font-display);
-  background: var(--sruti-gradient-primary);
+  font-family: var(--swara-font-display);
+  background: var(--swara-gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1452,12 +1452,12 @@
   padding: $spacing-3 $spacing-1;
   font-size: 13px;
   font-weight: 700;
-  font-family: var(--sruti-font-sans);
+  font-family: var(--swara-font-sans);
   text-align: center;
   border-radius: $radius-lg;
-  border: 1.5px solid var(--sruti-glass-border);
-  background: var(--sruti-bg-card);
-  color: var(--sruti-text-primary);
+  border: 1.5px solid var(--swara-glass-border);
+  background: var(--swara-bg-card);
+  color: var(--swara-text-primary);
   cursor: pointer;
   transition: all 0.15s ease;
   -webkit-tap-highlight-color: transparent;
@@ -1466,7 +1466,7 @@
 
   &:active:not(:disabled) {
     transform: scale(0.94);
-    background: rgba(var(--sruti-primary-rgb), 0.1);
+    background: rgba(var(--swara-primary-rgb), 0.1);
   }
 
   &--correct {
@@ -1499,13 +1499,13 @@
 .ear-replay-btn {
   font-size: 14px;
   font-weight: 600;
-  color: var(--sruti-primary);
-  background: rgba(var(--sruti-primary-rgb), 0.08);
-  border: 1.5px solid rgba(var(--sruti-primary-rgb), 0.25);
+  color: var(--swara-primary);
+  background: rgba(var(--swara-primary-rgb), 0.08);
+  border: 1.5px solid rgba(var(--swara-primary-rgb), 0.25);
   border-radius: $radius-lg;
   padding: $spacing-3 $spacing-5;
   cursor: pointer;
-  font-family: var(--sruti-font-sans);
+  font-family: var(--swara-font-sans);
   -webkit-tap-highlight-color: transparent;
   transition: all 0.15s ease;
 

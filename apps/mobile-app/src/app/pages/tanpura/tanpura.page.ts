@@ -92,7 +92,7 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
         <div class="controls-grid">
 
           <!-- Tempo -->
-          <div class="sruti-card control-card">
+          <div class="swara-card control-card">
             <div class="control-card__header">
               <span class="control-card__label">Tempo</span>
               <span class="control-card__value">{{ state.tempo }} <small>BPM</small></span>
@@ -103,7 +103,7 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
               [max]="1"
               [step]="0.1"
               (ionChange)="setTempo($event)"
-              class="sruti-range"
+              class="swara-range"
             ></ion-range>
             <div class="range-labels">
               <span>0</span><span>Slow</span><span>Fast</span><span>10</span>
@@ -111,7 +111,7 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
           </div>
 
           <!-- Volume -->
-          <div class="sruti-card control-card">
+          <div class="swara-card control-card">
             <div class="control-card__header">
               <span class="control-card__label">Volume</span>
               <span class="control-card__value">{{ (state.volume * 100) | number:'1.0-0' }}<small>%</small></span>
@@ -122,12 +122,12 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
               [max]="1"
               [step]="0.01"
               (ionChange)="setVolume($event)"
-              class="sruti-range"
+              class="swara-range"
             ></ion-range>
           </div>
 
           <!-- Fine Tune -->
-          <div class="sruti-card control-card">
+          <div class="swara-card control-card">
             <div class="control-card__header">
               <span class="control-card__label">Fine Tune</span>
               <span class="control-card__value"
@@ -143,7 +143,7 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
               [max]="100"
               [step]="1"
               (ionChange)="setFineTune($event)"
-              class="sruti-range sruti-range--bipolar"
+              class="swara-range swara-range--bipolar"
             ></ion-range>
             <div class="range-labels">
               <span>-100¢</span><span>Flat</span><span>Sharp</span><span>+100¢</span>
@@ -151,7 +151,7 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
           </div>
 
           <!-- Octave -->
-          <div class="sruti-card control-card">
+          <div class="swara-card control-card">
             <div class="control-card__header">
               <span class="control-card__label">Octave</span>
               <span class="control-card__value">{{ state.octave }}</span>

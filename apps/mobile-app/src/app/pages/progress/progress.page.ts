@@ -147,8 +147,8 @@ export class ProgressPage implements OnInit, ViewWillEnter {
   }
 
   scoreColor(acc: number): string {
-    if (acc >= 85) return 'var(--sruti-pitch-perfect)';
-    if (acc >= 70) return 'var(--sruti-pitch-close)';
-    return 'var(--sruti-pitch-off)';
+    if (acc >= 85) return 'var(--swara-pitch-perfect)';
+    if (acc >= 70) return 'var(--swara-pitch-close)';
+    return 'var(--swara-pitch-off)';
   }
 }

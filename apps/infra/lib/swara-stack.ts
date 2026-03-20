@@ -16,17 +16,17 @@ import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as ssm     from 'aws-cdk-lib/aws-ssm';
 import * as kms     from 'aws-cdk-lib/aws-kms';
 
-export interface SrutiStackProps extends cdk.StackProps {
+export interface SwaraStackProps extends cdk.StackProps {
   stage:        'dev' | 'prod';
   domainPrefix: string;
 }
 
-export class SrutiStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: SrutiStackProps) {
-    super(scope, id, { ...props, stackName: `sruti-${props.stage}` });
+export class SwaraStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: SwaraStackProps) {
+    super(scope, id, { ...props, stackName: `swara-${props.stage}` });
 
     const { stage } = props;
-    const prefix     = `sruti-${stage}`;
+    const prefix     = `swara-${stage}`;
 
     // ─── Cognito User Pool ────────────────────────────────────────────────────
 
@@ -294,7 +294,7 @@ export class SrutiStack extends cdk.Stack {
       UPLOADS_CDN_URL:      `https://${uploadsCdn.distributionDomainName}`,
       // Allow requests from the PWA and native Capacitor apps; dev stays open
       CORS_ORIGIN: stage === 'prod'
-        ? `https://app.sruti.in,https://${webCdn.distributionDomainName},capacitor://localhost,http://localhost`
+        ? `https://app.swara.in,https://${webCdn.distributionDomainName},capacitor://localhost,http://localhost`
         : '*',
     };
 
@@ -366,7 +366,7 @@ export class SrutiStack extends cdk.Stack {
     dailyReminderRule.addTarget(new targets.LambdaFunction(notificationsLambda));
 
     // ─── HTTP API Gateway ─────────────────────────────────────────────────────
-    const api = new apigwv2.HttpApi(this, 'SrutiApi', {
+    const api = new apigwv2.HttpApi(this, 'SwaraApi', {
       apiName:        `${prefix}-api`,
       corsPreflight: {
         allowHeaders:  ['Content-Type', 'Authorization'],

@@ -7,7 +7,7 @@ export class ThemeService {
   private currentTheme: AppTheme = 'dark';
 
   initialize(): void {
-    const saved = localStorage.getItem('sruti-theme') as AppTheme | null;
+    const saved = localStorage.getItem('swara-theme') as AppTheme | null;
     // Default to dark — the app is designed dark-first.
     // Only respect a saved preference, not the system setting.
     this.setTheme(saved ?? 'dark');
@@ -19,7 +19,7 @@ export class ThemeService {
     // Keep Ionic's own dark-palette class in sync so Ionic components
     // (which use shadow DOM and ignore data-theme) also render correctly.
     document.documentElement.classList.toggle('ion-palette-dark', theme === 'dark');
-    localStorage.setItem('sruti-theme', theme);
+    localStorage.setItem('swara-theme', theme);
   }
 
   toggleTheme(): void {

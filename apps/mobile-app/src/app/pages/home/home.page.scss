@@ -14,7 +14,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   margin-bottom: $spacing-2;
 }
 
@@ -28,7 +28,7 @@
 
 .hero-greeting {
   font-size: 13px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   font-weight: 500;
 }
 
@@ -37,11 +37,11 @@
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.15;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
 }
 
 .hero-highlight {
-  background: var(--sruti-gradient-primary);
+  background: var(--swara-gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -60,7 +60,7 @@
   align-items: center;
   gap: $spacing-3;
   text-decoration: none;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
   cursor: pointer;
   padding: $spacing-3 $spacing-3 !important;
 
@@ -84,7 +84,7 @@
   }
 
   &__label { font-size: 14px; font-weight: 700; }
-  &__sub   { font-size: 11px; color: var(--sruti-text-secondary); }
+  &__sub   { font-size: 11px; color: var(--swara-text-secondary); }
 
   .tanpura-icon  { background: linear-gradient(135deg, #7C4DFF, #9E6BFF); }
   .sing-icon     { background: linear-gradient(135deg, #FF6B6B, #FF8E53); }
@@ -113,13 +113,13 @@
   &__value {
     font-size: 22px;
     font-weight: 800;
-    font-family: var(--sruti-font-display);
-    color: var(--sruti-text-primary);
+    font-family: var(--swara-font-display);
+    color: var(--swara-text-primary);
   }
 
   &__label {
     font-size: 10px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     margin-top: 2px;
@@ -130,7 +130,7 @@
   display: flex;
   justify-content: center;
 
-  .sruti-btn { width: 100%; max-width: 200px; }
+  .swara-btn { width: 100%; max-width: 200px; }
 }
 
 // ── Raga of the Day ───────────────────────────────────────
@@ -142,24 +142,24 @@
 
 .raga-day-accent {
   width: 4px;
-  background: var(--sruti-primary);
+  background: var(--swara-primary);
   border-radius: $radius-full;
-  box-shadow: 0 0 12px rgba(var(--sruti-primary-rgb), 0.7);
+  box-shadow: 0 0 12px rgba(var(--swara-primary-rgb), 0.7);
   flex-shrink: 0;
 }
 
 .raga-day-content {
   flex: 1;
   .raga-day-name  { font-size: 18px; font-weight: 800; }
-  .raga-day-hindi { font-size: 13px; color: var(--sruti-text-secondary); }
-  .raga-day-time  { font-size: 11px; color: var(--sruti-text-secondary); margin: $spacing-1 0; }
-  .raga-day-desc  { font-size: 12px; color: var(--sruti-text-secondary); line-height: 1.4; }
+  .raga-day-hindi { font-size: 13px; color: var(--swara-text-secondary); }
+  .raga-day-time  { font-size: 11px; color: var(--swara-text-secondary); margin: $spacing-1 0; }
+  .raga-day-desc  { font-size: 12px; color: var(--swara-text-secondary); line-height: 1.4; }
 }
 
 // ── Today Card locked state ───────────────────────────────
 .today-stats--blurred {
   .today-stat__value {
-    color: var(--sruti-text-tertiary);
+    color: var(--swara-text-tertiary);
     letter-spacing: 0.05em;
   }
 }
@@ -188,7 +188,7 @@
 .day-bar-ghost {
   flex: 1;
   border-radius: $radius-sm $radius-sm 0 0;
-  background: var(--sruti-gradient-primary);
+  background: var(--swara-gradient-primary);
   min-height: 4px;
 }
 
@@ -205,7 +205,7 @@
 
   .lock-icon {
     font-size: 22px;
-    color: var(--sruti-primary);
+    color: var(--swara-primary);
     margin-bottom: 2px;
   }
 }
@@ -213,12 +213,12 @@
 .weekly-locked-title {
   font-size: 16px;
   font-weight: 700;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
 }
 
 .weekly-locked-sub {
   font-size: 13px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   line-height: 1.4;
 }
 
@@ -249,16 +249,16 @@
   &__fill {
     width: 100%;
     border-radius: $radius-sm $radius-sm 0 0;
-    background: var(--sruti-gradient-primary);
+    background: var(--swara-gradient-primary);
     min-height: 4px;
     position: relative;
     transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 -2px 12px rgba(var(--sruti-primary-rgb), 0.4);
+    box-shadow: 0 -2px 12px rgba(var(--swara-primary-rgb), 0.4);
   }
 
   &__label {
     font-size: 11px;
-    color: var(--sruti-text-tertiary);
+    color: var(--swara-text-tertiary);
     margin-top: 4px;
     text-align: center;
   }

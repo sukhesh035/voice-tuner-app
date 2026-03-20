@@ -167,7 +167,7 @@ Each feature includes a description, user value, and rough implementation notes.
 - Consider: per-raga leaderboards ("Top Yaman practitioners this week")
 - Anti-gaming: cap countable minutes per day (e.g., max 60 min/day counts toward leaderboard)
 
-**Affected Files**: New `leaderboard.page.ts`, new backend `leaderboard.handler.ts`, `sruti-stack.ts` (new table + Lambda), settings page
+**Affected Files**: New `leaderboard.page.ts`, new backend `leaderboard.handler.ts`, `swara-stack.ts` (new table + Lambda), settings page
 
 ---
 

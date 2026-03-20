@@ -20,7 +20,7 @@ import {
   imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, RouterLink],
   template: `
     <ion-tabs>
-      <ion-tab-bar slot="bottom" class="sruti-tab-bar">
+      <ion-tab-bar slot="bottom" class="swara-tab-bar">
         <ion-tab-button tab="home" [routerLink]="['/home']">
           <ion-icon name="home-outline"></ion-icon>
         </ion-tab-button>

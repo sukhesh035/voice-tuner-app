@@ -33,7 +33,7 @@ if (!['dev', 'prod'].includes(stage) || !version) {
 }
 
 const region    = process.env['AWS_REGION'] ?? 'us-east-1';
-const stackName = `sruti-${stage}`;
+const stackName = `swara-${stage}`;
 
 // ── Read CDK outputs ────────────────────────────────────────────────────────
 console.log(`\nReading stack outputs from ${stackName}...\n`);

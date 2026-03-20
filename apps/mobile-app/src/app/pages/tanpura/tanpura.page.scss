@@ -4,7 +4,7 @@
   padding: $spacing-3 $spacing-4;
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
   min-height: 100%;
-  background: var(--sruti-gradient-tanpura);
+  background: var(--swara-gradient-tanpura);
 }
 
 // ── Hero Section ─────────────────────────────────────────
@@ -33,7 +33,7 @@
   .ring {
     position: absolute;
     border-radius: 50%;
-    border: 1px solid rgba(var(--sruti-primary-rgb), 0.3);
+    border: 1px solid rgba(var(--swara-primary-rgb), 0.3);
     opacity: 0;
     transition: opacity 0.5s ease;
 
@@ -55,8 +55,8 @@
   height: 84px;
   border-radius: 50%;
   border: none;
-  background: var(--sruti-gradient-primary);
-  box-shadow: 0 8px 40px rgba(var(--sruti-primary-rgb), 0.55);
+  background: var(--swara-gradient-primary);
+  box-shadow: 0 8px 40px rgba(var(--swara-primary-rgb), 0.55);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -105,16 +105,16 @@
   justify-content: center;
   font-size: 13px;
   font-weight: 700;
-  background: var(--sruti-bg-card);
-  border: 1px solid var(--sruti-border);
-  color: var(--sruti-text-secondary);
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-border);
+  color: var(--swara-text-secondary);
   transition: all 0.1s ease;
 
   &.active {
-    background: var(--sruti-primary);
+    background: var(--swara-primary);
     border-color: transparent;
     color: white;
-    box-shadow: 0 4px 16px rgba(var(--sruti-primary-rgb), 0.6);
+    box-shadow: 0 4px 16px rgba(var(--swara-primary-rgb), 0.6);
     transform: scale(1.12);
   }
 }
@@ -129,14 +129,14 @@
   &__note {
     font-size: 34px;
     font-weight: 800;
-    font-family: var(--sruti-font-display);
-    color: var(--sruti-text-primary);
+    font-family: var(--swara-font-display);
+    color: var(--swara-text-primary);
     line-height: 1;
   }
 
   &__label {
     font-size: 12px;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
@@ -159,14 +159,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 }
 
 .section-value {
   font-size: 13px;
   font-weight: 600;
-  font-family: var(--sruti-font-mono);
-  color: var(--sruti-primary);
+  font-family: var(--swara-font-mono);
+  color: var(--swara-primary);
 }
 
 // ── Key Grid ──────────────────────────────────────────────
@@ -179,9 +179,9 @@
 .key-btn {
   height: 44px;
   border-radius: $radius-md;
-  border: 1px solid var(--sruti-border);
-  background: var(--sruti-bg-card);
-  color: var(--sruti-text-primary);
+  border: 1px solid var(--swara-border);
+  background: var(--swara-bg-card);
+  color: var(--swara-text-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -189,14 +189,14 @@
   -webkit-tap-highlight-color: transparent;
 
   &.selected {
-    background: var(--sruti-primary);
+    background: var(--swara-primary);
     border-color: transparent;
     color: white;
-    box-shadow: 0 4px 16px rgba(var(--sruti-primary-rgb), 0.5);
+    box-shadow: 0 4px 16px rgba(var(--swara-primary-rgb), 0.5);
   }
 
   &:active:not(.selected) {
-    background: var(--sruti-bg-card-hover);
+    background: var(--swara-bg-card-hover);
     transform: scale(0.95);
   }
 }
@@ -224,41 +224,41 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--sruti-text-secondary);
+    color: var(--swara-text-secondary);
   }
 
   &__value {
     font-size: 18px;
     font-weight: 800;
-    font-family: var(--sruti-font-mono);
-    color: var(--sruti-text-primary);
+    font-family: var(--swara-font-mono);
+    color: var(--swara-text-primary);
 
     small {
       font-size: 11px;
       font-weight: 500;
-      color: var(--sruti-text-secondary);
+      color: var(--swara-text-secondary);
     }
 
-    &.positive { color: var(--sruti-pitch-close); }
-    &.negative { color: var(--sruti-pitch-flat, #5E81F4); }
+    &.positive { color: var(--swara-pitch-close); }
+    &.negative { color: var(--swara-pitch-flat, #5E81F4); }
   }
 }
 
 // ── Range Slider ─────────────────────────────────────────
-.sruti-range {
-  --bar-background: var(--sruti-border);
-  --bar-background-active: var(--sruti-primary);
+.swara-range {
+  --bar-background: var(--swara-border);
+  --bar-background-active: var(--swara-primary);
   --bar-height: 4px;
   --bar-border-radius: 4px;
-  --knob-background: var(--sruti-primary);
+  --knob-background: var(--swara-primary);
   --knob-size: 18px;
-  --knob-box-shadow: 0 2px 8px rgba(var(--sruti-primary-rgb), 0.7);
+  --knob-box-shadow: 0 2px 8px rgba(var(--swara-primary-rgb), 0.7);
   padding: 8px 0;
 
   &--bipolar {
-    --bar-background-active: var(--sruti-secondary);
-    --knob-background: var(--sruti-secondary);
-    --knob-box-shadow: 0 2px 8px rgba(var(--sruti-secondary-rgb), 0.7);
+    --bar-background-active: var(--swara-secondary);
+    --knob-background: var(--swara-secondary);
+    --knob-box-shadow: 0 2px 8px rgba(var(--swara-secondary-rgb), 0.7);
   }
 }
 
@@ -266,8 +266,8 @@
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: var(--sruti-text-tertiary);
-  font-family: var(--sruti-font-mono);
+  color: var(--swara-text-tertiary);
+  font-family: var(--swara-font-mono);
   margin-top: -4px;
 }
 
@@ -282,19 +282,19 @@
   flex: 1;
   height: 40px;
   border-radius: $radius-md;
-  border: 1px solid var(--sruti-border);
-  background: var(--sruti-bg-card);
-  color: var(--sruti-text-secondary);
+  border: 1px solid var(--swara-border);
+  background: var(--swara-bg-card);
+  color: var(--swara-text-secondary);
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
 
   &.selected {
-    background: var(--sruti-primary);
+    background: var(--swara-primary);
     border-color: transparent;
     color: white;
-    box-shadow: 0 4px 12px rgba(var(--sruti-primary-rgb), 0.5);
+    box-shadow: 0 4px 12px rgba(var(--swara-primary-rgb), 0.5);
   }
 }
 
@@ -309,19 +309,19 @@
   width: 100%;
   padding: $spacing-3 $spacing-4;
   border-radius: $radius-md;
-  border: 1px solid var(--sruti-border);
-  background: var(--sruti-bg-card);
-  color: var(--sruti-text-secondary);
+  border: 1px solid var(--swara-border);
+  background: var(--swara-bg-card);
+  color: var(--swara-text-secondary);
   font-size: 14px;
   font-weight: 600;
-  font-family: var(--sruti-font-mono);
+  font-family: var(--swara-font-mono);
   text-align: left;
   cursor: pointer;
   transition: all 0.15s ease;
 
   &.selected {
-    background: var(--sruti-gradient-card);
-    border-color: rgba(var(--sruti-primary-rgb), 0.4);
-    color: var(--sruti-primary);
+    background: var(--swara-gradient-card);
+    border-color: rgba(var(--swara-primary-rgb), 0.4);
+    color: var(--swara-primary);
   }
 }

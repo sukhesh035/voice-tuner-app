@@ -57,16 +57,16 @@ function getGrade(score: number): Grade {
     <ion-content *ngIf="report" class="ion-padding">
 
       <!-- ─── Grade Hero ───────────────────────────────────────────────── -->
-      <div class="grade-hero sruti-card" style="text-align:center; margin-bottom:1.5rem; padding:2rem;">
+      <div class="grade-hero swara-card" style="text-align:center; margin-bottom:1.5rem; padding:2rem;">
         <div
           class="grade-badge"
           [style.color]="grade.color"
           [style.border-color]="grade.color"
         >{{ grade.label }}</div>
         <div style="font-size:2.5rem; font-weight:800; margin:0.5rem 0;">
-          {{ report.score }}<span style="font-size:1rem; color:var(--sruti-text-muted);">/100</span>
+          {{ report.score }}<span style="font-size:1rem; color:var(--swara-text-muted);">/100</span>
         </div>
-        <div style="color:var(--sruti-text-muted); font-size:0.9rem;">
+        <div style="color:var(--swara-text-muted); font-size:0.9rem;">
           {{ report.mode | titlecase }} &bull; {{ report.key }} &bull; {{ formattedDuration }}
         </div>
         <div *ngIf="raga" style="margin-top:0.5rem;">
@@ -78,14 +78,14 @@ function getGrade(score: number): Grade {
 
       <!-- ─── Key Metrics ──────────────────────────────────────────────── -->
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
-        <div class="sruti-stat-card" style="text-align:center;">
-          <div class="metric-value" style="color:var(--sruti-secondary);">
+        <div class="swara-stat-card" style="text-align:center;">
+          <div class="metric-value" style="color:var(--swara-secondary);">
             {{ report.avgAccuracy | number:'1.0-0' }}<span style="font-size:1rem;">%</span>
           </div>
           <div class="metric-label">Avg Accuracy</div>
         </div>
-        <div class="sruti-stat-card" style="text-align:center;">
-          <div class="metric-value" style="color:var(--sruti-accent);">
+        <div class="swara-stat-card" style="text-align:center;">
+          <div class="metric-value" style="color:var(--swara-accent);">
             {{ (report.stabilityScore * 100) | number:'1.0-0' }}<span style="font-size:1rem;">%</span>
           </div>
           <div class="metric-label">Pitch Stability</div>
@@ -93,33 +93,33 @@ function getGrade(score: number): Grade {
       </div>
 
       <!-- ─── Note Accuracy Bars ───────────────────────────────────────── -->
-      <div class="sruti-card" style="margin-bottom:1.5rem;">
+      <div class="swara-card" style="margin-bottom:1.5rem;">
         <h4 style="margin:0 0 1rem;">Note Accuracy</h4>
         <div *ngFor="let note of noteList" style="margin-bottom:0.75rem;">
           <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
             <span style="font-weight:600;">{{ note.name }}</span>
-            <span style="color:var(--sruti-text-muted);">{{ note.value | number:'1.0-0' }}%</span>
+            <span style="color:var(--swara-text-muted);">{{ note.value | number:'1.0-0' }}%</span>
           </div>
-          <div class="sruti-progress-bar">
+          <div class="swara-progress-bar">
             <div
-              class="sruti-progress-fill"
+              class="swara-progress-fill"
               [style.width.%]="note.value"
               [style.background]="noteColor(note.value)"
             ></div>
           </div>
         </div>
-        <div *ngIf="noteList.length === 0" style="color:var(--sruti-text-muted); text-align:center;">
+        <div *ngIf="noteList.length === 0" style="color:var(--swara-text-muted); text-align:center;">
           No note data recorded
         </div>
       </div>
 
       <!-- ─── AI Summary ───────────────────────────────────────────────── -->
-      <div *ngIf="report.aiSummary" class="sruti-card" style="margin-bottom:1.5rem;">
+      <div *ngIf="report.aiSummary" class="swara-card" style="margin-bottom:1.5rem;">
         <h4 style="margin:0 0 0.75rem;">
           <ion-icon name="sparkles-outline" style="vertical-align:middle; margin-right:0.5rem;"></ion-icon>
           AI Coach Feedback
         </h4>
-        <p style="color:var(--sruti-text-secondary); line-height:1.6;">{{ report.aiSummary }}</p>
+        <p style="color:var(--swara-text-secondary); line-height:1.6;">{{ report.aiSummary }}</p>
       </div>
 
       <!-- ─── Actions ──────────────────────────────────────────────────── -->
@@ -157,9 +157,9 @@ function getGrade(score: number): Grade {
       margin: 0 auto 1rem;
     }
     .metric-value { font-size: 2rem; font-weight: 800; }
-    .metric-label { font-size: 0.8rem; color: var(--sruti-text-muted); margin-top: 0.25rem; }
-    .sruti-progress-bar { height: 0.5rem; background: var(--sruti-surface-alt); border-radius: 999px; overflow: hidden; }
-    .sruti-progress-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
+    .metric-label { font-size: 0.8rem; color: var(--swara-text-muted); margin-top: 0.25rem; }
+    .swara-progress-bar { height: 0.5rem; background: var(--swara-surface-alt); border-radius: 999px; overflow: hidden; }
+    .swara-progress-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
   `],
 })
 export class SessionReportPage implements OnInit {

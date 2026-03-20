@@ -22,21 +22,21 @@
     "deploy-dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx cdk deploy SrutiStackDev --require-approval never --ci",
+        "command": "npx cdk deploy SwaraStackDev --require-approval never --ci",
         "cwd": "apps/infra"
       }
     },
     "deploy-prod": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "DEPLOY_PROD=1 npx cdk deploy SrutiStackProd --require-approval never --ci",
+        "command": "DEPLOY_PROD=1 npx cdk deploy SwaraStackProd --require-approval never --ci",
         "cwd": "apps/infra"
       }
     },
     "destroy-dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx cdk destroy SrutiStackDev --force",
+        "command": "npx cdk destroy SwaraStackDev --force",
         "cwd": "apps/infra"
       }
     }

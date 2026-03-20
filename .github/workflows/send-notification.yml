@@ -45,7 +45,7 @@ jobs:
           echo "Invoking notifications Lambda with payload: $PAYLOAD"
 
           aws lambda invoke \
-            --function-name sruti-prod-notifications \
+            --function-name swara-prod-notifications \
             --payload "$PAYLOAD_B64" \
             --region ${{ env.AWS_REGION }} \
             /tmp/response.json

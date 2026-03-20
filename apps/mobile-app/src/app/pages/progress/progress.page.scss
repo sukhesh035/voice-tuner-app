@@ -3,13 +3,13 @@
   justify-content: center;
   align-items: center;
   padding: 80px 0;
-  ion-spinner { --color: var(--sruti-primary); width: 40px; height: 40px; }
+  ion-spinner { --color: var(--swara-primary); width: 40px; height: 40px; }
 }
 
 .no-sessions {
   padding: 24px;
   text-align: center;
-  &__text { color: var(--sruti-text-secondary); font-size: 14px; }
+  &__text { color: var(--swara-text-secondary); font-size: 14px; }
 }
 
 .progress-page {
@@ -25,7 +25,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   margin-bottom: 12px;
 }
 
@@ -66,7 +66,7 @@
   justify-content: center;
   font-size: 28px;
   font-weight: 800;
-  color: var(--sruti-text-primary);
+  color: var(--swara-text-primary);
 }
 
 .overall-title {
@@ -76,7 +76,7 @@
 
 .overall-sub {
   font-size: 13px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 }
 
 // ── Weekly Cards ──────────────────────────────────────────────────────────────
@@ -93,20 +93,20 @@
 
 .week-day-name {
   font-size: 10px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   font-weight: 600;
 }
 
 .week-day-acc {
   font-size: 11px;
   font-weight: 700;
-  color: var(--sruti-primary);
+  color: var(--swara-primary);
 }
 
-.sruti-progress-bar {
+.swara-progress-bar {
   margin: 8px 0;
   height: 4px;
-  background: var(--sruti-border);
+  background: var(--swara-border);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -114,7 +114,7 @@
 .progress-fill {
   height: 100%;
   border-radius: 99px;
-  background: var(--sruti-primary);
+  background: var(--swara-primary);
 }
 
 // ── Note Accuracy Grid ────────────────────────────────────────────────────────
@@ -141,7 +141,7 @@
 .note-acc-bar {
   flex: 1;
   height: 6px;
-  background: var(--sruti-border);
+  background: var(--swara-border);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -156,7 +156,7 @@
   text-align: right;
   font-size: 13px;
   font-weight: 600;
-  font-family: var(--sruti-font-mono);
+  font-family: var(--swara-font-mono);
 }
 
 // ── AI Coach Card ─────────────────────────────────────────────────────────────
@@ -177,7 +177,7 @@
 
 .coach-text {
   font-size: 14px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
   line-height: 1.5;
   margin: 0 0 10px;
 }
@@ -224,11 +224,11 @@
 
 .session-meta {
   font-size: 12px;
-  color: var(--sruti-text-secondary);
+  color: var(--swara-text-secondary);
 }
 
 .session-score {
   font-size: 18px;
   font-weight: 800;
-  font-family: var(--sruti-font-mono);
+  font-family: var(--swara-font-mono);
 }

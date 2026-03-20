@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        sruti: {
+        swara: {
           primary:    '#7C4DFF',
           secondary:  '#00E5C2',
           accent:     '#FF6B35',
@@ -35,9 +35,9 @@ module.exports = {
         mono:    ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       borderRadius: {
-        'sruti': '1.25rem',
-        'sruti-sm': '0.75rem',
-        'sruti-lg': '2rem',
+        'swara': '1.25rem',
+        'swara-sm': '0.75rem',
+        'swara-lg': '2rem',
       },
       boxShadow: {
         'glow':    '0 0 20px rgba(124,77,255,0.4), 0 0 60px rgba(124,77,255,0.1)',
@@ -45,7 +45,7 @@ module.exports = {
         'glass':   '0 8px 32px rgba(0,0,0,0.4)',
       },
       backdropBlur: {
-        'sruti': '20px',
+        'swara': '20px',
       },
       animation: {
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',

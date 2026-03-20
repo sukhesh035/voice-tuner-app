@@ -68,7 +68,7 @@ async function sendEmail(payload: EmailPayload): Promise<void> {
     auth: { user, pass },
   });
   await transporter.sendMail({
-    from: `"Sruti" <${user}>`,
+    from: `"Swara" <${user}>`,
     to:      payload.to,
     subject: payload.subject,
     html:    payload.html,
@@ -78,12 +78,12 @@ async function sendEmail(payload: EmailPayload): Promise<void> {
 function buildVerificationEmail(email: string, code: string): EmailPayload {
   return {
     to:      email,
-    subject: 'Verify your Sruti account',
+    subject: 'Verify your Swara account',
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
         <h1 style="font-size:28px;font-weight:900;background:linear-gradient(135deg,#b388ff,#e040fb);
                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;">
-          Sruti
+          Swara
         </h1>
         <p style="color:#555;font-size:15px;margin-bottom:24px;">Indian Classical Music Companion</p>
         <h2 style="font-size:20px;font-weight:700;color:#111;">Verify your email</h2>
@@ -95,7 +95,7 @@ function buildVerificationEmail(email: string, code: string): EmailPayload {
           <span style="font-size:36px;font-weight:900;letter-spacing:8px;color:#7c3aed;">${code}</span>
         </div>
         <p style="color:#888;font-size:13px;">
-          If you didn't create a Sruti account, you can safely ignore this email.
+          If you didn't create a Swara account, you can safely ignore this email.
         </p>
       </div>
     `,
@@ -105,12 +105,12 @@ function buildVerificationEmail(email: string, code: string): EmailPayload {
 function buildForgotPasswordEmail(email: string, code: string): EmailPayload {
   return {
     to:      email,
-    subject: 'Reset your Sruti password',
+    subject: 'Reset your Swara password',
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
         <h1 style="font-size:28px;font-weight:900;background:linear-gradient(135deg,#b388ff,#e040fb);
                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;">
-          Sruti
+          Swara
         </h1>
         <p style="color:#555;font-size:15px;margin-bottom:24px;">Indian Classical Music Companion</p>
         <h2 style="font-size:20px;font-weight:700;color:#111;">Reset your password</h2>

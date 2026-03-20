@@ -189,7 +189,7 @@ function buildFeedback(
 
         <!-- ── Shruti Trainer ──────────────────────────────── -->
         <div *ngIf="selectedMode === 'shruti'" class="shruti-section animate-fade-in">
-          <div class="mode-card sruti-card">
+          <div class="mode-card swara-card">
             <div class="mode-card__title">Shruti Trainer</div>
             <div class="mode-card__desc">App plays a note — then you sing it back. Match pitch perfectly.</div>
           </div>
@@ -255,7 +255,7 @@ function buildFeedback(
           <!-- Round controls -->
           <div class="shruti-round-controls" *ngIf="sessionActive">
             <button
-              class="sruti-btn sruti-btn--secondary round-btn"
+              class="swara-btn swara-btn--secondary round-btn"
               *ngIf="shrutiPhase === 'result'"
               (click)="nextShrutiRound()"
             >
@@ -360,7 +360,7 @@ function buildFeedback(
 
           <!-- Raga Detail -->
           <div class="raga-detail" *ngIf="selectedRaga">
-            <div class="sruti-card raga-info-card">
+            <div class="swara-card raga-info-card">
               <div class="raga-info-header">
                 <div class="raga-info-mela" *ngIf="selectedRaga.melaNumber"
                   [style.background]="selectedRaga.color">
@@ -527,10 +527,10 @@ function buildFeedback(
 
               <!-- Action buttons -->
               <div class="raga-result-actions">
-                <button class="sruti-btn sruti-btn--primary round-btn" (click)="practiceRagaAgain()">
+                <button class="swara-btn swara-btn--primary round-btn" (click)="practiceRagaAgain()">
                   Practice Again
                 </button>
-                <button class="sruti-btn sruti-btn--secondary round-btn" (click)="stopSession()">
+                <button class="swara-btn swara-btn--secondary round-btn" (click)="stopSession()">
                   Change Raga
                 </button>
               </div>
@@ -549,7 +549,7 @@ function buildFeedback(
             <!-- Note Grid (when not actively in a phase) -->
             <div class="notes-section" *ngIf="!sessionActive || ragaPhase === 'idle'">
               <div class="notes-label">Raga Notes</div>
-              <div class="sruti-note-grid">
+              <div class="swara-note-grid">
                 <div
                   *ngFor="let note of allNotes; let i = index"
                   class="note-chip"
@@ -576,7 +576,7 @@ function buildFeedback(
         <div *ngIf="selectedMode === 'free'" class="ear-section animate-fade-in">
 
           <!-- Intro card (before session starts) -->
-          <div class="sruti-card ear-intro" *ngIf="!sessionActive">
+          <div class="swara-card ear-intro" *ngIf="!sessionActive">
             <div class="ear-intro__title">Ear Training</div>
             <div class="ear-intro__desc">
               Test your note recognition. The app plays a random note &mdash; can you identify it?
@@ -598,7 +598,7 @@ function buildFeedback(
           </div>
 
           <!-- Score bar (during session) -->
-          <div class="sruti-card ear-scorebar" *ngIf="sessionActive">
+          <div class="swara-card ear-scorebar" *ngIf="sessionActive">
             <div class="ear-scorebar__item">
               <div class="ear-scorebar__value">{{ earScore }}</div>
               <div class="ear-scorebar__label">Score</div>
@@ -669,7 +669,7 @@ function buildFeedback(
             </div>
 
             <div class="ear-next-row">
-              <button class="sruti-btn sruti-btn--primary round-btn" (click)="nextEarRound()">
+              <button class="swara-btn swara-btn--primary round-btn" (click)="nextEarRound()">
                 Next Round
               </button>
             </div>
@@ -680,7 +680,7 @@ function buildFeedback(
         <!-- ── Start / Stop ────────────────────────────────── -->
         <div class="session-controls">
           <button
-            class="sruti-btn sruti-btn--primary session-btn"
+            class="swara-btn swara-btn--primary session-btn"
             *ngIf="!sessionActive"
             (click)="startSession()"
             [disabled]="selectedMode === 'raga' && !selectedRaga"
@@ -688,7 +688,7 @@ function buildFeedback(
             Start Practice
           </button>
           <button
-            class="sruti-btn sruti-btn--primary session-btn session-btn--stop"
+            class="swara-btn swara-btn--primary session-btn session-btn--stop"
             *ngIf="sessionActive"
             (click)="stopSession()"
           >
@@ -700,15 +700,15 @@ function buildFeedback(
         <div class="result-section animate-slide-up" *ngIf="lastResult">
           <div class="result-header">Session Complete</div>
           <div class="stats-grid">
-            <div class="sruti-stat-card">
+            <div class="swara-stat-card">
               <div class="stat-value">{{ lastResult.overallAccuracy | number:'1.0-0' }}%</div>
               <div class="stat-label">Accuracy</div>
             </div>
-            <div class="sruti-stat-card">
+            <div class="swara-stat-card">
               <div class="stat-value">{{ lastResult.pitchStability | number:'1.0-0' }}</div>
               <div class="stat-label">Stability</div>
             </div>
-            <div class="sruti-stat-card">
+            <div class="swara-stat-card">
               <div class="stat-value">{{ lastResult.duration | number:'1.0-0' }}s</div>
               <div class="stat-label">Duration</div>
             </div>
@@ -718,7 +718,7 @@ function buildFeedback(
             <div class="rec-header">Recommendations</div>
             <div
               *ngFor="let rec of lastResult.recommendations"
-              class="rec-item sruti-card"
+              class="rec-item swara-card"
             >
               &#128161; {{ rec }}
             </div>
@@ -1407,9 +1407,12 @@ export class PracticePage implements OnInit, OnDestroy {
     this.earPhase       = 'playing';
     this.cdr.markForCheck();
 
-    // Tune tanpura to the target note's pitch
-    const semitone = ALL_SHRUTI_NOTES.indexOf(this.earTargetNote);
-    this.tanpura.setKey(SEMITONE_TO_KEY[semitone]);
+    // Stop any in-flight playback before changing key and restarting.
+    // setKey() internally calls stop()+play() if isPlaying is true, which
+    // would create a double scheduler when followed by an explicit play().
+    // Instead: stop first, patch key directly, then play once.
+    this.tanpura.stop();
+    this.tanpura.setKey(SEMITONE_TO_KEY[ALL_SHRUTI_NOTES.indexOf(this.earTargetNote)]);
     await this.tanpura.play();
 
     // After PLAY_DURATION_MS, stop tanpura and transition to guess phase
@@ -1451,8 +1454,9 @@ export class PracticePage implements OnInit, OnDestroy {
   async replayEarNote(): Promise<void> {
     if (this.earPhase !== 'guessing') return;
 
-    const semitone = ALL_SHRUTI_NOTES.indexOf(this.earTargetNote);
-    this.tanpura.setKey(SEMITONE_TO_KEY[semitone]);
+    // Stop first to avoid double scheduler (same pattern as startEarRound)
+    this.tanpura.stop();
+    this.tanpura.setKey(SEMITONE_TO_KEY[ALL_SHRUTI_NOTES.indexOf(this.earTargetNote)]);
     await this.tanpura.play();
 
     // Stop after PLAY_DURATION_MS
@@ -1470,6 +1474,9 @@ export class PracticePage implements OnInit, OnDestroy {
       score:  this.earScore,
       streak: this.earBestStreak,
     });
+    // Clear any stale replay timer before starting the next round to prevent
+    // a pending stopAndSilence() from firing mid-way through the new round's playback.
+    this.clearEarPhaseTimer();
     this.startEarRound();
   }
 
