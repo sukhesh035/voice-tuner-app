@@ -182,7 +182,7 @@ const MELAKARTA_META: Record<number, [string, string, string]> = {
   18: ['Any time',  'Regal, Powerful',             'Pa-centric with all natural upper notes — strong, kingly character.'],
   19: ['Any time',  'Resonant, Mysterious',        'Re-centric with komal Ga and Dha — shimmering, bell-like resonance.'],
   20: ['Night',     'Serious, Deep',               'Parent of Natabhairavi — rich komal notes evoke depth and gravity.'],
-  21: ['Evening',   'Luminous, Serene',            'Natural Dha with komal Ni — like rays of light at dusk.'],
+  21: ['Evening',   'Luminous, Serene',            'Parent of Kiravani. Natural Ni with komal Re and Ga♭ — moving, expressive.'],
   22: ['Afternoon', 'Expressive, Emotive',         'Parent of Kharaharapriya / Kafi — one of the most versatile scales.'],
   23: ['Morning',   'Devotional, Serene',          'Pa-centric with komal Dha. Quiet morning devotion.'],
   24: ['Evening',   'Flowing, Calm',               'Named after Varuna, god of water — smooth, flowing character.'],
@@ -192,12 +192,12 @@ const MELAKARTA_META: Record<number, [string, string, string]> = {
   28: ['Evening',   'Joyful, Festive',             'Parent of Harikambhoji / Khamaj. Natural Ga and Dha, komal Ni — celebratory.'],
   29: ['Evening',   'Majestic, Bright',            'Parent of Shankarabharanam / Bilawal — the natural scale. Full, majestic.'],
   30: ['Any time',  'Stable, Grounded',            'Pa-centric with all natural notes. Epitome of tonal balance.'],
-  31: ['Any time',  'Contemplative, Reserved',     'Ga-centric with komal Dha and Ni. Rarely performed — scholarly.'],
-  32: ['Evening',   'Intense, Inward',             'Natural Ni with komal Dha — an unusual, intense combination.'],
-  33: ['Evening',   'Graceful, Flowing',           'Komal Ni with natural Dha — smooth, flowing lines.'],
-  34: ['Any time',  'Assertive, Clear',            'All natural upper notes — clean, assertive character.'],
-  35: ['Night',     'Dark, Mysterious',            'Komal Dha and Ni return in mela 35 — shadowy, nocturnal quality.'],
-  36: ['Night',     'Strong, Resolute',            'Natural Ni with komal Dha — resolute and powerful.'],
+  31: ['Any time',  'Contemplative, Reserved',     'R3G3 scale — Ga♭ and Ga together create an unusual, rarely-performed tone.'],
+  32: ['Evening',   'Intense, Inward',             'Ga♭ and Ga with Dha♭ Ni♭ — a striking, inward-looking combination.'],
+  33: ['Evening',   'Graceful, Flowing',           'Ga♭ and Ga with Dha♭ Ni — smooth lines in the Rutu chakra.'],
+  34: ['Any time',  'Assertive, Clear',            'Ga♭ and Ga with natural Dha Ni♭ — clean, assertive character.'],
+  35: ['Night',     'Dark, Mysterious',            'Ga♭ and Ga with Dha Ni — wide range, shadowy nocturnal quality.'],
+  36: ['Night',     'Strong, Resolute',            'R3G3 closes the shuddha-Ma half. Ni♭ Ni as Dha-Ni — resolute and powerful.'],
   37: ['Evening',   'Austere, Ancient',            'First prati-Ma mela. Komal Re and Ga with Ma# — ancient, austere mood.'],
   38: ['Evening',   'Vast, Oceanic',               'Named after the ocean (Jala+Arnava). Expansive, unending quality.'],
   39: ['Evening',   'Pensive, Unusual',            'Natural Dha with komal Ni — an uncommon, contemplative combination.'],
@@ -236,102 +236,107 @@ const MELAKARTA_META: Record<number, [string, string, string]> = {
   72: ['Evening',   'Joyful, Aesthetic',           'Named after the lover of aesthetics (Rasika+Priya). Joyful and refined.'],
 };
 
+// Dha-Ni pairs for the 6 positions within each chakra (per Wikipedia standard):
+// D1=Dha♭(8), D2=N1=Dha(9), D3=N2=Ni♭(10), N3=Ni(11)
+// Pos1=D1N1(Dha♭,Dha) Pos2=D1N2(Dha♭,Ni♭) Pos3=D1N3(Dha♭,Ni)
+// Pos4=D2N2(Dha,Ni♭)  Pos5=D2N3(Dha,Ni)   Pos6=D3N3(Ni♭,Ni)
+
 const MELAKARTA_DATA: MelaSpec[] = [
-  // ── Chakra 1: Indu (1–6) — Shuddha Ma, Re♭ Ga♭ ─────
-  [1,  'Kanakangi',        'कनकांगी',     ['Sa','Re♭','Ga♭','Ma','Pa','Dha♭','Ni♭'], 'Ma'],
-  [2,  'Ratnangi',         'रत्नांगी',     ['Sa','Re♭','Ga♭','Ma','Pa','Dha♭','Ni'],  'Ma'],
-  [3,  'Ganamurti',        'गानमूर्ति',    ['Sa','Re♭','Ga♭','Ma','Pa','Dha','Ni♭'],  'Ma'],
-  [4,  'Vanaspati',        'वनस्पति',     ['Sa','Re♭','Ga♭','Ma','Pa','Dha','Ni'],   'Ma'],
-  [5,  'Manavati',         'मानवती',      ['Sa','Re♭','Ga♭','Ma','Pa','Dha♭','Ni♭'], 'Pa'],
-  [6,  'Tanarupi',         'तानरूपी',     ['Sa','Re♭','Ga♭','Ma','Pa','Dha♭','Ni'],  'Pa'],
+  // ── Chakra 1: Indu (1–6) — Shuddha Ma, R1G1 (Re♭, Re) ──
+  [1,  'Kanakangi',             'कनकांगी',            ['Sa','Re♭','Re','Ma','Pa','Dha♭','Dha'],  'Ma'],
+  [2,  'Ratnangi',              'रत्नांगी',            ['Sa','Re♭','Re','Ma','Pa','Dha♭','Ni♭'], 'Ma'],
+  [3,  'Ganamurti',             'गानमूर्ति',           ['Sa','Re♭','Re','Ma','Pa','Dha♭','Ni'],  'Ma'],
+  [4,  'Vanaspati',             'वनस्पति',            ['Sa','Re♭','Re','Ma','Pa','Dha','Ni♭'],  'Ma'],
+  [5,  'Manavati',              'मानवती',             ['Sa','Re♭','Re','Ma','Pa','Dha','Ni'],   'Pa'],
+  [6,  'Tanarupi',              'तानरूपी',            ['Sa','Re♭','Re','Ma','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 2: Netra (7–12) — Shuddha Ma, Re♭ Ga ────
-  [7,  'Senavati',         'सेनावती',      ['Sa','Re♭','Ga','Ma','Pa','Dha♭','Ni♭'],  'Ma'],
-  [8,  'Hanumatodi',       'हनुमतोड़ी',    ['Sa','Re♭','Ga','Ma','Pa','Dha♭','Ni'],   'Ma'],
-  [9,  'Dhenuka',          'धेनुका',       ['Sa','Re♭','Ga','Ma','Pa','Dha','Ni♭'],   'Ma'],
-  [10, 'Natakapriya',      'नाटकप्रिया',   ['Sa','Re♭','Ga','Ma','Pa','Dha','Ni'],    'Ma'],
-  [11, 'Kokilapriya',      'कोकिलप्रिया',  ['Sa','Re♭','Ga','Ma','Pa','Dha♭','Ni♭'],  'Pa'],
-  [12, 'Rupavati',         'रूपवती',       ['Sa','Re♭','Ga','Ma','Pa','Dha♭','Ni'],   'Pa'],
+  // ── Chakra 2: Netra (7–12) — Shuddha Ma, R1G2 (Re♭, Ga♭) ─
+  [7,  'Senavati',              'सेनावती',             ['Sa','Re♭','Ga♭','Ma','Pa','Dha♭','Dha'],  'Ma'],
+  [8,  'Hanumatodi',            'हनुमतोड़ी',           ['Sa','Re♭','Ga♭','Ma','Pa','Dha♭','Ni♭'], 'Ma'],
+  [9,  'Dhenuka',               'धेनुका',              ['Sa','Re♭','Ga♭','Ma','Pa','Dha♭','Ni'],  'Ma'],
+  [10, 'Natakapriya',           'नाटकप्रिया',          ['Sa','Re♭','Ga♭','Ma','Pa','Dha','Ni♭'],  'Ma'],
+  [11, 'Kokilapriya',           'कोकिलप्रिया',         ['Sa','Re♭','Ga♭','Ma','Pa','Dha','Ni'],   'Pa'],
+  [12, 'Rupavati',              'रूपवती',              ['Sa','Re♭','Ga♭','Ma','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 3: Agni (13–18) — Shuddha Ma, Re♭ Ga ────
-  [13, 'Gayakapriya',      'गायकप्रिया',   ['Sa','Re♭','Ga','Ma','Pa','Dha♭','Ni♭'],  'Ga'],
-  [14, 'Vakulabharanam',   'वकुलाभरणम्',  ['Sa','Re♭','Ga','Ma','Pa','Dha♭','Ni'],   'Ga'],
-  [15, 'Mayamalavagowla',  'मायामालवगौला', ['Sa','Re♭','Ga','Ma','Pa','Dha♭','Ni'],   'Ga'],
-  [16, 'Chakravakam',      'चक्रवाकम्',    ['Sa','Re♭','Ga','Ma','Pa','Dha','Ni♭'],   'Ga'],
-  [17, 'Suryakantam',      'सूर्यकान्तम्', ['Sa','Re♭','Ga','Ma','Pa','Dha','Ni'],    'Ga'],
-  [18, 'Hatakambari',      'हाटकाम्बरी',   ['Sa','Re♭','Ga','Ma','Pa','Dha','Ni'],    'Pa'],
+  // ── Chakra 3: Agni (13–18) — Shuddha Ma, R1G3 (Re♭, Ga) ──
+  [13, 'Gayakapriya',           'गायकप्रिया',          ['Sa','Re♭','Ga','Ma','Pa','Dha♭','Dha'],  'Ga'],
+  [14, 'Vakulabharanam',        'वकुलाभरणम्',         ['Sa','Re♭','Ga','Ma','Pa','Dha♭','Ni♭'], 'Ga'],
+  [15, 'Mayamalavagowla',       'मायामालवगौला',        ['Sa','Re♭','Ga','Ma','Pa','Dha♭','Ni'],  'Ga'],
+  [16, 'Chakravakam',           'चक्रवाकम्',           ['Sa','Re♭','Ga','Ma','Pa','Dha','Ni♭'],  'Ga'],
+  [17, 'Suryakantam',           'सूर्यकान्तम्',        ['Sa','Re♭','Ga','Ma','Pa','Dha','Ni'],   'Ga'],
+  [18, 'Hatakambari',           'हाटकाम्बरी',          ['Sa','Re♭','Ga','Ma','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 4: Veda (19–24) — Shuddha Ma, Re Ga ─────
-  [19, 'Jhankaradhwani',   'झंकारध्वनि',  ['Sa','Re','Ga♭','Ma','Pa','Dha♭','Ni♭'],  'Re'],
-  [20, 'Natabhairavi',     'नटभैरवी',     ['Sa','Re','Ga♭','Ma','Pa','Dha♭','Ni'],   'Re'],
-  [21, 'Kiranavali',       'किरणावली',     ['Sa','Re','Ga♭','Ma','Pa','Dha','Ni♭'],   'Re'],
-  [22, 'Kharaharapriya',   'खरहरप्रिया',   ['Sa','Re','Ga♭','Ma','Pa','Dha','Ni'],    'Re'],
-  [23, 'Gourimanohari',    'गौरीमनोहरी',   ['Sa','Re','Ga♭','Ma','Pa','Dha♭','Ni♭'],  'Pa'],
-  [24, 'Varunapriya',      'वरुणप्रिया',    ['Sa','Re','Ga♭','Ma','Pa','Dha♭','Ni'],   'Pa'],
+  // ── Chakra 4: Veda (19–24) — Shuddha Ma, R2G2 (Re, Ga♭) ──
+  [19, 'Jhankaradhwani',        'झंकारध्वनि',         ['Sa','Re','Ga♭','Ma','Pa','Dha♭','Dha'],  'Re'],
+  [20, 'Natabhairavi',          'नटभैरवी',            ['Sa','Re','Ga♭','Ma','Pa','Dha♭','Ni♭'], 'Re'],
+  [21, 'Kiravani',              'किरवाणी',             ['Sa','Re','Ga♭','Ma','Pa','Dha♭','Ni'],  'Re'],
+  [22, 'Kharaharapriya',        'खरहरप्रिया',          ['Sa','Re','Ga♭','Ma','Pa','Dha','Ni♭'],  'Re'],
+  [23, 'Gourimanohari',         'गौरीमनोहरी',          ['Sa','Re','Ga♭','Ma','Pa','Dha','Ni'],   'Pa'],
+  [24, 'Varunapriya',           'वरुणप्रिया',           ['Sa','Re','Ga♭','Ma','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 5: Bana (25–30) — Shuddha Ma, Re Ga ─────
-  [25, 'Mararanjani',      'मररंजनी',      ['Sa','Re','Ga♭','Ma','Pa','Dha♭','Ni♭'],  'Dha♭'],
-  [26, 'Charukesi',        'चारुकेशी',     ['Sa','Re','Ga♭','Ma','Pa','Dha♭','Ni'],   'Dha♭'],
-  [27, 'Sarasangi',        'सरसांगी',      ['Sa','Re','Ga♭','Ma','Pa','Dha','Ni♭'],   'Dha'],
-  [28, 'Harikambhoji',     'हरिकाम्भोजी',  ['Sa','Re','Ga','Ma','Pa','Dha','Ni♭'],    'Dha'],
-  [29, 'Dheerasankarabharanam', 'धीरशंकराभरणम्', ['Sa','Re','Ga','Ma','Pa','Dha','Ni'], 'Dha'],
-  [30, 'Naganandini',      'नागानन्दिनी',   ['Sa','Re','Ga','Ma','Pa','Dha','Ni'],     'Pa'],
+  // ── Chakra 5: Bana (25–30) — Shuddha Ma, R2G3 (Re, Ga) ───
+  [25, 'Mararanjani',           'मररंजनी',             ['Sa','Re','Ga','Ma','Pa','Dha♭','Dha'],  'Dha♭'],
+  [26, 'Charukesi',             'चारुकेशी',            ['Sa','Re','Ga','Ma','Pa','Dha♭','Ni♭'], 'Dha♭'],
+  [27, 'Sarasangi',             'सरसांगी',             ['Sa','Re','Ga','Ma','Pa','Dha♭','Ni'],  'Dha'],
+  [28, 'Harikambhoji',          'हरिकाम्भोजी',         ['Sa','Re','Ga','Ma','Pa','Dha','Ni♭'],  'Dha'],
+  [29, 'Dheerasankarabharanam', 'धीरशंकराभरणम्',      ['Sa','Re','Ga','Ma','Pa','Dha','Ni'],   'Dha'],
+  [30, 'Naganandini',           'नागानन्दिनी',          ['Sa','Re','Ga','Ma','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 6: Rutu (31–36) — Shuddha Ma, Re Ga ─────
-  [31, 'Yagapriya',        'यागप्रिया',     ['Sa','Re','Ga','Ma','Pa','Dha♭','Ni♭'],   'Ga'],
-  [32, 'Ragavardhini',     'रागवर्धिनी',    ['Sa','Re','Ga','Ma','Pa','Dha♭','Ni'],    'Ga'],
-  [33, 'Gangeyabhushini',  'गांगेयभूषिणी',  ['Sa','Re','Ga','Ma','Pa','Dha','Ni♭'],    'Ga'],
-  [34, 'Vagadheeswari',    'वागधीश्वरी',   ['Sa','Re','Ga','Ma','Pa','Dha','Ni'],     'Ga'],
-  [35, 'Shulini',          'शूलिनी',       ['Sa','Re','Ga','Ma','Pa','Dha♭','Ni♭'],   'Pa'],
-  [36, 'Chalanata',        'चलनाट',       ['Sa','Re','Ga','Ma','Pa','Dha♭','Ni'],    'Pa'],
+  // ── Chakra 6: Rutu (31–36) — Shuddha Ma, R3G3 (Ga♭, Ga) ──
+  [31, 'Yagapriya',             'यागप्रिया',            ['Sa','Ga♭','Ga','Ma','Pa','Dha♭','Dha'],  'Ga'],
+  [32, 'Ragavardhini',          'रागवर्धिनी',           ['Sa','Ga♭','Ga','Ma','Pa','Dha♭','Ni♭'], 'Ga'],
+  [33, 'Gangeyabhushini',       'गांगेयभूषिणी',         ['Sa','Ga♭','Ga','Ma','Pa','Dha♭','Ni'],  'Ga'],
+  [34, 'Vagadheeswari',         'वागधीश्वरी',          ['Sa','Ga♭','Ga','Ma','Pa','Dha','Ni♭'],  'Ga'],
+  [35, 'Shulini',               'शूलिनी',              ['Sa','Ga♭','Ga','Ma','Pa','Dha','Ni'],   'Pa'],
+  [36, 'Chalanata',             'चलनाट',              ['Sa','Ga♭','Ga','Ma','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 7: Rishi (37–42) — Prati Ma, Re♭ Ga♭ ────
-  [37, 'Salagam',          'सालगम्',       ['Sa','Re♭','Ga♭','Ma#','Pa','Dha♭','Ni♭'], 'Ma#'],
-  [38, 'Jalarnavam',       'जलार्णवम्',    ['Sa','Re♭','Ga♭','Ma#','Pa','Dha♭','Ni'],  'Ma#'],
-  [39, 'Jhalavarali',      'झालवराली',     ['Sa','Re♭','Ga♭','Ma#','Pa','Dha','Ni♭'],  'Ma#'],
-  [40, 'Navaneetam',       'नवनीतम्',      ['Sa','Re♭','Ga♭','Ma#','Pa','Dha','Ni'],   'Ma#'],
-  [41, 'Pavani',           'पावनी',        ['Sa','Re♭','Ga♭','Ma#','Pa','Dha♭','Ni♭'], 'Pa'],
-  [42, 'Raghupriya',       'रघुप्रिया',     ['Sa','Re♭','Ga♭','Ma#','Pa','Dha♭','Ni'],  'Pa'],
+  // ── Chakra 7: Rishi (37–42) — Prati Ma, R1G1 (Re♭, Re) ──
+  [37, 'Salagam',               'सालगम्',              ['Sa','Re♭','Re','Ma#','Pa','Dha♭','Dha'],  'Ma#'],
+  [38, 'Jalarnavam',            'जलार्णवम्',           ['Sa','Re♭','Re','Ma#','Pa','Dha♭','Ni♭'], 'Ma#'],
+  [39, 'Jhalavarali',           'झालवराली',            ['Sa','Re♭','Re','Ma#','Pa','Dha♭','Ni'],  'Ma#'],
+  [40, 'Navaneetam',            'नवनीतम्',             ['Sa','Re♭','Re','Ma#','Pa','Dha','Ni♭'],  'Ma#'],
+  [41, 'Pavani',                'पावनी',               ['Sa','Re♭','Re','Ma#','Pa','Dha','Ni'],   'Pa'],
+  [42, 'Raghupriya',            'रघुप्रिया',            ['Sa','Re♭','Re','Ma#','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 8: Vasu (43–48) — Prati Ma, Re♭ Ga ──────
-  [43, 'Gavambhodi',       'गवाम्बोधी',    ['Sa','Re♭','Ga','Ma#','Pa','Dha♭','Ni♭'],  'Ma#'],
-  [44, 'Bhavapriya',       'भावप्रिया',     ['Sa','Re♭','Ga','Ma#','Pa','Dha♭','Ni'],   'Ma#'],
-  [45, 'Shubhapantuvarali','शुभपन्तुवराली', ['Sa','Re♭','Ga','Ma#','Pa','Dha','Ni♭'],   'Ma#'],
-  [46, 'Shadvidhamargini', 'षड्विधमार्गिणी', ['Sa','Re♭','Ga','Ma#','Pa','Dha','Ni'],    'Ma#'],
-  [47, 'Suvarnangi',       'सुवर्णांगी',    ['Sa','Re♭','Ga','Ma#','Pa','Dha♭','Ni♭'],  'Pa'],
-  [48, 'Divyamani',        'दिव्यमणी',     ['Sa','Re♭','Ga','Ma#','Pa','Dha♭','Ni'],   'Pa'],
+  // ── Chakra 8: Vasu (43–48) — Prati Ma, R1G2 (Re♭, Ga♭) ──
+  [43, 'Gavambhodi',            'गवाम्बोधी',           ['Sa','Re♭','Ga♭','Ma#','Pa','Dha♭','Dha'],  'Ma#'],
+  [44, 'Bhavapriya',            'भावप्रिया',            ['Sa','Re♭','Ga♭','Ma#','Pa','Dha♭','Ni♭'], 'Ma#'],
+  [45, 'Shubhapantuvarali',     'शुभपन्तुवराली',        ['Sa','Re♭','Ga♭','Ma#','Pa','Dha♭','Ni'],  'Ma#'],
+  [46, 'Shadvidhamargini',      'षड्विधमार्गिणी',       ['Sa','Re♭','Ga♭','Ma#','Pa','Dha','Ni♭'],  'Ma#'],
+  [47, 'Suvarnangi',            'सुवर्णांगी',           ['Sa','Re♭','Ga♭','Ma#','Pa','Dha','Ni'],   'Pa'],
+  [48, 'Divyamani',             'दिव्यमणी',            ['Sa','Re♭','Ga♭','Ma#','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 9: Brahma (49–54) — Prati Ma, Re♭ Ga ────
-  [49, 'Dhavalambari',     'धवलाम्बरी',    ['Sa','Re♭','Ga','Ma#','Pa','Dha♭','Ni♭'],  'Ga'],
-  [50, 'Namanarayani',     'नामनारायणी',   ['Sa','Re♭','Ga','Ma#','Pa','Dha♭','Ni'],   'Ga'],
-  [51, 'Kamavardhini',     'कामवर्धिनी',    ['Sa','Re♭','Ga','Ma#','Pa','Dha♭','Ni'],   'Ga'],
-  [52, 'Ramapriya',        'रामप्रिया',     ['Sa','Re♭','Ga','Ma#','Pa','Dha','Ni♭'],   'Ga'],
-  [53, 'Gamanashrama',     'गमनश्रमा',    ['Sa','Re♭','Ga','Ma#','Pa','Dha','Ni'],    'Ga'],
-  [54, 'Vishwambhari',     'विश्वम्भरी',    ['Sa','Re♭','Ga','Ma#','Pa','Dha','Ni'],    'Pa'],
+  // ── Chakra 9: Brahma (49–54) — Prati Ma, R1G3 (Re♭, Ga) ──
+  [49, 'Dhavalambari',          'धवलाम्बरी',           ['Sa','Re♭','Ga','Ma#','Pa','Dha♭','Dha'],  'Ga'],
+  [50, 'Namanarayani',          'नामनारायणी',          ['Sa','Re♭','Ga','Ma#','Pa','Dha♭','Ni♭'], 'Ga'],
+  [51, 'Kamavardhini',          'कामवर्धिनी',           ['Sa','Re♭','Ga','Ma#','Pa','Dha♭','Ni'],  'Ga'],
+  [52, 'Ramapriya',             'रामप्रिया',            ['Sa','Re♭','Ga','Ma#','Pa','Dha','Ni♭'],  'Ga'],
+  [53, 'Gamanashrama',          'गमनश्रमा',           ['Sa','Re♭','Ga','Ma#','Pa','Dha','Ni'],   'Ga'],
+  [54, 'Vishwambhari',          'विश्वम्भरी',           ['Sa','Re♭','Ga','Ma#','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 10: Disi (55–60) — Prati Ma, Re Ga♭ ─────
-  [55, 'Shamalangi',       'श्यामलांगी',    ['Sa','Re','Ga♭','Ma#','Pa','Dha♭','Ni♭'],  'Re'],
-  [56, 'Shanmukhapriya',   'षण्मुखप्रिया',  ['Sa','Re','Ga♭','Ma#','Pa','Dha♭','Ni'],   'Re'],
-  [57, 'Simhendramadhyamam','सिंहेन्द्रमध्यमम्', ['Sa','Re','Ga♭','Ma#','Pa','Dha','Ni♭'], 'Re'],
-  [58, 'Hemavati',         'हेमावती',       ['Sa','Re','Ga♭','Ma#','Pa','Dha','Ni'],    'Re'],
-  [59, 'Dharmavati',       'धर्मवती',       ['Sa','Re','Ga♭','Ma#','Pa','Dha♭','Ni♭'],  'Pa'],
-  [60, 'Neetimati',        'नीतिमती',       ['Sa','Re','Ga♭','Ma#','Pa','Dha♭','Ni'],   'Pa'],
+  // ── Chakra 10: Disi (55–60) — Prati Ma, R2G2 (Re, Ga♭) ───
+  [55, 'Shamalangi',            'श्यामलांगी',           ['Sa','Re','Ga♭','Ma#','Pa','Dha♭','Dha'],  'Re'],
+  [56, 'Shanmukhapriya',        'षण्मुखप्रिया',         ['Sa','Re','Ga♭','Ma#','Pa','Dha♭','Ni♭'], 'Re'],
+  [57, 'Simhendramadhyamam',    'सिंहेन्द्रमध्यमम्',   ['Sa','Re','Ga♭','Ma#','Pa','Dha♭','Ni'],  'Re'],
+  [58, 'Hemavati',              'हेमावती',              ['Sa','Re','Ga♭','Ma#','Pa','Dha','Ni♭'],  'Re'],
+  [59, 'Dharmavati',            'धर्मवती',              ['Sa','Re','Ga♭','Ma#','Pa','Dha','Ni'],   'Pa'],
+  [60, 'Neetimati',             'नीतिमती',              ['Sa','Re','Ga♭','Ma#','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 11: Rudra (61–66) — Prati Ma, Re Ga ─────
-  [61, 'Kantamani',        'कान्तामणी',     ['Sa','Re','Ga','Ma#','Pa','Dha♭','Ni♭'],   'Dha♭'],
-  [62, 'Rishabhapriya',    'ऋषभप्रिया',    ['Sa','Re','Ga','Ma#','Pa','Dha♭','Ni'],    'Dha♭'],
-  [63, 'Latangi',          'लतांगी',        ['Sa','Re','Ga','Ma#','Pa','Dha','Ni♭'],    'Dha'],
-  [64, 'Vachaspati',       'वाचस्पति',     ['Sa','Re','Ga','Ma#','Pa','Dha','Ni'],     'Dha'],
-  [65, 'Mechakalyani',     'मेचकल्याणी',   ['Sa','Re','Ga','Ma#','Pa','Dha','Ni'],     'Dha'],
-  [66, 'Chitrambari',      'चित्राम्बरी',    ['Sa','Re','Ga','Ma#','Pa','Dha','Ni'],     'Pa'],
+  // ── Chakra 11: Rudra (61–66) — Prati Ma, R2G3 (Re, Ga) ───
+  [61, 'Kantamani',             'कान्तामणी',            ['Sa','Re','Ga','Ma#','Pa','Dha♭','Dha'],  'Dha♭'],
+  [62, 'Rishabhapriya',         'ऋषभप्रिया',           ['Sa','Re','Ga','Ma#','Pa','Dha♭','Ni♭'], 'Dha♭'],
+  [63, 'Latangi',               'लतांगी',               ['Sa','Re','Ga','Ma#','Pa','Dha♭','Ni'],  'Dha'],
+  [64, 'Vachaspati',            'वाचस्पति',            ['Sa','Re','Ga','Ma#','Pa','Dha','Ni♭'],  'Dha'],
+  [65, 'Mechakalyani',          'मेचकल्याणी',          ['Sa','Re','Ga','Ma#','Pa','Dha','Ni'],   'Dha'],
+  [66, 'Chitrambari',           'चित्राम्बरी',           ['Sa','Re','Ga','Ma#','Pa','Ni♭','Ni'],   'Pa'],
 
-  // ── Chakra 12: Aditya (67–72) — Prati Ma, Re Ga ────
-  [67, 'Sucharitra',       'सुचरित्रा',     ['Sa','Re','Ga','Ma#','Pa','Dha♭','Ni♭'],   'Ga'],
-  [68, 'Jyotiswarupini',   'ज्योतिस्वरूपिणी', ['Sa','Re','Ga','Ma#','Pa','Dha♭','Ni'],  'Ga'],
-  [69, 'Dhatuvardhini',    'धातुवर्धिनी',   ['Sa','Re','Ga','Ma#','Pa','Dha','Ni♭'],    'Ga'],
-  [70, 'Nasikabhushini',   'नासिकाभूषिणी', ['Sa','Re','Ga','Ma#','Pa','Dha','Ni'],     'Ga'],
-  [71, 'Kosalam',          'कोसलम्',       ['Sa','Re','Ga','Ma#','Pa','Dha♭','Ni♭'],   'Pa'],
-  [72, 'Rasikapriya',      'रसिकप्रिया',    ['Sa','Re','Ga','Ma#','Pa','Dha♭','Ni'],    'Pa'],
+  // ── Chakra 12: Aditya (67–72) — Prati Ma, R3G3 (Ga♭, Ga) ─
+  [67, 'Sucharitra',            'सुचरित्रा',            ['Sa','Ga♭','Ga','Ma#','Pa','Dha♭','Dha'],  'Ga'],
+  [68, 'Jyotiswarupini',        'ज्योतिस्वरूपिणी',      ['Sa','Ga♭','Ga','Ma#','Pa','Dha♭','Ni♭'], 'Ga'],
+  [69, 'Dhatuvardhini',         'धातुवर्धिनी',          ['Sa','Ga♭','Ga','Ma#','Pa','Dha♭','Ni'],  'Ga'],
+  [70, 'Nasikabhushini',        'नासिकाभूषिणी',        ['Sa','Ga♭','Ga','Ma#','Pa','Dha','Ni♭'],  'Ga'],
+  [71, 'Kosalam',               'कोसलम्',              ['Sa','Ga♭','Ga','Ma#','Pa','Dha','Ni'],   'Pa'],
+  [72, 'Rasikapriya',           'रसिकप्रिया',           ['Sa','Ga♭','Ga','Ma#','Pa','Ni♭','Ni'],   'Pa'],
 ];
 
 // Build Melakarta raga records from the compact data table
