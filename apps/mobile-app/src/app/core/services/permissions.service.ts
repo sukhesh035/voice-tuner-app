@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { ApiService } from './api.service';
@@ -17,13 +17,11 @@ export type PermissionState = 'granted' | 'denied' | 'prompt';
  */
 @Injectable({ providedIn: 'root' })
 export class PermissionsService {
+  private readonly api         = inject(ApiService);
+  private readonly pushService = inject(PushNotificationService);
+
   micPermission: PermissionState = 'prompt';
   notificationPermission: PermissionState = 'prompt';
-
-  constructor(
-    private api: ApiService,
-    private pushService: PushNotificationService,
-  ) {}
 
   /**
    * Check current OS-level permission states for mic and notifications.

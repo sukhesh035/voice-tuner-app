@@ -1,5 +1,5 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, inject } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner,
@@ -30,7 +30,7 @@ interface Achievement {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, RouterLink,
+    RouterLink, AsyncPipe,
     IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner
   ],
   template: `
@@ -44,19 +44,18 @@ interface Achievement {
       <div class="profile-page">
 
         <!-- ── Authenticated View ──────────────────────────── -->
-        <ng-container *ngIf="authService.user$ | async as user; else guestView">
+        @if (authService.user$ | async; as user) {
 
           <!-- Loading state -->
-          <ng-container *ngIf="loading; else profileLoaded">
+          @if (loading) {
             <div class="profile-loading">
               <ion-spinner name="crescent"></ion-spinner>
             </div>
-          </ng-container>
-
-          <ng-template #profileLoaded>
+          } @else {
 
             <!-- Email not verified banner -->
-            <div *ngIf="!(user.emailVerified)" class="unverified-banner swara-card">
+            @if (!(user.emailVerified)) {
+            <div class="unverified-banner swara-card">
               <ion-icon name="warning-outline" class="unverified-banner__icon"></ion-icon>
               <div class="unverified-banner__body">
                 <div class="unverified-banner__title">Email not verified</div>
@@ -64,16 +63,22 @@ interface Achievement {
               </div>
               <button class="unverified-banner__btn" (click)="verifyEmail()">Verify</button>
             </div>
+            }
 
             <!-- Avatar + Name -->
             <div class="profile-hero">
               <div class="avatar-wrap" (click)="changePhoto()">
-                <img *ngIf="profile?.photoUrl" [src]="profile.photoUrl" class="avatar-img" alt="Profile photo" />
-                <div *ngIf="!profile?.photoUrl" class="avatar-initial">{{ user.name?.[0]?.toUpperCase() ?? 'U' }}</div>
+                @if (profile?.photoUrl) {
+                <img [src]="profile.photoUrl" class="avatar-img" alt="Profile photo" />
+                } @else {
+                <div class="avatar-initial">{{ user.name?.[0]?.toUpperCase() ?? 'U' }}</div>
+                }
                 <div class="avatar-edit-badge">
                   <ion-icon name="camera-outline"></ion-icon>
                 </div>
-                <ion-spinner *ngIf="uploading" name="crescent" class="avatar-spinner"></ion-spinner>
+                @if (uploading) {
+                <ion-spinner name="crescent" class="avatar-spinner"></ion-spinner>
+                }
               </div>
               <div class="profile-info">
                 <div class="profile-name">{{ user.name }}</div>
@@ -133,15 +138,18 @@ interface Achievement {
             <div class="section">
               <div class="section-label">Achievements</div>
               <div class="achievements-grid">
+                @for (a of achievements; track a.label) {
                 <div
-                  *ngFor="let a of achievements"
                   class="achievement-chip"
                   [class.unlocked]="a.unlocked"
                 >
                   <span class="achievement-icon">{{ a.icon }}</span>
                   <span class="achievement-label">{{ a.label }}</span>
-                  <ion-icon *ngIf="a.unlocked" name="checkmark-circle" class="achievement-check"></ion-icon>
+                  @if (a.unlocked) {
+                  <ion-icon name="checkmark-circle" class="achievement-check"></ion-icon>
+                  }
                 </div>
+                }
               </div>
             </div>
 
@@ -174,15 +182,15 @@ interface Achievement {
               Sign Out
             </button>
 
-          </ng-template>
+          }
 
-        </ng-container>
+        } @else {
 
-        <!-- ── Guest View ───────────────────────────────────── -->
-        <ng-template #guestView>
+          <!-- ── Guest View ───────────────────────────────────── -->
 
           <!-- Verify email banner (shown after sign up before confirmation) -->
-          <div *ngIf="authService.pendingConfirmationEmail as pendingEmail" class="verify-banner swara-card">
+          @if (authService.pendingConfirmationEmail(); as pendingEmail) {
+          <div class="verify-banner swara-card">
             <div class="verify-banner__icon">✉️</div>
             <div class="verify-banner__body">
               <div class="verify-banner__title">Check your email</div>
@@ -195,6 +203,7 @@ interface Achievement {
               {{ resendLoading ? 'Sending…' : 'Resend' }}
             </button>
           </div>
+          }
 
           <div class="guest-hero">
             <div class="guest-avatar-wrap">
@@ -244,13 +253,26 @@ interface Achievement {
             </div>
           </div>
 
-        </ng-template>
+        }
       </div>
     </ion-content>
   `,
   styleUrls: ['./profile.page.scss']
 })
 export class ProfilePage implements OnInit, ViewWillEnter {
+  readonly authService = inject(AuthService);
+  readonly api = inject(ApiService);
+  readonly analytics = inject(AnalyticsService);
+  readonly actionSheet = inject(ActionSheetController);
+  readonly alertCtrl = inject(AlertController);
+  readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly _icons = (() => addIcons({
+    personCircle, trendingUp, flame, musicalNote,
+    settingsOutline, chevronForward, logOutOutline,
+    checkmarkCircle, school, mic, cameraOutline, warningOutline
+  }))();
+
   resendLoading = false;
   loading = false;
   uploading = false;
@@ -322,21 +344,7 @@ export class ProfilePage implements OnInit, ViewWillEnter {
     ];
   }
 
-  constructor(
-    public authService: AuthService,
-    private api: ApiService,
-    private cdr: ChangeDetectorRef,
-    private analytics: AnalyticsService,
-    private actionSheet: ActionSheetController,
-    private alertCtrl: AlertController,
-    private router: Router,
-  ) {
-    addIcons({
-      personCircle, trendingUp, flame, musicalNote,
-      settingsOutline, chevronForward, logOutOutline,
-      checkmarkCircle, school, mic, cameraOutline, warningOutline
-    });
-  }
+  // constructor removed - using `inject()` for dependencies
 
   ngOnInit(): void {
     // Initial load: wait for auth to be ready, then fetch data once.
@@ -490,7 +498,10 @@ export class ProfilePage implements OnInit, ViewWillEnter {
   }
 
   async resendConfirmation(): Promise<void> {
-    const email = this.authService.pendingConfirmationEmail;
+    // pendingConfirmationEmail is a Signal<string | null>
+    const email = typeof this.authService.pendingConfirmationEmail === 'function'
+      ? this.authService.pendingConfirmationEmail()
+      : (this.authService.pendingConfirmationEmail as unknown as string | null);
     if (!email) return;
     this.resendLoading = true;
     this.cdr.markForCheck();

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { PitchDetectionService, PitchResult, IndianNote } from '@voice-tuner/pitch-detection';
@@ -55,6 +55,8 @@ export interface PracticePlanItem {
  */
 @Injectable({ providedIn: 'root' })
 export class TrainingEngineService {
+  private readonly pitchDetection = inject(PitchDetectionService);
+
   private sessionActive     = false;
   private sessionStart      = 0;
   private currentMode: TrainingMode = 'free';
@@ -75,8 +77,6 @@ export class TrainingEngineService {
   get liveNotes$(): Observable<IndianNote[]> {
     return this.liveNotesSubject.asObservable();
   }
-
-  constructor(private pitchDetection: PitchDetectionService) {}
 
   // ── Session Lifecycle ──────────────────────────────────
 

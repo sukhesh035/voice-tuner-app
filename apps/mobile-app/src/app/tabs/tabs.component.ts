@@ -42,15 +42,14 @@ import {
   styleUrls: ['./tabs.component.scss']
 })
 export class TabsComponent {
-  constructor() {
-    addIcons({
-      homeOutline, home,
-      musicalNoteOutline, musicalNote,
-      micOutline, mic,
-      barbellOutline, barbell,
-      trendingUpOutline, trendingUp,
-      settingsOutline, settings,
-      personOutline, person
-    });
-  }
+  // Register Ionicons at class field initialisation time — no constructor needed.
+  private readonly _icons = (() => addIcons({
+    homeOutline, home,
+    musicalNoteOutline, musicalNote,
+    micOutline, mic,
+    barbellOutline, barbell,
+    trendingUpOutline, trendingUp,
+    settingsOutline, settings,
+    personOutline, person
+  }))();
 }

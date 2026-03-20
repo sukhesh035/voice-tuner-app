@@ -12,21 +12,24 @@
         <ion-icon name="musical-note-outline"></ion-icon> Drone Instrument
       </div>
       <div class="instrument-selector">
-        <button
-          *ngFor="let inst of instruments"
-          class="instrument-card swara-card"
-          [class.selected]="selectedInstrument === inst.id"
-          (click)="selectInstrument(inst.id)"
-        >
-          <div class="instrument-card__visual" [ngClass]="inst.icon">
-            <span class="instrument-card__emoji">
-              {{ inst.id === 'tanpura' ? '🎵' : inst.id === 'keyboard' ? '🎹' : '🎸' }}
-            </span>
-          </div>
-          <div class="instrument-card__label">{{ inst.label }}</div>
-          <div class="instrument-card__desc">{{ inst.desc }}</div>
-          <div class="instrument-card__check" *ngIf="selectedInstrument === inst.id">&#10003;</div>
-        </button>
+        @for (inst of instruments; track inst.id) {
+          <button
+            class="instrument-card swara-card"
+            [class.selected]="selectedInstrument === inst.id"
+            (click)="selectInstrument(inst.id)"
+          >
+            <div class="instrument-card__visual" [ngClass]="inst.icon">
+              <span class="instrument-card__emoji">
+                {{ inst.id === 'tanpura' ? '🎵' : inst.id === 'keyboard' ? '🎹' : '🎸' }}
+              </span>
+            </div>
+            <div class="instrument-card__label">{{ inst.label }}</div>
+            <div class="instrument-card__desc">{{ inst.desc }}</div>
+            @if (selectedInstrument === inst.id) {
+              <div class="instrument-card__check">&#10003;</div>
+            }
+          </button>
+        }
       </div>
     </div>
 
@@ -117,12 +120,14 @@
           {{ notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'Denied' : 'Not Set' }}
         </span>
       </div>
-      <div class="settings-row swara-card hint-row" *ngIf="micPermission === 'denied' || notificationPermission === 'denied'">
-        <div class="setting-info">
-          <div class="setting-sub">Denied permissions must be enabled in your device's Settings app.</div>
+      @if (micPermission === 'denied' || notificationPermission === 'denied') {
+        <div class="settings-row swara-card hint-row">
+          <div class="setting-info">
+            <div class="setting-sub">Denied permissions must be enabled in your device's Settings app.</div>
+          </div>
+          <button class="open-settings-btn" (click)="openAppSettings()">Open Settings</button>
         </div>
-        <button class="open-settings-btn" (click)="openAppSettings()">Open Settings</button>
-      </div>
+      }
     </div>
 
     <!-- ── Notifications ──────────────────────────────────────────────── -->
@@ -144,7 +149,8 @@
     </div>
 
     <!-- ── Account ────────────────────────────────────────────────────────── -->
-    <div class="settings-group" *ngIf="isAuthenticated$ | async">
+    @if (isAuthenticated$ | async) {
+      <div class="settings-group">
       <div class="group-label">
         <ion-icon name="lock-closed-outline"></ion-icon> Account
       </div>
@@ -155,7 +161,8 @@
         </div>
         <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
       </div>
-    </div>
+      </div>
+    }
 
     <!-- ── About ──────────────────────────────────────────────────────── -->
     <div class="settings-group">

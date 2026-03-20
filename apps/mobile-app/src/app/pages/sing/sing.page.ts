@@ -1,8 +1,4 @@
-import {
-  Component, OnInit, OnDestroy, ChangeDetectionStrategy,
-  ChangeDetectorRef
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil, filter, throttleTime } from 'rxjs/operators';
 import {
@@ -10,8 +6,10 @@ import {
   IonButton, IonIcon
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
+import { DecimalPipe } from '@angular/common';
 import { mic, micOff, musicalNotes, statsChart } from 'ionicons/icons';
 import { PitchDetectionService, PitchResult, IndianNote } from '@voice-tuner/pitch-detection';
+import { ChangeDetectorRef } from '@angular/core';
 import { TanpuraPlayerService } from '@voice-tuner/tanpura-player';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
@@ -23,8 +21,10 @@ import { AuthService } from '@voice-tuner/auth';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, RouterLink,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon
+    RouterLink,
+    IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
+    // decimal pipe used in template
+    DecimalPipe
   ],
   template: `
     <ion-header>
@@ -66,7 +66,8 @@ import { AuthService } from '@voice-tuner/auth';
               transform="rotate(-225 120 120)"
             />
             <!-- Center markers (12 note positions) -->
-            <g *ngFor="let angle of noteAngles; let i = index">
+            @for (angle of noteAngles; track angle) {
+            <g>
               <line
                 [attr.x1]="120 + 84 * cos(angle)"
                 [attr.y1]="120 + 84 * sin(angle)"
@@ -77,6 +78,7 @@ import { AuthService } from '@voice-tuner/auth';
                 stroke-linecap="round"
               />
             </g>
+            }
           </svg>
 
           <!-- Center Display -->
@@ -95,9 +97,11 @@ import { AuthService } from '@voice-tuner/auth';
             >
               {{ (currentPitch?.centsOff ?? 0) > 0 ? '+' : '' }}{{ (currentPitch?.centsOff ?? 0) | number:'1.0-0' }}¢
             </div>
-            <div class="no-pitch" *ngIf="!currentPitch && isActive">
+            @if (!currentPitch && isActive) {
+            <div class="no-pitch">
               Sing...
             </div>
+            }
           </div>
         </div>
 
@@ -138,8 +142,8 @@ import { AuthService } from '@voice-tuner/auth';
         <div class="note-grid-section">
           <div class="section-title">Notes Detected</div>
           <div class="swara-note-grid">
+            @for (note of allNotes; track note; let i = $index) {
             <div
-              *ngFor="let note of allNotes; let i = index"
               class="note-chip"
               [class.active]="detectedNotes.has(note)"
               [class.current]="currentPitch?.indianNote === note"
@@ -147,6 +151,7 @@ import { AuthService } from '@voice-tuner/auth';
             >
               <span class="note-name">{{ note }}</span>
             </div>
+            }
           </div>
         </div>
 
@@ -160,10 +165,14 @@ import { AuthService } from '@voice-tuner/auth';
             <ion-icon [name]="isActive ? 'mic' : 'mic-off'"></ion-icon>
           </button>
 
-          <div class="mic-error" *ngIf="micError">{{ micError }}</div>
+          @if (micError) {
+          <div class="mic-error">{{ micError }}</div>
+          }
 
           <div class="waveform-bars" [class.silent]="!currentPitch">
-            <div *ngFor="let _ of [1,2,3,4,5,6,7,8]" class="bar"></div>
+            @for (_ of [1,2,3,4,5,6,7,8]; track $index) {
+            <div class="bar"></div>
+            }
           </div>
         </div>
 
@@ -225,16 +234,13 @@ export class SingPage implements OnInit, OnDestroy {
     return Math.max(-45, Math.min(45, this.currentPitch.centsOff * 0.9));
   }
 
-  constructor(
-    private pitchDetection: PitchDetectionService,
-    private tanpura: TanpuraPlayerService,
-    private api: ApiService,
-    private cdr: ChangeDetectorRef,
-    private analytics: AnalyticsService,
-    private authService: AuthService,
-  ) {
-    addIcons({ mic, micOff, musicalNotes, statsChart });
-  }
+  readonly pitchDetection = inject(PitchDetectionService);
+  readonly tanpura = inject(TanpuraPlayerService);
+  readonly api = inject(ApiService);
+  private readonly cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+  readonly analytics = inject(AnalyticsService);
+  readonly authService = inject(AuthService);
+  private readonly _icons = (() => addIcons({ mic, micOff, musicalNotes, statsChart }))();
 
   ngOnInit(): void {
     this.pitchDetection.pitch$
@@ -242,7 +248,9 @@ export class SingPage implements OnInit, OnDestroy {
       .subscribe(pitch => {
         this.currentPitch = pitch;
         if (pitch) this.detectedNotes.add(pitch.indianNote);
-        this.cdr.markForCheck();
+        try {
+          this.cdr.markForCheck();
+        } catch {}
       });
   }
 
@@ -280,7 +288,7 @@ export class SingPage implements OnInit, OnDestroy {
         }).then(() => {
           this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
           this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).catch(() => {});
-        }).catch(err => console.warn('[SingPage] Failed to save session:', err));
+        }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
       }
     } else {
       try {
@@ -289,8 +297,9 @@ export class SingPage implements OnInit, OnDestroy {
         this.isActive = true;
         this.micError = null;
         this.analytics.logEvent('mic_started');
-      } catch (err: any) {
-        const isDenied = err?.name === 'NotAllowedError';
+        } catch (err: any) {
+         const _err = err as { name?: string } | undefined;
+         const isDenied = _err?.name === 'NotAllowedError';
         this.micError = isDenied
           ? 'Microphone permission denied. Please allow access and try again.'
           : 'Could not start microphone. Please try again.';

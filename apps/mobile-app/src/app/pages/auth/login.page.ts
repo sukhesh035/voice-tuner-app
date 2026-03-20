@@ -1,5 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -16,11 +15,18 @@ import { AnalyticsService } from '../../core/services/analytics.service';
   selector: 'app-login',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonBackButton, IonButtons],
+  imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonBackButton, IonButtons],
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
 })
 export class LoginPage {
+  private readonly authService = inject(AuthService);
+  private readonly api         = inject(ApiService);
+  private readonly router      = inject(Router);
+  private readonly analytics   = inject(AnalyticsService);
+
+  private readonly _icons = (() => addIcons({ arrowBackOutline, eyeOutline, eyeOffOutline }))();
+
   email     = '';
   password  = '';
   showPass  = false;
@@ -28,16 +34,6 @@ export class LoginPage {
   errorMsg  = '';
   successMsg = '';
   unconfirmedEmail = '';
-
-  constructor(
-    private authService: AuthService,
-    private api: ApiService,
-    private router: Router,
-    private cdr: ChangeDetectorRef,
-    private analytics: AnalyticsService
-  ) {
-    addIcons({ arrowBackOutline, eyeOutline, eyeOffOutline });
-  }
 
   async signIn(): Promise<void> {
     this.isLoading        = true;
@@ -59,7 +55,6 @@ export class LoginPage {
       }
     } finally {
       this.isLoading = false;
-      this.cdr.markForCheck();
     }
   }
 
@@ -76,7 +71,6 @@ export class LoginPage {
       this.errorMsg = err.message ?? 'Could not resend confirmation email.';
     } finally {
       this.isLoading = false;
-      this.cdr.markForCheck();
     }
   }
 

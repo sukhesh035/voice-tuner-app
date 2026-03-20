@@ -1,7 +1,5 @@
-import {
-  Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef
-} from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject, ChangeDetectorRef } from '@angular/core';
+import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -160,10 +158,10 @@ function buildFeedback(
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
-    IonSegment, IonSegmentButton, IonLabel
+    IonSegment, IonSegmentButton, IonLabel,
+    AsyncPipe, DecimalPipe
   ],
   template: `
     <ion-header>
@@ -189,30 +187,36 @@ function buildFeedback(
         </ion-segment>
 
         <!-- ── Shruti Trainer ──────────────────────────────── -->
-        <div *ngIf="selectedMode === 'shruti'" class="shruti-section animate-fade-in">
+        @if (selectedMode === 'shruti') {
+        <div class="shruti-section animate-fade-in">
           <div class="mode-card swara-card">
             <div class="mode-card__title">Shruti Trainer</div>
             <div class="mode-card__desc">App plays a note — then you sing it back. Match pitch perfectly.</div>
           </div>
 
           <!-- Phase: PLAYING -->
-          <div class="phase-display phase-playing" *ngIf="shrutiPhase === 'playing'">
+          @if (shrutiPhase === 'playing') {
+          <div class="phase-display phase-playing">
             <div class="phase-icon">&#9654;</div>
             <div class="phase-note">{{ currentTargetNote }}</div>
             <div class="phase-label">Listen to the note&hellip;</div>
             <div class="phase-hint">Mic is off &mdash; just listen</div>
           </div>
+          }
 
           <!-- Phase: READY (silence gap) -->
-          <div class="phase-display phase-ready" *ngIf="shrutiPhase === 'ready'">
+          @if (shrutiPhase === 'ready') {
+          <div class="phase-display phase-ready">
             <div class="phase-icon ready-icon">&#8987;</div>
             <div class="phase-note">{{ currentTargetNote }}</div>
             <div class="phase-label">Get ready to sing&hellip;</div>
             <div class="phase-hint">Mic opens in a moment</div>
           </div>
+          }
 
           <!-- Phase: LISTENING -->
-          <div class="phase-display phase-listening" *ngIf="shrutiPhase === 'listening'">
+          @if (shrutiPhase === 'listening') {
+          <div class="phase-display phase-listening">
             <div class="phase-icon pulse-icon">&#9679;</div>
             <div class="phase-note">{{ currentTargetNote }}</div>
             <div class="phase-label">Now sing <strong>{{ currentTargetNote }}</strong></div>
@@ -220,15 +224,19 @@ function buildFeedback(
               <span class="live-pitch-note" [class.on-target]="liveNote === currentTargetNote">
                 {{ liveNote ?? '&ndash;' }}
               </span>
-              <span class="live-pitch-accuracy" *ngIf="currentAccuracy !== null">
+              @if (currentAccuracy !== null) {
+              <span class="live-pitch-accuracy">
                 {{ currentAccuracy | number:'1.0-0' }}%
               </span>
+              }
             </div>
             <div class="phase-hint">Mic is active &mdash; sing now</div>
           </div>
+          }
 
           <!-- Phase: RESULT -->
-          <div class="phase-display phase-result" *ngIf="shrutiPhase === 'result'">
+          @if (shrutiPhase === 'result') {
+          <div class="phase-display phase-result">
             <div class="result-notes-compared">
               <div class="result-note-block">
                 <div class="result-note-label">Target</div>
@@ -252,40 +260,53 @@ function buildFeedback(
             <div class="round-feedback">{{ roundFeedback }}</div>
             <div class="phase-hint">Tap "Next Note" to continue</div>
           </div>
+          }
 
           <!-- Round controls -->
-          <div class="shruti-round-controls" *ngIf="sessionActive">
+          @if (sessionActive) {
+          <div class="shruti-round-controls">
+            @if (shrutiPhase === 'result') {
             <button
               class="swara-btn swara-btn--secondary round-btn"
-              *ngIf="shrutiPhase === 'result'"
               (click)="nextShrutiRound()"
             >
               Next Note
             </button>
-            <div class="round-status-pill" *ngIf="shrutiPhase === 'playing'">
+            }
+            @if (shrutiPhase === 'playing') {
+            <div class="round-status-pill">
               <span class="pill-dot playing-dot"></span>Playing
             </div>
-            <div class="round-status-pill" *ngIf="shrutiPhase === 'ready'">
+            }
+            @if (shrutiPhase === 'ready') {
+            <div class="round-status-pill">
               <span class="pill-dot ready-dot"></span>Get ready&hellip;
             </div>
-            <div class="round-status-pill" *ngIf="shrutiPhase === 'listening'">
+            }
+            @if (shrutiPhase === 'listening') {
+            <div class="round-status-pill">
               <span class="pill-dot listening-dot"></span>Listening
             </div>
+            }
           </div>
+          }
         </div>
+        }
 
         <!-- ── Raga Practice ───────────────────────────────── -->
-        <div *ngIf="selectedMode === 'raga'" class="raga-section animate-fade-in">
+        @if (selectedMode === 'raga') {
+        <div class="raga-section animate-fade-in">
 
           <!-- Raga Browser -->
-          <div class="raga-browser" *ngIf="!selectedRaga">
+          @if (!selectedRaga) {
+          <div class="raga-browser">
 
             <!-- Popular Ragas -->
             <div class="raga-browser-section">
               <div class="raga-section-header">Popular Ragas</div>
               <div class="popular-ragas-row">
+                @for (raga of popularRagas; track raga.englishName) {
                 <button
-                  *ngFor="let raga of popularRagas"
                   class="popular-raga-card"
                   (click)="selectRaga(raga)"
                 >
@@ -293,6 +314,7 @@ function buildFeedback(
                   <div class="popular-raga-card__name">{{ raga.englishName }}</div>
                   <div class="popular-raga-card__time">{{ raga.time }}</div>
                 </button>
+                }
               </div>
             </div>
 
@@ -321,8 +343,8 @@ function buildFeedback(
                 >
                   All <span class="chakra-chip__count">72</span>
                 </button>
+                @for (ch of chakras; track ch.name) {
                 <button
-                  *ngFor="let ch of chakras"
                   class="chakra-chip"
                   [class.chakra-chip--active]="selectedChakra === ch.name"
                   (click)="selectChakra(ch.name)"
@@ -330,12 +352,13 @@ function buildFeedback(
                   {{ ch.name }}
                   <span class="chakra-chip__range">{{ ch.range[0] }}&ndash;{{ ch.range[1] }}</span>
                 </button>
+                }
               </div>
 
               <!-- Melakarta raga list -->
               <div class="raga-list">
+                @for (raga of filteredRagas; track raga.melaNumber) {
                 <button
-                  *ngFor="let raga of filteredRagas"
                   class="raga-card"
                   (click)="selectRaga(raga)"
                 >
@@ -347,45 +370,63 @@ function buildFeedback(
                     <div class="raga-card__hindi">{{ raga.name }}</div>
                     <div class="raga-card__meta">
                       <span class="raga-card__time">{{ raga.time }}</span>
-                      <span class="raga-card__mood" *ngIf="raga.mood">{{ raga.mood }}</span>
+                      @if (raga.mood) {
+                      <span class="raga-card__mood">{{ raga.mood }}</span>
+                      }
                     </div>
                   </div>
                   <div class="raga-card__arrow">&#8250;</div>
                 </button>
-                <div class="raga-list-empty" *ngIf="filteredRagas.length === 0">
+                }
+                @if (filteredRagas.length === 0) {
+                <div class="raga-list-empty">
                   No ragas match your search.
                 </div>
+                }
               </div>
             </div>
           </div>
+          }
 
           <!-- Raga Detail -->
-          <div class="raga-detail" *ngIf="selectedRaga">
+          @if (selectedRaga) {
+          <div class="raga-detail">
             <div class="swara-card raga-info-card">
               <div class="raga-info-header">
-                <div class="raga-info-mela" *ngIf="selectedRaga.melaNumber"
+                @if (selectedRaga.melaNumber) {
+                <div class="raga-info-mela"
                   [style.background]="selectedRaga.color">
                   {{ selectedRaga.melaNumber }}
                 </div>
-                <div class="raga-info-dot" *ngIf="!selectedRaga.melaNumber"
+                }
+                @if (!selectedRaga.melaNumber) {
+                <div class="raga-info-dot"
                   [style.background]="selectedRaga.color"></div>
+                }
                 <div class="raga-info-titles">
                   <div class="raga-info-name">{{ selectedRaga.englishName }}</div>
                   <div class="raga-info-hindi">{{ selectedRaga.name }}</div>
                   <div class="raga-info-meta">
                     {{ selectedRaga.thaat }}
-                    <span *ngIf="selectedRaga.chakra"> &middot; {{ selectedRaga.chakra }} Chakra</span>
+                    @if (selectedRaga.chakra) {
+                    <span> &middot; {{ selectedRaga.chakra }} Chakra</span>
+                    }
                     &middot; {{ selectedRaga.time }}
                   </div>
                 </div>
-                <button class="change-raga-btn" (click)="clearRaga()" *ngIf="!sessionActive">Change</button>
+                @if (!sessionActive) {
+                <button class="change-raga-btn" (click)="clearRaga()">Change</button>
+                }
               </div>
-              <div class="raga-mood-badge" *ngIf="selectedRaga.mood">{{ selectedRaga.mood }}</div>
+              @if (selectedRaga.mood) {
+              <div class="raga-mood-badge">{{ selectedRaga.mood }}</div>
+              }
               <p class="raga-info-desc">{{ selectedRaga.description }}</p>
             </div>
 
             <!-- BPM Tempo Control -->
-            <div class="raga-bpm-control" *ngIf="!sessionActive || ragaPhase === 'idle'">
+            @if (!sessionActive || ragaPhase === 'idle') {
+            <div class="raga-bpm-control">
               <div class="bpm-header">
                 <span class="bpm-label">Tempo</span>
                 <span class="bpm-value">{{ ragaBpm === 0 ? 'Manual' : ragaBpm + ' BPM' }}</span>
@@ -407,14 +448,15 @@ function buildFeedback(
                 <span>Fast</span>
               </div>
             </div>
+            }
 
             <!-- Aroh / Avaroh with progress highlight -->
             <div class="raga-sequence-section">
               <div class="sequence-row">
                 <div class="sequence-label" [class.sequence-label--active]="sessionActive && ragaSequencePart === 'aroh'">Aroh</div>
                 <div class="sequence-notes">
+                  @for (note of selectedRaga.aroh; track $index; let i = $index; let last = $last) {
                   <span
-                    *ngFor="let note of selectedRaga.aroh; let i = index; let last = last"
                     class="seq-note"
                     [class.seq-note--vadi]="note === selectedRaga.vadi"
                     [class.seq-note--samvadi]="note === selectedRaga.samvadi"
@@ -422,15 +464,16 @@ function buildFeedback(
                     [class.seq-note--current]="sessionActive && ragaPhase === 'playback' && ragaSequencePart === 'aroh' && i === ragaPlaybackIndex"
                     [class.seq-note--done]="sessionActive && ragaPhase === 'playback' && (ragaSequencePart === 'avaroh' || (ragaSequencePart === 'aroh' && i < ragaPlaybackIndex))"
                   >
-                    {{ note }}<span class="seq-arrow" *ngIf="!last"> &rarr; </span>
+                    {{ note }}@if (!last) {<span class="seq-arrow"> &rarr; </span>}
                   </span>
+                  }
                 </div>
               </div>
               <div class="sequence-row">
                 <div class="sequence-label" [class.sequence-label--active]="sessionActive && ragaSequencePart === 'avaroh'">Avaroh</div>
                 <div class="sequence-notes">
+                  @for (note of selectedRaga.avaroh; track $index; let i = $index; let last = $last) {
                   <span
-                    *ngFor="let note of selectedRaga.avaroh; let i = index; let last = last"
                     class="seq-note"
                     [class.seq-note--vadi]="note === selectedRaga.vadi"
                     [class.seq-note--samvadi]="note === selectedRaga.samvadi"
@@ -438,8 +481,9 @@ function buildFeedback(
                     [class.seq-note--current]="sessionActive && ragaPhase === 'playback' && ragaSequencePart === 'avaroh' && i === (ragaPlaybackIndex - selectedRaga.aroh.length)"
                     [class.seq-note--done]="sessionActive && ragaPhase === 'playback' && ragaSequencePart === 'avaroh' && i < (ragaPlaybackIndex - selectedRaga.aroh.length)"
                   >
-                    {{ note }}<span class="seq-arrow" *ngIf="!last"> &rarr; </span>
+                    {{ note }}@if (!last) {<span class="seq-arrow"> &rarr; </span>}
                   </span>
+                  }
                 </div>
               </div>
               <div class="vadi-legend">
@@ -449,7 +493,8 @@ function buildFeedback(
             </div>
 
             <!-- Playback progress indicator -->
-            <div class="raga-progress" *ngIf="sessionActive && ragaPhase === 'playback'">
+            @if (sessionActive && ragaPhase === 'playback') {
+            <div class="raga-progress">
               <div class="raga-progress-bar">
                 <div class="raga-progress-fill"
                   [style.width.%]="(ragaPlaybackIndex / ragaNoteSequence.length) * 100"></div>
@@ -459,35 +504,43 @@ function buildFeedback(
                 &middot; {{ ragaSequencePart === 'aroh' ? 'Ascending' : 'Descending' }}
               </div>
             </div>
+            }
 
             <!-- Raga Phase: PLAYBACK (listen to the entire raga) -->
-            <div class="phase-display phase-playing raga-phase" *ngIf="sessionActive && ragaPhase === 'playback'">
+            @if (sessionActive && ragaPhase === 'playback') {
+            <div class="phase-display phase-playing raga-phase">
               <div class="phase-icon">&#9654;</div>
               <div class="phase-note">{{ currentTargetNote }}</div>
               <div class="phase-label">Listen to the raga&hellip;</div>
               <div class="phase-hint">Mic is off &mdash; just listen to each note</div>
             </div>
+            }
 
             <!-- Raga Phase: PRACTICE (user sings freely) -->
-            <div class="phase-display phase-listening raga-phase" *ngIf="sessionActive && ragaPhase === 'practice'">
+            @if (sessionActive && ragaPhase === 'practice') {
+            <div class="phase-display phase-listening raga-phase">
               <div class="phase-icon pulse-icon">&#9679;</div>
               <div class="phase-label">Now sing the raga</div>
               <div class="live-pitch-row">
                 <span class="live-pitch-note" [class.on-target]="liveNote && selectedRaga.notes.includes(liveNote)">
                   {{ liveNote ?? '&ndash;' }}
                 </span>
-                <span class="live-pitch-accuracy" *ngIf="currentAccuracy !== null">
+                @if (currentAccuracy !== null) {
+                <span class="live-pitch-accuracy">
                   {{ currentAccuracy | number:'1.0-0' }}%
                 </span>
+                }
               </div>
               <div class="raga-practice-countdown">
                 {{ ragaPracticeCountdown }}s remaining
               </div>
               <div class="phase-hint">Mic is active &mdash; sing aroh then avaroh</div>
             </div>
+            }
 
             <!-- Raga Phase: RESULT (analysis breakdown) -->
-            <div class="raga-result-section" *ngIf="sessionActive && ragaPhase === 'result'">
+            @if (sessionActive && ragaPhase === 'result') {
+            <div class="raga-result-section">
               <!-- Overall accuracy -->
               <div class="raga-result-overall">
                 <div class="raga-result-accuracy-circle"
@@ -502,26 +555,33 @@ function buildFeedback(
               <div class="raga-note-breakdown">
                 <div class="raga-note-breakdown-header">Note Breakdown</div>
                 <div class="raga-note-breakdown-grid">
+                  @for (nr of ragaNoteResults; track nr.note) {
                   <div
-                    *ngFor="let nr of ragaNoteResults"
                     class="raga-note-result"
                     [class.raga-note-result--hit]="nr.hit"
                     [class.raga-note-result--miss]="!nr.hit"
                   >
                     <div class="raga-note-result__name">{{ nr.note }}</div>
-                    <div class="raga-note-result__accuracy" *ngIf="nr.count > 0">{{ nr.accuracy }}%</div>
+                    @if (nr.count > 0) {
+                    <div class="raga-note-result__accuracy">{{ nr.accuracy }}%</div>
+                    }
                     <div class="raga-note-result__status">{{ nr.hit ? 'Hit' : 'Missed' }}</div>
                   </div>
+                  }
                 </div>
               </div>
 
               <!-- Wrong notes (not in the raga) -->
-              <div class="raga-wrong-notes" *ngIf="ragaWrongNotes.length > 0">
+              @if (ragaWrongNotes.length > 0) {
+              <div class="raga-wrong-notes">
                 <div class="raga-wrong-notes-header">Notes outside the raga</div>
                 <div class="raga-wrong-notes-list">
-                  <span *ngFor="let wn of ragaWrongNotes" class="raga-wrong-note-chip">{{ wn }}</span>
+                  @for (wn of ragaWrongNotes; track $index) {
+                  <span class="raga-wrong-note-chip">{{ wn }}</span>
+                  }
                 </div>
               </div>
+              }
 
               <!-- Summary feedback -->
               <div class="raga-result-feedback">{{ ragaResultSummary }}</div>
@@ -536,23 +596,31 @@ function buildFeedback(
                 </button>
               </div>
             </div>
+            }
 
             <!-- Round controls during playback/practice -->
-            <div class="shruti-round-controls" *ngIf="sessionActive && (ragaPhase === 'playback' || ragaPhase === 'practice')">
-              <div class="round-status-pill" *ngIf="ragaPhase === 'playback'">
+            @if (sessionActive && (ragaPhase === 'playback' || ragaPhase === 'practice')) {
+            <div class="shruti-round-controls">
+              @if (ragaPhase === 'playback') {
+              <div class="round-status-pill">
                 <span class="pill-dot playing-dot"></span>Playing raga
               </div>
-              <div class="round-status-pill" *ngIf="ragaPhase === 'practice'">
+              }
+              @if (ragaPhase === 'practice') {
+              <div class="round-status-pill">
                 <span class="pill-dot listening-dot"></span>Listening
               </div>
+              }
             </div>
+            }
 
             <!-- Note Grid (when not actively in a phase) -->
-            <div class="notes-section" *ngIf="!sessionActive || ragaPhase === 'idle'">
+            @if (!sessionActive || ragaPhase === 'idle') {
+            <div class="notes-section">
               <div class="notes-label">Raga Notes</div>
               <div class="swara-note-grid">
+                @for (note of allNotes; track $index; let i = $index) {
                 <div
-                  *ngFor="let note of allNotes; let i = index"
                   class="note-chip"
                   [class.active]="isAllowed(note)"
                   [class.disallowed]="!isAllowed(note)"
@@ -561,23 +629,35 @@ function buildFeedback(
                   [class.singing]="(liveNotes$ | async)?.includes(note)"
                 >
                   <span class="note-name">{{ note }}</span>
-                  <span class="note-role" *ngIf="note === selectedRaga.vadi">V</span>
-                  <span class="note-role" *ngIf="note === selectedRaga.samvadi">S</span>
+                  @if (note === selectedRaga.vadi) {
+                  <span class="note-role">V</span>
+                  }
+                  @if (note === selectedRaga.samvadi) {
+                  <span class="note-role">S</span>
+                  }
                 </div>
+                }
               </div>
             </div>
+            }
 
-            <div class="disallowed-alert" *ngIf="lastDisallowedNote">
+            @if (lastDisallowedNote) {
+            <div class="disallowed-alert">
               {{ lastDisallowedNote }} is not in {{ selectedRaga.englishName }}
             </div>
+            }
           </div>
+          }
         </div>
+        }
 
         <!-- ── Ear Training ────────────────────────────────── -->
-        <div *ngIf="selectedMode === 'free'" class="ear-section animate-fade-in">
+        @if (selectedMode === 'free') {
+        <div class="ear-section animate-fade-in">
 
           <!-- Intro card (before session starts) -->
-          <div class="swara-card ear-intro" *ngIf="!sessionActive">
+          @if (!sessionActive) {
+          <div class="swara-card ear-intro">
             <div class="ear-intro__title">Ear Training</div>
             <div class="ear-intro__desc">
               Test your note recognition. The app plays a random note &mdash; can you identify it?
@@ -597,9 +677,11 @@ function buildFeedback(
               </div>
             </div>
           </div>
+          }
 
           <!-- Score bar (during session) -->
-          <div class="swara-card ear-scorebar" *ngIf="sessionActive">
+          @if (sessionActive) {
+          <div class="swara-card ear-scorebar">
             <div class="ear-scorebar__item">
               <div class="ear-scorebar__value">{{ earScore }}</div>
               <div class="ear-scorebar__label">Score</div>
@@ -615,41 +697,48 @@ function buildFeedback(
               <div class="ear-scorebar__label">Round</div>
             </div>
           </div>
+          }
 
           <!-- Phase: PLAYING (note is sounding) -->
-          <div class="ear-phase-display phase-playing" *ngIf="sessionActive && earPhase === 'playing'">
+          @if (sessionActive && earPhase === 'playing') {
+          <div class="ear-phase-display phase-playing">
             <div class="ear-wave">
               <span></span><span></span><span></span><span></span><span></span>
             </div>
             <div class="ear-phase-label">Listening&hellip;</div>
             <div class="ear-phase-hint">A note is playing &mdash; listen carefully</div>
           </div>
+          }
 
           <!-- Phase: GUESSING (user picks a note) -->
-          <div class="ear-phase-display phase-guessing" *ngIf="sessionActive && earPhase === 'guessing'">
+          @if (sessionActive && earPhase === 'guessing') {
+          <div class="ear-phase-display phase-guessing">
             <div class="ear-question-mark">?</div>
             <div class="ear-phase-label">Which note was it?</div>
             <div class="ear-note-grid">
+              @for (note of allNotes; track $index) {
               <button
-                *ngFor="let note of allNotes"
                 class="ear-note-btn"
                 (click)="onEarGuess(note)"
               >
                 {{ note }}
               </button>
+              }
             </div>
             <button class="ear-replay-btn" (click)="replayEarNote()">
               &#9654; Replay
             </button>
           </div>
+          }
 
           <!-- Phase: REVEAL (correct or wrong) -->
+          @if (sessionActive && earPhase === 'reveal') {
           <div
             class="ear-phase-display"
-            [ngClass]="earIsCorrect ? 'phase-correct' : 'phase-wrong'"
-            *ngIf="sessionActive && earPhase === 'reveal'"
+            [class.phase-correct]="earIsCorrect"
+            [class.phase-wrong]="!earIsCorrect"
           >
-            <div class="ear-feedback-icon" [ngClass]="earIsCorrect ? 'correct-icon' : 'wrong-icon'">
+            <div class="ear-feedback-icon" [class.correct-icon]="earIsCorrect" [class.wrong-icon]="!earIsCorrect">
               {{ earIsCorrect ? '\u2713' : '\u2717' }}
             </div>
             <div class="ear-reveal-note">{{ earTargetNote }}</div>
@@ -659,14 +748,15 @@ function buildFeedback(
 
             <!-- Show note grid with highlights -->
             <div class="ear-note-grid">
+              @for (note of allNotes; track $index) {
               <button
-                *ngFor="let note of allNotes"
                 class="ear-note-btn"
-                [ngClass]="getEarBtnClass(note)"
+                [class]="getEarBtnClass(note)"
                 disabled
               >
                 {{ note }}
               </button>
+              }
             </div>
 
             <div class="ear-next-row">
@@ -675,30 +765,35 @@ function buildFeedback(
               </button>
             </div>
           </div>
+          }
 
         </div>
+        }
 
         <!-- ── Start / Stop ────────────────────────────────── -->
         <div class="session-controls">
+          @if (!sessionActive) {
           <button
             class="swara-btn swara-btn--primary session-btn"
-            *ngIf="!sessionActive"
             (click)="startSession()"
             [disabled]="selectedMode === 'raga' && !selectedRaga"
           >
             Start Practice
           </button>
+          }
+          @if (sessionActive) {
           <button
             class="swara-btn swara-btn--primary session-btn session-btn--stop"
-            *ngIf="sessionActive"
             (click)="stopSession()"
           >
             End Session
           </button>
+          }
         </div>
 
         <!-- ── Session Result Cards ────────────────────────── -->
-        <div class="result-section animate-slide-up" *ngIf="lastResult">
+        @if (lastResult) {
+        <div class="result-section animate-slide-up">
           <div class="result-header">Session Complete</div>
           <div class="stats-grid">
             <div class="swara-stat-card">
@@ -715,16 +810,18 @@ function buildFeedback(
             </div>
           </div>
 
-          <div class="recommendations" *ngIf="lastResult.recommendations.length">
+          @if (lastResult.recommendations.length) {
+          <div class="recommendations">
             <div class="rec-header">Recommendations</div>
-            <div
-              *ngFor="let rec of lastResult.recommendations"
-              class="rec-item swara-card"
-            >
+            @for (rec of lastResult.recommendations; track $index) {
+            <div class="rec-item swara-card">
               &#128161; {{ rec }}
             </div>
+            }
           </div>
+          }
         </div>
+        }
 
       </div>
     </ion-content>
@@ -812,16 +909,16 @@ export class PracticePage implements OnInit, OnDestroy {
   private destroy$    = new Subject<void>();
   private phaseTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(
-    private trainingEngine: TrainingEngineService,
-    private tanpura: TanpuraPlayerService,
-    private pitchDetection: PitchDetectionService,
-    private api: ApiService,
-    private cdr: ChangeDetectorRef,
-    private analytics: AnalyticsService,
-    private perf: PerformanceService,
-    private authService: AuthService,
-  ) {
+  readonly trainingEngine = inject(TrainingEngineService);
+  readonly tanpura = inject(TanpuraPlayerService);
+  readonly pitchDetection = inject(PitchDetectionService);
+  readonly api = inject(ApiService);
+  private readonly cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+  readonly analytics = inject(AnalyticsService);
+  readonly perf = inject(PerformanceService);
+  readonly authService = inject(AuthService);
+
+  constructor() {
     this.liveNotes$ = this.trainingEngine.liveNotes$;
   }
 

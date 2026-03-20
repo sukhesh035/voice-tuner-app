@@ -1,6 +1,6 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AsyncPipe } from '@angular/common';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner
 } from '@ionic/angular/standalone';
@@ -21,8 +21,9 @@ import { ViewWillEnter } from '@ionic/angular';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, RouterLink,
-    IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner
+    RouterLink,
+    IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonSpinner,
+    AsyncPipe
   ],
   template: `
     <ion-header>
@@ -36,31 +37,32 @@ import { ViewWillEnter } from '@ionic/angular';
 
         <!-- Hero -->
         <div class="hero-section">
-          <ng-container *ngIf="authService.user$ | async as user; else guestGreeting">
+          @if (authService.user$ | async; as user) {
             <div class="hero-greeting">{{ greeting }}, {{ user.name }}</div>
-          </ng-container>
-          <ng-template #guestGreeting>
+          } @else {
             <div class="hero-greeting">{{ greeting }}, रियाज़ करें</div>
-          </ng-template>
+          }
 
           <div class="hero-title">
             Your Daily<br />
             <span class="hero-highlight">Riyaz Companion ✦</span>
           </div>
 
-          <ng-container *ngIf="authService.isAuthenticated$ | async; else streakGuest">
+          @if (authService.isAuthenticated$ | async) {
             <div class="swara-streak-badge">
               <span class="streak-icon">🔥</span>
-              <span *ngIf="!loading; else streakLoading">{{ streakLabel }}</span>
-              <ng-template #streakLoading><ion-spinner name="dots" style="--color:#fff;width:24px;height:16px"></ion-spinner></ng-template>
+              @if (!loading) {
+                <span>{{ streakLabel }}</span>
+              } @else {
+                <ion-spinner name="dots" style="--color:#fff;width:24px;height:16px"></ion-spinner>
+              }
             </div>
-          </ng-container>
-          <ng-template #streakGuest>
+          } @else {
             <a class="swara-streak-badge swara-streak-badge--guest" [routerLink]="['/login']">
               <span class="streak-icon">🔥</span>
               <span>Sign in to track streak</span>
             </a>
-          </ng-template>
+          }
         </div>
 
         <!-- Quick Actions -->
@@ -101,9 +103,9 @@ import { ViewWillEnter } from '@ionic/angular';
         <!-- Today's Practice -->
         <div class="today-section">
           <div class="section-label">Today's Practice</div>
-          <ng-container *ngIf="authService.isAuthenticated$ | async; else todayGuest">
+          @if (authService.isAuthenticated$ | async) {
             <div class="swara-card today-card">
-              <ng-container *ngIf="!loading; else todayLoading">
+              @if (!loading) {
                 <div class="today-stats">
                   <div class="today-stat">
                     <div class="today-stat__value">{{ todayMinutes }}</div>
@@ -118,18 +120,16 @@ import { ViewWillEnter } from '@ionic/angular';
                     <div class="today-stat__label">Sessions</div>
                   </div>
                 </div>
-              </ng-container>
-              <ng-template #todayLoading>
+              } @else {
                 <div class="today-loading">
                   <ion-spinner name="crescent"></ion-spinner>
                 </div>
-              </ng-template>
+              }
               <a [routerLink]="['/practice']" class="swara-btn swara-btn--primary today-btn">
                 {{ todaySessions > 0 ? 'Continue' : 'Start Riyaz' }}
               </a>
             </div>
-          </ng-container>
-          <ng-template #todayGuest>
+          } @else {
             <div class="swara-card today-card today-card--locked">
               <div class="today-stats today-stats--blurred">
                 <div class="today-stat">
@@ -151,7 +151,7 @@ import { ViewWillEnter } from '@ionic/angular';
                 </a>
               </div>
             </div>
-          </ng-template>
+          }
         </div>
 
         <!-- Raga of the Day -->
@@ -172,28 +172,29 @@ import { ViewWillEnter } from '@ionic/angular';
         <div class="weekly-section">
           <div class="section-label">This Week</div>
 
-          <ng-container *ngIf="authService.isAuthenticated$ | async; else weeklyGuest">
-            <ng-container *ngIf="!loading; else weeklyLoading">
+          @if (authService.isAuthenticated$ | async) {
+            @if (!loading) {
               <div class="weekly-bars">
-                <div *ngFor="let day of weekDays; let i = index" class="day-bar">
+                @for (day of weekDays; track day; let i = $index) {
+                <div class="day-bar">
                   <div class="day-bar__fill" [style.height]="weekData[i] + '%'">
                     <div class="day-bar__glow"></div>
                   </div>
                   <div class="day-bar__label">{{ day }}</div>
                 </div>
+                }
               </div>
-            </ng-container>
-            <ng-template #weeklyLoading>
+            } @else {
               <div class="weekly-loading">
                 <ion-spinner name="crescent"></ion-spinner>
               </div>
-            </ng-template>
-          </ng-container>
-
-          <ng-template #weeklyGuest>
+            }
+          } @else {
             <a class="swara-card weekly-locked-card" [routerLink]="['/login']">
               <div class="weekly-locked-bars" aria-hidden="true">
-                <div *ngFor="let h of lockedBarHeights" class="day-bar-ghost" [style.height]="h + '%'"></div>
+                @for (h of lockedBarHeights; track h) {
+                <div class="day-bar-ghost" [style.height]="h + '%'"></div>
+                }
               </div>
               <div class="weekly-locked-overlay">
                 <ion-icon name="lock-closed" class="lock-icon"></ion-icon>
@@ -202,7 +203,7 @@ import { ViewWillEnter } from '@ionic/angular';
                 <span class="swara-btn swara-btn--primary weekly-locked-btn">Sign In Free</span>
               </div>
             </a>
-          </ng-template>
+          }
         </div>
 
       </div>
@@ -252,14 +253,11 @@ export class HomePage implements OnInit, OnDestroy, ViewWillEnter {
     return 'Good Night';
   }
 
-  constructor(
-    public authService: AuthService,
-    private api: ApiService,
-    private tanpuraPlayer: TanpuraPlayerService,
-    private cdr: ChangeDetectorRef
-  ) {
-    addIcons({ musicalNote, mic, flame, trendingUp, sparkles, lockClosed, personCircle });
-  }
+  readonly authService = inject(AuthService);
+  readonly api = inject(ApiService);
+  readonly tanpuraPlayer = inject(TanpuraPlayerService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly _icons = (() => addIcons({ musicalNote, mic, flame, trendingUp, sparkles, lockClosed, personCircle }))();
 
   private isAuthenticated = false;
 

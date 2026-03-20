@@ -38,8 +38,12 @@
         />
       </div>
 
-      <div class="error-msg"   *ngIf="errorMsg">{{ errorMsg }}</div>
-      <div class="success-msg" *ngIf="successMsg">{{ successMsg }}</div>
+      @if (errorMsg) {
+        <div class="error-msg">{{ errorMsg }}</div>
+      }
+      @if (successMsg) {
+        <div class="success-msg">{{ successMsg }}</div>
+      }
 
       <button class="swara-btn swara-btn--primary verify-btn" (click)="verify()" [disabled]="isLoading">
         {{ isLoading ? 'Verifying...' : 'Verify Email' }}

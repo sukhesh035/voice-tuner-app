@@ -1,5 +1,5 @@
-import { Component, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -24,9 +24,10 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule,
+    FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
-    IonRange
+    IonRange,
+    AsyncPipe
   ],
   template: `
     <ion-header>
@@ -36,7 +37,8 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
     </ion-header>
 
     <ion-content>
-      <div class="tanpura-page" *ngIf="state$ | async as state">
+      @if (state$ | async; as state) {
+      <div class="tanpura-page">
 
         <!-- Hero Visual -->
         <div class="tanpura-hero" [class.is-playing]="state.isPlaying">
@@ -55,13 +57,16 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
           </button>
 
           <!-- String Activity Indicators -->
-          <div class="string-indicators" *ngIf="state.isPlaying">
+          @if (state.isPlaying) {
+          <div class="string-indicators">
+            @for (s of stringLabels; track s; let i = $index) {
             <div
-              *ngFor="let s of stringLabels; let i = index"
               class="string-dot"
               [class.active]="state.currentString === i"
             >{{ s }}</div>
+            }
           </div>
+          }
 
           <!-- Key Display -->
           <div class="key-badge">
@@ -77,14 +82,15 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
             <span class="section-value">{{ keyDisplay(state.key) }}</span>
           </div>
           <div class="key-grid">
+            @for (key of allKeys; track key) {
             <button
-              *ngFor="let key of allKeys"
               class="key-btn"
               [class.selected]="state.key === key"
               (click)="setKey(key)"
             >
               {{ keyDisplay(key) }}
             </button>
+            }
           </div>
         </div>
 
@@ -170,48 +176,47 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
             <span class="section-title">String Tuning</span>
           </div>
           <div class="string-config-btns">
+            @for (config of stringConfigs; track config) {
             <button
-              *ngFor="let config of stringConfigs"
               class="string-config-btn"
               [class.selected]="state.stringConfig === config"
               (click)="setStringConfig(config)"
             >{{ configLabel(config) }}</button>
+            }
           </div>
         </div>
 
       </div>
+      }
     </ion-content>
   `,
   styleUrls: ['./tanpura.page.scss']
 })
 export class TanpuraPage implements OnDestroy {
-  readonly allKeys    = ALL_KEYS;
+  readonly allKeys = ALL_KEYS;
   readonly stringConfigs: StringConfig[] = ['Sa-Pa-Sa', 'Sa-Ma-Sa', 'Sa-Ma#-Sa'];
   readonly stringLabels = ['Sa', 'Pa', 'Sa'];
 
   private readonly configLabels: Record<StringConfig, string> = {
-    'Sa-Pa-Sa':  'Sa - Pa - Sa',
-    'Sa-Ma-Sa':  'Sa - Ma - Sa',
+    'Sa-Pa-Sa': 'Sa - Pa - Sa',
+    'Sa-Ma-Sa': 'Sa - Ma - Sa',
     'Sa-Ma#-Sa': 'Sa - Ma♯ - Sa',
   };
 
   private readonly instrumentTitles: Record<Instrument, string> = {
-    tanpura:  'Tanpura',
+    tanpura: 'Tanpura',
     keyboard: 'Keyboard',
-    guitar:   'Guitar',
+    guitar: 'Guitar',
   };
+
+  readonly tanpura = inject(TanpuraPlayerService);
+  readonly audioEngine = inject(AudioEngineService);
+  readonly analytics = inject(AnalyticsService);
+  private readonly _icons = (() => addIcons({ playCircle, stopCircle, musicalNote, volumeMedium, speedometer }))();
 
   state$ = this.tanpura.state$;
 
   private destroy$ = new Subject<void>();
-
-  constructor(
-    private tanpura: TanpuraPlayerService,
-    private audioEngine: AudioEngineService,
-    private analytics: AnalyticsService
-  ) {
-    addIcons({ playCircle, stopCircle, musicalNote, volumeMedium, speedometer });
-  }
 
   async togglePlay(): Promise<void> {
     const wasPlaying = this.tanpura.state.isPlaying;

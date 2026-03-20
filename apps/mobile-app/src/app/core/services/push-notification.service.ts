@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { ApiService } from './api.service';
@@ -12,13 +12,11 @@ import { AnalyticsService } from './analytics.service';
  */
 @Injectable({ providedIn: 'root' })
 export class PushNotificationService {
+  private readonly api       = inject(ApiService);
+  private readonly analytics = inject(AnalyticsService);
+
   private initialized = false;
   private currentToken: string | null = null;
-
-  constructor(
-    private api: ApiService,
-    private analytics: AnalyticsService,
-  ) {}
 
   /**
    * Call once after the user is authenticated and notification permission is granted.

@@ -1,5 +1,4 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, ChangeDetectionStrategy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -16,28 +15,26 @@ import { AnalyticsService } from '../../core/services/analytics.service';
   selector: 'app-verify-email',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonBackButton, IonButtons],
+  imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonBackButton, IonButtons],
   templateUrl: './verify-email.page.html',
   styleUrls: ['./verify-email.page.scss'],
 })
-export class VerifyEmailPage {
-  code      = '';
+export class VerifyEmailPage implements OnInit {
+  readonly authService = inject(AuthService);
+  readonly api = inject(ApiService);
+  readonly router = inject(Router);
+  readonly analytics = inject(AnalyticsService);
+  private readonly _icons = (() => addIcons({ arrowBackOutline, mailOutline }))();
+
+  code = '';
   isLoading = false;
-  errorMsg  = '';
+  errorMsg = '';
   successMsg = '';
 
   // Passed via router state from signup.page after a successful signUp() call
-  readonly email: string;
+  email = '';
 
-  constructor(
-    private authService: AuthService,
-    private api: ApiService,
-    private router: Router,
-    private cdr: ChangeDetectorRef,
-    private analytics: AnalyticsService,
-  ) {
-    addIcons({ arrowBackOutline, mailOutline });
-
+  ngOnInit(): void {
     const nav = this.router.getCurrentNavigation();
     const state = nav?.extras?.state as { email?: string } | undefined;
     this.email = state?.email ?? '';
@@ -51,11 +48,10 @@ export class VerifyEmailPage {
   async verify(): Promise<void> {
     if (!this.code.trim()) {
       this.errorMsg = 'Please enter the 6-digit code from your email.';
-      this.cdr.markForCheck();
       return;
     }
-    this.isLoading  = true;
-    this.errorMsg   = '';
+    this.isLoading = true;
+    this.errorMsg = '';
     this.successMsg = '';
     try {
       await this.authService.confirmSignUp(this.email, this.code.trim());
@@ -68,13 +64,12 @@ export class VerifyEmailPage {
       this.analytics.logEvent('email_verify_error', { error: err.name ?? 'unknown' });
     } finally {
       this.isLoading = false;
-      this.cdr.markForCheck();
     }
   }
 
   async resend(): Promise<void> {
-    this.isLoading  = true;
-    this.errorMsg   = '';
+    this.isLoading = true;
+    this.errorMsg = '';
     this.successMsg = '';
     try {
       await this.authService.resendConfirmation(this.email);
@@ -84,7 +79,6 @@ export class VerifyEmailPage {
       this.errorMsg = err.message ?? 'Could not resend code. Please try again.';
     } finally {
       this.isLoading = false;
-      this.cdr.markForCheck();
     }
   }
 }

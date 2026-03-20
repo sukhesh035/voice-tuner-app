@@ -1,4 +1,4 @@
-import { Injectable, NgZone, isDevMode } from '@angular/core';
+import { Injectable, NgZone, isDevMode, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { CapacitorUpdater, BundleInfo } from '@capgo/capacitor-updater';
@@ -20,10 +20,10 @@ interface UpdateManifest {
 
 @Injectable({ providedIn: 'root' })
 export class LiveUpdateService {
+  private readonly zone = inject(NgZone);
+
   /** Whether an update was downloaded and is waiting to be applied. */
   private pendingBundle: BundleInfo | null = null;
-
-  constructor(private zone: NgZone) {}
 
   /**
    * Call once from AppComponent.ngOnInit().
