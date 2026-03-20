@@ -52,8 +52,23 @@ export const handler = async (
 
     // GET /sessions — list user sessions
     if (method === 'GET' && !sessionId) {
-      const limit  = parseInt(event.queryStringParameters?.['limit'] ?? '20');
-      const cursor = event.queryStringParameters?.['cursor'];
+      const rawLimit = parseInt(event.queryStringParameters?.['limit'] ?? '20', 10);
+      const limit    = Math.min(Math.max(isNaN(rawLimit) ? 20 : rawLimit, 1), 100);
+      const rawCursor = event.queryStringParameters?.['cursor'];
+
+      let exclusiveStartKey: Record<string, unknown> | undefined;
+      if (rawCursor) {
+        try {
+          const cursor = JSON.parse(Buffer.from(rawCursor, 'base64').toString()) as Record<string, unknown>;
+          // Validate the cursor belongs to the authenticated user to prevent cross-user data leakage
+          if (cursor['pk'] !== auth.userId) {
+            return badRequest('Invalid cursor');
+          }
+          exclusiveStartKey = cursor;
+        } catch {
+          return badRequest('Invalid cursor');
+        }
+      }
 
       const result = await ddb.send(new QueryCommand({
         TableName:              TABLE,
@@ -64,7 +79,7 @@ export const handler = async (
         },
         ScanIndexForward: false,   // newest first
         Limit: limit,
-        ...(cursor ? { ExclusiveStartKey: JSON.parse(Buffer.from(cursor, 'base64').toString()) } : {}),
+        ...(exclusiveStartKey ? { ExclusiveStartKey: exclusiveStartKey } : {}),
       }));
 
       return ok({

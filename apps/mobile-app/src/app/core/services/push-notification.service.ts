@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { ApiService } from './api.service';
@@ -12,13 +12,11 @@ import { AnalyticsService } from './analytics.service';
  */
 @Injectable({ providedIn: 'root' })
 export class PushNotificationService {
+  private readonly api       = inject(ApiService);
+  private readonly analytics = inject(AnalyticsService);
+
   private initialized = false;
   private currentToken: string | null = null;
-
-  constructor(
-    private api: ApiService,
-    private analytics: AnalyticsService,
-  ) {}
 
   /**
    * Call once after the user is authenticated and notification permission is granted.
@@ -32,7 +30,8 @@ export class PushNotificationService {
 
     try {
       const { token } = await FirebaseMessaging.getToken();
-      console.log('[Push] FCM token:', token);
+      // Never log the full token — truncate to avoid leaking device identity
+      console.log('[Push] FCM token registered:', token.slice(0, 8) + '…');
       this.currentToken = token;
       const platform = Capacitor.getPlatform() as 'ios' | 'android';
       await this.api.registerDeviceToken(token, platform);
@@ -69,7 +68,7 @@ export class PushNotificationService {
   private addListeners(): void {
     // Token refreshed — re-register with backend
     FirebaseMessaging.addListener('tokenReceived', async ({ token }) => {
-      console.log('[Push] Token refreshed:', token);
+      console.log('[Push] Token refreshed:', token.slice(0, 8) + '…');
       if (token !== this.currentToken) {
         this.currentToken = token;
         const platform = Capacitor.getPlatform() as 'ios' | 'android';

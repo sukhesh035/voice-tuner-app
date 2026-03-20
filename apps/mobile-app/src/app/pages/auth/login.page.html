@@ -40,14 +40,20 @@
         <button class="link-btn" type="button" (click)="goToForgotPassword()">Forgot password?</button>
       </div>
 
-      <div class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</div>
-      <div class="success-msg" *ngIf="successMsg">{{ successMsg }}</div>
+      @if (errorMsg) {
+        <div class="error-msg">{{ errorMsg }}</div>
+      }
+      @if (successMsg) {
+        <div class="success-msg">{{ successMsg }}</div>
+      }
 
-      <div *ngIf="unconfirmedEmail" class="resend-block">
-        <button class="swara-btn swara-btn--secondary login-btn" (click)="resendConfirmation()" [disabled]="isLoading">
-          {{ isLoading ? 'Sending...' : 'Resend Confirmation Email' }}
-        </button>
-      </div>
+      @if (unconfirmedEmail) {
+        <div class="resend-block">
+          <button class="swara-btn swara-btn--secondary login-btn" (click)="resendConfirmation()" [disabled]="isLoading">
+            {{ isLoading ? 'Sending...' : 'Resend Confirmation Email' }}
+          </button>
+        </div>
+      }
 
       <button class="swara-btn swara-btn--primary login-btn" (click)="signIn()" [disabled]="isLoading">
         {{ isLoading ? 'Signing in...' : 'Sign In' }}

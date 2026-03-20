@@ -45,6 +45,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # ── 3a. Dependency security audit ────────────────────────────────────────
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high
+
       # ── 4. AWS credentials ───────────────────────────────────────────────────
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4.0.3
@@ -174,7 +178,7 @@ jobs:
           VERSION="1.1.${{ github.run_number }}"
           ZIP="dist/update-${VERSION}.zip"
           LEGACY_BUCKET="sruti-prod-updates-use1"
-          LEGACY_DIST="E3MNNB9K9P20PT"
+          LEGACY_DIST="${{ vars.LEGACY_CF_DIST_ID }}"
           LEGACY_CDN="https://d36pxm4nxhwid8.cloudfront.net"
 
           # Upload the same zip under the same key

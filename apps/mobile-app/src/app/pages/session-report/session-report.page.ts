@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy, ChangeDetectorRef,
   Component, OnInit, inject,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DecimalPipe, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
@@ -43,7 +43,7 @@ function getGrade(score: number): Grade {
   selector: 'app-session-report',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, IonSpinner, IonBackButton, IonButtons],
+  imports: [DecimalPipe, TitleCasePipe, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, IonSpinner, IonBackButton, IonButtons],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -54,7 +54,8 @@ function getGrade(score: number): Grade {
       </ion-toolbar>
     </ion-header>
 
-    <ion-content *ngIf="report" class="ion-padding">
+    @if (report) {
+    <ion-content class="ion-padding">
 
       <!-- ─── Grade Hero ───────────────────────────────────────────────── -->
       <div class="grade-hero swara-card" style="text-align:center; margin-bottom:1.5rem; padding:2rem;">
@@ -69,11 +70,13 @@ function getGrade(score: number): Grade {
         <div style="color:var(--swara-text-muted); font-size:0.9rem;">
           {{ report.mode | titlecase }} &bull; {{ report.key }} &bull; {{ formattedDuration }}
         </div>
-        <div *ngIf="raga" style="margin-top:0.5rem;">
+        @if (raga) {
+        <div style="margin-top:0.5rem;">
           <ion-chip [style.background]="raga.color + '33'" [style.color]="raga.color">
             {{ raga.name }}
           </ion-chip>
         </div>
+        }
       </div>
 
       <!-- ─── Key Metrics ──────────────────────────────────────────────── -->
@@ -95,7 +98,8 @@ function getGrade(score: number): Grade {
       <!-- ─── Note Accuracy Bars ───────────────────────────────────────── -->
       <div class="swara-card" style="margin-bottom:1.5rem;">
         <h4 style="margin:0 0 1rem;">Note Accuracy</h4>
-        <div *ngFor="let note of noteList" style="margin-bottom:0.75rem;">
+        @for (note of noteList; track note.name) {
+        <div style="margin-bottom:0.75rem;">
           <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
             <span style="font-weight:600;">{{ note.name }}</span>
             <span style="color:var(--swara-text-muted);">{{ note.value | number:'1.0-0' }}%</span>
@@ -108,19 +112,24 @@ function getGrade(score: number): Grade {
             ></div>
           </div>
         </div>
-        <div *ngIf="noteList.length === 0" style="color:var(--swara-text-muted); text-align:center;">
+        }
+        @if (noteList.length === 0) {
+        <div style="color:var(--swara-text-muted); text-align:center;">
           No note data recorded
         </div>
+        }
       </div>
 
       <!-- ─── AI Summary ───────────────────────────────────────────────── -->
-      <div *ngIf="report.aiSummary" class="swara-card" style="margin-bottom:1.5rem;">
+      @if (report.aiSummary) {
+      <div class="swara-card" style="margin-bottom:1.5rem;">
         <h4 style="margin:0 0 0.75rem;">
           <ion-icon name="sparkles-outline" style="vertical-align:middle; margin-right:0.5rem;"></ion-icon>
           AI Coach Feedback
         </h4>
         <p style="color:var(--swara-text-secondary); line-height:1.6;">{{ report.aiSummary }}</p>
       </div>
+      }
 
       <!-- ─── Actions ──────────────────────────────────────────────────── -->
       <div style="display:flex; gap:1rem; margin-bottom:2rem;">
@@ -135,13 +144,16 @@ function getGrade(score: number): Grade {
       </div>
 
     </ion-content>
+    }
 
-    <ion-content *ngIf="!report" class="ion-padding" style="display:flex; align-items:center; justify-content:center;">
+    @if (!report) {
+    <ion-content class="ion-padding" style="display:flex; align-items:center; justify-content:center;">
       <div style="text-align:center;">
         <ion-spinner name="crescent" style="width:3rem; height:3rem;"></ion-spinner>
         <p>Loading report…</p>
       </div>
     </ion-content>
+    }
   `,
   styles: [`
     .grade-badge {

@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, filter, map } from 'rxjs/operators';
 import { AudioEngineService } from '@voice-tuner/audio-engine';
@@ -50,6 +50,8 @@ function centsToAccuracy(cents: number): number {
  */
 @Injectable({ providedIn: 'root' })
 export class PitchDetectionService implements OnDestroy {
+  private readonly audioEngine = inject(AudioEngineService);
+
   private workletNode: AudioWorkletNode | null = null;
   private scriptProcessor: ScriptProcessorNode | null = null;
   private analyserBuffer: Float32Array | null = null;
@@ -79,8 +81,6 @@ export class PitchDetectionService implements OnDestroy {
   get note$(): Observable<IndianNote | null> {
     return this.pitch$.pipe(map(p => p?.indianNote ?? null));
   }
-
-  constructor(private audioEngine: AudioEngineService) {}
 
   /**
    * Set the Sa (tonic) frequency. All deviations are calculated relative to this.

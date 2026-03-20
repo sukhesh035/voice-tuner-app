@@ -16,6 +16,24 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Swara AI" />
   
+  <!-- Content Security Policy
+       - capacitor: / ionic: are required for Capacitor native bridge
+       - 'unsafe-inline' for scripts/styles is required by Ionic/Angular
+       - connect-src covers Cognito, API Gateway, Firebase, live-update CDN
+  -->
+  <meta http-equiv="Content-Security-Policy"
+    content="
+      default-src 'self' capacitor: ionic: https:;
+      script-src  'self' 'unsafe-inline' capacitor: ionic:;
+      style-src   'self' 'unsafe-inline';
+      img-src     'self' data: blob: https:;
+      media-src   'self' blob: https:;
+      font-src    'self' data: https:;
+      connect-src 'self' https: wss: capacitor: ionic:;
+      frame-src   'none';
+      object-src  'none';
+    " />
+
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png" />
   <link rel="icon" type="image/png" href="assets/icons/icon-192x192.png" />

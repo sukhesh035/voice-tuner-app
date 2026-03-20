@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy, ChangeDetectorRef,
   Component, OnDestroy, OnInit, inject,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule }   from '@angular/forms';
 import { Router }        from '@angular/router';
 import {
@@ -44,7 +44,7 @@ type ClassroomView = 'join' | 'teacher' | 'student-waiting' | 'student-active';
   selector: 'app-classroom',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, IonBadge, IonSpinner, IonInput, IonBackButton, IonButtons],
+  imports: [DatePipe, DecimalPipe, FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, IonBadge, IonSpinner, IonInput, IonBackButton, IonButtons],
   template: `
     <ion-header>
       <ion-toolbar>
@@ -52,10 +52,12 @@ type ClassroomView = 'join' | 'teacher' | 'student-waiting' | 'student-active';
           <ion-back-button defaultHref="/home"></ion-back-button>
         </ion-buttons>
         <ion-title>{{ viewTitle }}</ion-title>
-        <ion-buttons slot="end" *ngIf="currentView === 'teacher' && session">
+        <ion-buttons slot="end">
+          @if (currentView === 'teacher' && session) {
           <ion-chip [color]="session.isActive ? 'success' : 'medium'">
             {{ session.isActive ? 'LIVE' : 'ENDED' }}
           </ion-chip>
+          }
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -63,103 +65,116 @@ type ClassroomView = 'join' | 'teacher' | 'student-waiting' | 'student-active';
     <ion-content class="ion-padding">
 
       <!-- ─── Join View ───────────────────────────────────────────────── -->
-      <ng-container *ngIf="currentView === 'join'">
-        <div class="swara-card" style="text-align:center; padding:2rem;">
-          <div style="font-size:3rem; margin-bottom:1rem;">🎵</div>
-          <h2 style="margin-bottom:0.5rem;">Join a Class</h2>
-          <p style="color:var(--swara-text-muted); margin-bottom:2rem;">
-            Enter the session code from your Guru
-          </p>
-          <ion-input
-            [(ngModel)]="joinCode"
-            placeholder="e.g. YAMAN-X7"
-            fill="outline"
-            style="margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1em;"
-            (ionInput)="joinCode = joinCode.toUpperCase()"
-          ></ion-input>
-          <ion-input
-            [(ngModel)]="studentName"
-            placeholder="Your name"
-            fill="outline"
-            style="margin-bottom:1.5rem;"
-          ></ion-input>
-          <ion-button expand="block" [disabled]="!joinCode || !studentName || joining" (click)="joinSession()">
-            <ion-spinner *ngIf="joining" name="crescent" slot="start"></ion-spinner>
-            {{ joining ? 'Joining…' : 'Join Session' }}
-          </ion-button>
-          <div *ngIf="joinError" style="color:var(--swara-error); margin-top:1rem;">
-            {{ joinError }}
-          </div>
+      @if (currentView === 'join') {
+      <div class="swara-card" style="text-align:center; padding:2rem;">
+        <div style="font-size:3rem; margin-bottom:1rem;">🎵</div>
+        <h2 style="margin-bottom:0.5rem;">Join a Class</h2>
+        <p style="color:var(--swara-text-muted); margin-bottom:2rem;">
+          Enter the session code from your Guru
+        </p>
+        <ion-input
+          [(ngModel)]="joinCode"
+          placeholder="e.g. YAMAN-X7"
+          fill="outline"
+          style="margin-bottom:1rem; text-transform:uppercase; letter-spacing:0.1em;"
+          (ionInput)="joinCode = joinCode.toUpperCase()"
+        ></ion-input>
+        <ion-input
+          [(ngModel)]="studentName"
+          placeholder="Your name"
+          fill="outline"
+          style="margin-bottom:1.5rem;"
+        ></ion-input>
+        <ion-button expand="block" [disabled]="!joinCode || !studentName || joining" (click)="joinSession()">
+          @if (joining) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          }
+          {{ joining ? 'Joining…' : 'Join Session' }}
+        </ion-button>
+        @if (joinError) {
+        <div style="color:var(--swara-error); margin-top:1rem;">
+          {{ joinError }}
         </div>
-      </ng-container>
+        }
+      </div>
+      }
 
       <!-- ─── Teacher View ────────────────────────────────────────────── -->
-      <ng-container *ngIf="currentView === 'teacher' && session">
-        <!-- Code Display -->
-        <div class="swara-card" style="text-align:center; margin-bottom:1rem;">
-          <p style="color:var(--swara-text-muted); margin-bottom:0.5rem;">Session Code</p>
-          <div class="session-code-display">{{ session.sessionCode }}</div>
-          <p style="font-size:0.8rem; color:var(--swara-text-muted); margin-top:0.5rem;">
-            Expires {{ expiresIn }}
-          </p>
-          <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem;">
-            <ion-button fill="outline" size="small" (click)="copyCode()">
-              <ion-icon name="copy-outline" slot="start"></ion-icon>
-              Copy
-            </ion-button>
-            <ion-button fill="outline" size="small" color="danger" (click)="endSession()">
-              <ion-icon name="stop-circle-outline" slot="start"></ion-icon>
-              End Session
-            </ion-button>
-          </div>
+      @if (currentView === 'teacher' && session) {
+      <!-- Code Display -->
+      <div class="swara-card" style="text-align:center; margin-bottom:1rem;">
+        <p style="color:var(--swara-text-muted); margin-bottom:0.5rem;">Session Code</p>
+        <div class="session-code-display">{{ session.sessionCode }}</div>
+        <p style="font-size:0.8rem; color:var(--swara-text-muted); margin-top:0.5rem;">
+          Expires {{ expiresIn }}
+        </p>
+        <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:1rem;">
+          <ion-button fill="outline" size="small" (click)="copyCode()">
+            <ion-icon name="copy-outline" slot="start"></ion-icon>
+            Copy
+          </ion-button>
+          <ion-button fill="outline" size="small" color="danger" (click)="endSession()">
+            <ion-icon name="stop-circle-outline" slot="start"></ion-icon>
+            End Session
+          </ion-button>
         </div>
+      </div>
 
-        <!-- Session Config Badge -->
-        <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
-          <ion-chip>Key: {{ session.key }}</ion-chip>
-          <ion-chip>BPM: {{ session.tempo }}</ion-chip>
-          <ion-chip *ngIf="session.raagaId">{{ session.raagaId }}</ion-chip>
-          <ion-chip color="success">{{ students.length }} students</ion-chip>
-        </div>
+      <!-- Session Config Badge -->
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <ion-chip>Key: {{ session.key }}</ion-chip>
+        <ion-chip>BPM: {{ session.tempo }}</ion-chip>
+        @if (session.raagaId) {
+        <ion-chip>{{ session.raagaId }}</ion-chip>
+        }
+        <ion-chip color="success">{{ students.length }} students</ion-chip>
+      </div>
 
-        <!-- Student List -->
-        <div class="swara-card" style="padding:0;">
-          <div style="padding:1rem; border-bottom:1px solid var(--swara-border);">
-            <strong>Students</strong>
-          </div>
-          <div *ngFor="let s of students" style="padding:0.875rem 1rem; border-bottom:1px solid var(--swara-border); display:flex; align-items:center; justify-content:space-between;">
-            <div>
-              <div>{{ s.studentName }}</div>
-              <div style="font-size:0.75rem; color:var(--swara-text-muted);">
-                Joined {{ s.joinedAt | date:'shortTime' }}
-              </div>
-            </div>
-            <div *ngIf="s.submitted" style="text-align:right;">
-              <div style="font-size:1.2rem; font-weight:700; color:var(--swara-primary);">
-                {{ s.score }}
-              </div>
-              <div style="font-size:0.75rem; color:var(--swara-text-muted);">
-                {{ s.accuracy | number:'1.0-0' }}% accuracy
-              </div>
-            </div>
-            <ion-badge *ngIf="!s.submitted" color="warning">Practicing</ion-badge>
-          </div>
-          <div *ngIf="students.length === 0" style="padding:2rem; text-align:center; color:var(--swara-text-muted);">
-            Waiting for students to join…
-          </div>
+      <!-- Student List -->
+      <div class="swara-card" style="padding:0;">
+        <div style="padding:1rem; border-bottom:1px solid var(--swara-border);">
+          <strong>Students</strong>
         </div>
-      </ng-container>
+        @for (s of students; track s.studentId) {
+        <div style="padding:0.875rem 1rem; border-bottom:1px solid var(--swara-border); display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div>{{ s.studentName }}</div>
+            <div style="font-size:0.75rem; color:var(--swara-text-muted);">
+              Joined {{ s.joinedAt | date:'shortTime' }}
+            </div>
+          </div>
+          @if (s.submitted) {
+          <div style="text-align:right;">
+            <div style="font-size:1.2rem; font-weight:700; color:var(--swara-primary);">
+              {{ s.score }}
+            </div>
+            <div style="font-size:0.75rem; color:var(--swara-text-muted);">
+              {{ s.accuracy | number:'1.0-0' }}% accuracy
+            </div>
+          </div>
+          } @else {
+          <ion-badge color="warning">Practicing</ion-badge>
+          }
+        </div>
+        }
+        @if (students.length === 0) {
+        <div style="padding:2rem; text-align:center; color:var(--swara-text-muted);">
+          Waiting for students to join…
+        </div>
+        }
+      </div>
+      }
 
       <!-- ─── Student Waiting ─────────────────────────────────────────── -->
-      <ng-container *ngIf="currentView === 'student-waiting'">
-        <div style="text-align:center; padding:3rem 1rem;">
-          <ion-spinner name="dots" style="transform:scale(2); margin-bottom:2rem;"></ion-spinner>
-          <h3>Waiting for session to start…</h3>
-          <p style="color:var(--swara-text-muted);">
-            Session code: <strong>{{ joinCode }}</strong>
-          </p>
-        </div>
-      </ng-container>
+      @if (currentView === 'student-waiting') {
+      <div style="text-align:center; padding:3rem 1rem;">
+        <ion-spinner name="dots" style="transform:scale(2); margin-bottom:2rem;"></ion-spinner>
+        <h3>Waiting for session to start…</h3>
+        <p style="color:var(--swara-text-muted);">
+          Session code: <strong>{{ joinCode }}</strong>
+        </p>
+      </div>
+      }
 
     </ion-content>
   `,

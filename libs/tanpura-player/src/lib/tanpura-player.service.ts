@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AudioEngineService } from '@voice-tuner/audio-engine';
 
@@ -57,6 +57,8 @@ const STRING_RESONANCE = [
  */
 @Injectable({ providedIn: 'root' })
 export class TanpuraPlayerService {
+  private readonly audioEngine = inject(AudioEngineService);
+
   private stateSubject = new BehaviorSubject<TanpuraState>({
     isPlaying:    false,
     key:          'C',
@@ -78,8 +80,6 @@ export class TanpuraPlayerService {
 
   get state$(): Observable<TanpuraState> { return this.stateSubject.asObservable(); }
   get state():  TanpuraState              { return this.stateSubject.value; }
-
-  constructor(private audioEngine: AudioEngineService) {}
 
   // ── Public API ─────────────────────────────────────────
 

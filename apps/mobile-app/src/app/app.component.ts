@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { ThemeService } from './core/services/theme.service';
 import { AuthService } from '@voice-tuner/auth';
@@ -22,14 +22,12 @@ const AUTH_INIT_TIMEOUT_MS = 5000;
   `
 })
 export class AppComponent implements OnInit {
-  constructor(
-    private themeService: ThemeService,
-    private authService: AuthService,
-    private api: ApiService,
-    private liveUpdate: LiveUpdateService,
-    private pushNotification: PushNotificationService,
-    private permissions: PermissionsService,
-  ) {}
+  private readonly themeService    = inject(ThemeService);
+  private readonly authService     = inject(AuthService);
+  private readonly api             = inject(ApiService);
+  private readonly liveUpdate      = inject(LiveUpdateService);
+  private readonly pushNotification = inject(PushNotificationService);
+  private readonly permissions     = inject(PermissionsService);
 
   ngOnInit(): void {
     this.themeService.initialize();

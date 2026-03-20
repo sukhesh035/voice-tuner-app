@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -73,9 +73,8 @@ export interface SessionsResponse {
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
+  private readonly http = inject(HttpClient);
   private base = environment.apiBaseUrl;
-
-  constructor(private http: HttpClient) {}
 
   getProfile(): Promise<UserProfile> {
     return firstValueFrom(

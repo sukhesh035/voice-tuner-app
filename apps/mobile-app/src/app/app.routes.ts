@@ -29,11 +29,13 @@ export const routes: Routes = [
       },
       {
         path: 'settings',
-        loadComponent: () => import('./pages/settings/settings.page').then(m => m.SettingsPage)
+        loadComponent: () => import('./pages/settings/settings.page').then(m => m.SettingsPage),
+        canActivate: [authGuard]
       },
       {
         path: 'profile',
-        loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage)
+        loadComponent: () => import('./pages/profile/profile.page').then(m => m.ProfilePage),
+        canActivate: [authGuard]
       },
       { path: '', redirectTo: 'home', pathMatch: 'full' }
     ]
@@ -60,11 +62,13 @@ export const routes: Routes = [
   },
   {
     path: 'classroom/:code',
-    loadComponent: () => import('./pages/classroom/classroom.page').then(m => m.ClassroomPage)
+    loadComponent: () => import('./pages/classroom/classroom.page').then(m => m.ClassroomPage),
+    canActivate: [authGuard]
   },
   {
     path: 'session-report/:id',
-    loadComponent: () => import('./pages/session-report/session-report.page').then(m => m.SessionReportPage)
+    loadComponent: () => import('./pages/session-report/session-report.page').then(m => m.SessionReportPage),
+    canActivate: [authGuard]
   },
   {
     path: 'privacy-policy',

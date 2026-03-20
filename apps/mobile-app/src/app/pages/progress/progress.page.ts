@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonSpinner,
@@ -16,7 +16,7 @@ interface RecentSession  { raga: string; date: string; duration: number; accurac
   selector: 'app-progress',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonSpinner],
+  imports: [RouterLink, IonHeader, IonToolbar, IonTitle, IonContent, IonSpinner, AsyncPipe],
   templateUrl: './progress.page.html',
   styleUrls: ['./progress.page.scss'],
 })

@@ -36,7 +36,9 @@
         </div>
       </div>
 
-      <div class="error-msg" *ngIf="errorMsg">{{ errorMsg }}</div>
+      @if (errorMsg) {
+        <div class="error-msg">{{ errorMsg }}</div>
+      }
 
       <button class="swara-btn swara-btn--primary signup-btn" (click)="signUp()" [disabled]="isLoading">
         {{ isLoading ? 'Creating account...' : 'Create Account' }}
