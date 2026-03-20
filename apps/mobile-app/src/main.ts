@@ -1,4 +1,5 @@
 import { bootstrapApplication } from '@angular/platform-browser';
+import { ErrorHandler, inject } from '@angular/core';
 import { Amplify } from 'aws-amplify';
 import { initializeApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
@@ -7,6 +8,19 @@ import { defineCustomElements } from '@ionic/pwa-elements/loader';
 import { AppComponent } from './app/app.component';
 import { appConfig } from './app/app.config';
 import { environment } from './environments/environment';
+import { CrashlyticsService } from './app/core/services/crashlytics.service';
+
+/**
+ * Global Angular ErrorHandler that forwards uncaught errors to Crashlytics.
+ * In dev / web it falls back to console.error (CrashlyticsService handles the guard).
+ */
+class GlobalErrorHandler implements ErrorHandler {
+  private crashlytics = inject(CrashlyticsService);
+
+  handleError(error: unknown): void {
+    this.crashlytics.recordError(error, 'GlobalErrorHandler');
+  }
+}
 
 Amplify.configure({
   Auth: {
@@ -31,4 +45,10 @@ if (environment.firebase.projectId) {
 // Register Ionic PWA Elements (provides web fallback UI for Camera, Toast, etc.)
 defineCustomElements(window);
 
-bootstrapApplication(AppComponent, appConfig).catch(console.error);
+bootstrapApplication(AppComponent, {
+  ...appConfig,
+  providers: [
+    ...appConfig.providers,
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
+  ],
+}).catch(console.error);

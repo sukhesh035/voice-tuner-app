@@ -1,4 +1,4 @@
-.login-page {
+.signup-page {
   padding: 24px;
   min-height: 100%;
   display: flex;
@@ -8,7 +8,7 @@
 }
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
-.login-hero {
+.signup-hero {
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -16,11 +16,11 @@
   gap: 8px;
 }
 
-.login-logo {
+.signup-logo {
   font-size: 64px;
 }
 
-.login-title {
+.signup-title {
   font-size: 36px;
   font-weight: 900;
   background: var(--swara-gradient-primary);
@@ -29,13 +29,13 @@
   background-clip: text;
 }
 
-.login-sub {
+.signup-sub {
   font-size: 15px;
   color: var(--swara-text-secondary);
 }
 
 // ── Form Card ─────────────────────────────────────────────────────────────────
-.login-form {
+.signup-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -97,10 +97,24 @@
   justify-content: center;
 }
 
-// ── Forgot link ───────────────────────────────────────────────────────────────
-.forgot-link {
-  text-align: right;
-  margin-top: -8px;
+// ── CTA buttons ───────────────────────────────────────────────────────────────
+.signup-btn {
+  width: 100%;
+  padding: 14px !important;
+  font-size: 16px !important;
+}
+
+// ── Sign-in link row ──────────────────────────────────────────────────────────
+.signin-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.signin-label {
+  color: var(--swara-text-secondary);
 }
 
 .link-btn {
@@ -108,25 +122,10 @@
   border: none;
   padding: 0;
   color: var(--swara-primary);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-}
-
-// ── Forgot desc ───────────────────────────────────────────────────────────────
-.forgot-desc {
-  font-size: 14px;
-  color: var(--swara-text-secondary);
-  line-height: 1.5;
-  margin: 0;
-}
-
-// ── CTA buttons ───────────────────────────────────────────────────────────────
-.login-btn {
-  width: 100%;
-  padding: 14px !important;
-  font-size: 16px !important;
 }
 
 // ── Messages ─────────────────────────────────────────────────────────────────
@@ -134,48 +133,4 @@
   font-size: 13px;
   color: var(--swara-pitch-off);
   text-align: center;
-}
-
-.success-msg {
-  font-size: 13px;
-  color: var(--swara-pitch-perfect, #4caf50);
-  text-align: center;
-}
-
-// ── Divider ───────────────────────────────────────────────────────────────────
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--swara-text-tertiary);
-  font-size: 13px;
-
-  &::before,
-  &::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--swara-border);
-  }
-}
-
-// ── Sign-up link row ──────────────────────────────────────────────────────────
-.signup-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  padding-top: 4px;
-}
-
-.signup-label {
-  color: var(--swara-text-secondary);
-}
-
-// ── Resend block ──────────────────────────────────────────────────────────────
-.resend-block {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }

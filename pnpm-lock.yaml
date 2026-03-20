@@ -68,8 +68,17 @@ importers:
       '@capacitor-firebase/analytics':
         specifier: ^7.5.0
         version: 7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)
+      '@capacitor-firebase/crashlytics':
+        specifier: ^7.5.0
+        version: 7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)
       '@capacitor-firebase/messaging':
         specifier: 7.5.0
+        version: 7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)
+      '@capacitor-firebase/performance':
+        specifier: ^7.5.0
+        version: 7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)
+      '@capacitor-firebase/remote-config':
+        specifier: ^7.5.0
         version: 7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)
       '@capacitor/android':
         specifier: ^7.0.0
@@ -1729,8 +1738,35 @@ packages:
       firebase:
         optional: true
 
+  '@capacitor-firebase/crashlytics@7.5.0':
+    resolution: {integrity: sha512-lSXUjIlZFN7O8ueNhAd33GQ2Lr5M99/Qg2hivvRTnvXoUDISgEi35Ro18ZJeOigqHUCGGiMApfng2UgpCH8fjg==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+      firebase: '*'
+    peerDependenciesMeta:
+      firebase:
+        optional: true
+
   '@capacitor-firebase/messaging@7.5.0':
     resolution: {integrity: sha512-mQ4542IX7HWyGnHZLAkOvqzYYpaH47v6ijOsBO/CdyA5hfTdGc5fbxzdS5xMYKTxfpFiecb1qgEDmB5XFWvWOA==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+      firebase: ^11.2.0
+    peerDependenciesMeta:
+      firebase:
+        optional: true
+
+  '@capacitor-firebase/performance@7.5.0':
+    resolution: {integrity: sha512-C4K7DMiIc+CSfoIrWTWVwesQOPp8O5KYOEaC1C9T34dpeQF/zQJdzWpJy9VHXV7PIreezx8fGXy9Bl68WXAR0Q==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+      firebase: ^11.2.0
+    peerDependenciesMeta:
+      firebase:
+        optional: true
+
+  '@capacitor-firebase/remote-config@7.5.0':
+    resolution: {integrity: sha512-sUoVppiSYTxJk2hreiy9sfcAayu/dCkLsfQR9SC9n5xI0dGipIj4JgYHHZPfnHpd+KivNA7mYgtu0ZUK4daNGw==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
       firebase: ^11.2.0
@@ -14536,7 +14572,25 @@ snapshots:
     optionalDependencies:
       firebase: 11.10.0
 
+  '@capacitor-firebase/crashlytics@7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)':
+    dependencies:
+      '@capacitor/core': 7.6.0
+    optionalDependencies:
+      firebase: 11.10.0
+
   '@capacitor-firebase/messaging@7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)':
+    dependencies:
+      '@capacitor/core': 7.6.0
+    optionalDependencies:
+      firebase: 11.10.0
+
+  '@capacitor-firebase/performance@7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)':
+    dependencies:
+      '@capacitor/core': 7.6.0
+    optionalDependencies:
+      firebase: 11.10.0
+
+  '@capacitor-firebase/remote-config@7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)':
     dependencies:
       '@capacitor/core': 7.6.0
     optionalDependencies:

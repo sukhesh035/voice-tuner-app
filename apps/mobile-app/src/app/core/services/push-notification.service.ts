@@ -89,6 +89,14 @@ export class PushNotificationService {
       });
     });
 
+    // User dismissed a notification (swiped away without tapping)
+    FirebaseMessaging.addListener('notificationReceived', ({ notification }) => {
+      // We can't directly detect dismiss on iOS/Android from Capacitor, but
+      // logNotificationDismissed can be called explicitly from UI components
+      // when the user swipes away an in-app banner. This listener is a stub.
+      void notification; // suppress unused warning
+    });
+
     // User tapped a notification
     FirebaseMessaging.addListener('notificationActionPerformed', ({ notification }) => {
       console.log('[Push] Notification tapped:', notification);
