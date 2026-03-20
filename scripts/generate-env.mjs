@@ -12,7 +12,7 @@
  */
 
 import { execSync } from 'child_process';
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -122,5 +122,6 @@ const envFile = isProd
   ? resolve(__dirname, '../apps/mobile-app/src/environments/environment.prod.ts')
   : resolve(__dirname, '../apps/mobile-app/src/environments/environment.ts');
 
+mkdirSync(dirname(envFile), { recursive: true });
 writeFileSync(envFile, content, 'utf8');
 console.log(`\n✅ Written → ${envFile}\n`);
