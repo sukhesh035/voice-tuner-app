@@ -144,4 +144,11 @@ export class ApiService {
       this.http.post<{ deleted: boolean }>(`${this.base}/api/users/me/device-token/remove`, { token })
     );
   }
+
+  /** Delete the user's account data from the backend (profile, photo). */
+  deleteAccount(): Promise<{ deleted: boolean }> {
+    return firstValueFrom(
+      this.http.delete<{ deleted: boolean }>(`${this.base}/api/users/me`)
+    );
+  }
 }
