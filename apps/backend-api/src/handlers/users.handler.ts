@@ -5,9 +5,9 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import {
-  DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand,
+  DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, DeleteCommand,
 } from '@aws-sdk/lib-dynamodb';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import {
   verifyToken, unauthorized, ok, created,
@@ -240,6 +240,29 @@ export const handler = async (
         UpdateExpression: 'SET deviceTokens = :tokens, #updatedAt = :now',
         ExpressionAttributeNames: { '#updatedAt': 'updatedAt' },
         ExpressionAttributeValues: { ':tokens': filtered, ':now': now },
+      }));
+
+      return ok({ deleted: true });
+    }
+
+    // DELETE /users/me — delete user profile data (Cognito account deleted client-side via Amplify)
+    if (method === 'DELETE') {
+      // Delete profile photo from S3 if it exists
+      if (UPLOADS_BUCKET) {
+        try {
+          await s3.send(new DeleteObjectCommand({
+            Bucket: UPLOADS_BUCKET,
+            Key: `avatars/${auth.userId}.jpg`,
+          }));
+        } catch {
+          // ignore — photo may not exist
+        }
+      }
+
+      // Delete user record from DynamoDB
+      await ddb.send(new DeleteCommand({
+        TableName: TABLE,
+        Key: { userId: auth.userId },
       }));
 
       return ok({ deleted: true });

@@ -6,6 +6,7 @@ import {
   signIn as amplifySignIn,
   signUp as amplifySignUp,
   signOut as amplifySignOut,
+  deleteUser as amplifyDeleteUser,
   getCurrentUser,
   fetchAuthSession,
   resendSignUpCode,
@@ -131,6 +132,13 @@ export class AuthService {
 
   async signOut(): Promise<void> {
     await amplifySignOut();
+    this._pendingConfirmation.set(null);
+    this._user.set(null);
+  }
+
+  /** Delete the current Cognito user account permanently. */
+  async deleteAccount(): Promise<void> {
+    await amplifyDeleteUser();
     this._pendingConfirmation.set(null);
     this._user.set(null);
   }

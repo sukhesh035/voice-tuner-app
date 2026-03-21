@@ -105,8 +105,12 @@
     "cap-sync": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx cap sync",
-        "cwd": "apps/mobile-app"
+        "commands": [
+          "npx cap sync",
+          "node ../../scripts/patch-android.mjs"
+        ],
+        "cwd": "apps/mobile-app",
+        "parallel": false
       }
     },
     "cap-open-ios": {

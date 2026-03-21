@@ -1,13 +1,13 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { IonHeader, IonToolbar, IonTitle, IonContent, IonToggle, IonIcon } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonToggle, IonIcon, AlertController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   moonOutline, flashOutline, musicalNoteOutline, notificationsOutline,
   informationCircleOutline, documentTextOutline, shieldCheckmarkOutline,
-  heartOutline, chevronForwardOutline, micOutline, lockClosedOutline
+  heartOutline, chevronForwardOutline, micOutline, lockClosedOutline, trashOutline
 } from 'ionicons/icons';
 import { ThemeService } from '../../core/services/theme.service';
 import { ApiService, UserPreferences } from '../../core/services/api.service';
@@ -27,6 +27,7 @@ import { AnalyticsService } from '../../core/services/analytics.service';
   styleUrls: ['./settings.page.scss'],
 })
 export class SettingsPage {
+  private readonly alertCtrl = inject(AlertController);
   lowLatency     = false;
   useSamples     = true;
   sensitivity    = 'medium';
@@ -61,7 +62,7 @@ export class SettingsPage {
     addIcons({
       moonOutline, flashOutline, musicalNoteOutline, notificationsOutline,
       informationCircleOutline, documentTextOutline, shieldCheckmarkOutline,
-      heartOutline, chevronForwardOutline, micOutline, lockClosedOutline
+      heartOutline, chevronForwardOutline, micOutline, lockClosedOutline, trashOutline
     });
   }
 
@@ -127,6 +128,39 @@ export class SettingsPage {
   changePassword(): void {
     this.analytics.logEvent('change_password_requested');
     this.router.navigate(['/forgot-password']);
+  }
+
+  async deleteAccount(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Delete Account',
+      message:
+        'This will permanently delete your account, all practice sessions, streaks, and data. This cannot be undone.',
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Delete',
+          role: 'destructive',
+          cssClass: 'danger-button',
+          handler: async () => {
+            try {
+              await this.api.deleteAccount();
+              await this.authService.deleteAccount();
+              this.analytics.logEvent('account_deleted');
+              this.router.navigate(['/login'], { replaceUrl: true });
+            } catch (err) {
+              console.error('[Settings] Delete account failed', err);
+              const errAlert = await this.alertCtrl.create({
+                header: 'Error',
+                message: 'Failed to delete account. Please try again.',
+                buttons: ['OK'],
+              });
+              await errAlert.present();
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 
   private async loadPermissions(): Promise<void> {
