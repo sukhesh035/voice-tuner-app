@@ -5,7 +5,7 @@
   // behind the content, not the padding).
   background: #0A0A1B !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: env(safe-area-inset-bottom) !important;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important;
   display: flex;
   align-items: stretch;
 
