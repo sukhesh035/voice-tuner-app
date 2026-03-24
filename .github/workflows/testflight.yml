@@ -115,14 +115,17 @@ jobs:
       - name: Restore iOS bundle ID after cap sync
         run: |
           PBXPROJ="apps/mobile-app/ios/App/App.xcodeproj/project.pbxproj"
-          python3 -c "
-import re, sys
-path = '$PBXPROJ'
-content = open(path).read()
-content = content.replace('PRODUCT_BUNDLE_IDENTIFIER = com.swaraai.app', 'PRODUCT_BUNDLE_IDENTIFIER = com.sruti.voicetuner')
-open(path, 'w').write(content)
-print('Bundle ID patch applied')
-"
+          python3 << 'PYEOF'
+          import sys
+          path = "apps/mobile-app/ios/App/App.xcodeproj/project.pbxproj"
+          content = open(path).read()
+          content = content.replace(
+              "PRODUCT_BUNDLE_IDENTIFIER = com.swaraai.app",
+              "PRODUCT_BUNDLE_IDENTIFIER = com.sruti.voicetuner"
+          )
+          open(path, "w").write(content)
+          print("Bundle ID patch applied")
+          PYEOF
           echo "── Bundle ID after patch ──"
           grep "PRODUCT_BUNDLE_IDENTIFIER" "$PBXPROJ"
 
