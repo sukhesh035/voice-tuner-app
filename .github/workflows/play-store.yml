@@ -204,7 +204,7 @@ jobs:
               "releases": [{
                   "name":        rel_name,
                   "versionCodes": [version_code],
-                  "status":      "completed",
+                  "status":      "draft",
               }],
           }
           service.edits().tracks().update(
