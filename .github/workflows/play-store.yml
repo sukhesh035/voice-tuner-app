@@ -199,22 +199,37 @@ jobs:
           print(f"Uploaded versionCode: {version_code}")
 
           # 3. Assign to the internal track
-          track_body = {
-              "track": "internal",
-              "releases": [{
-                  "name":        rel_name,
-                  "versionCodes": [version_code],
-                  "status":      "completed",
-              }],
-          }
-          service.edits().tracks().update(
-              packageName=package, editId=edit_id, track="internal", body=track_body
-          ).execute()
-          print("Track updated: internal")
+          # Try "completed" first; fall back to "draft" if the app store listing
+          # is not yet complete (Play Console keeps the app in draft state until
+          # the store listing is fully submitted).
+          from googleapiclient.errors import HttpError as _HttpError
+          for status in ("completed", "draft"):
+              track_body = {
+                  "track": "internal",
+                  "releases": [{
+                      "name":        rel_name,
+                      "versionCodes": [version_code],
+                      "status":      status,
+                  }],
+              }
+              service.edits().tracks().update(
+                  packageName=package, editId=edit_id, track="internal", body=track_body
+              ).execute()
+              print(f"Track updated: internal (status={status})")
 
-          # 4. Commit the edit
-          service.edits().commit(packageName=package, editId=edit_id).execute()
-          print("Edit committed — upload complete!")
+              # 4. Commit the edit — if app is draft, commit will fail with 400
+              try:
+                  service.edits().commit(packageName=package, editId=edit_id).execute()
+                  print(f"Edit committed — upload complete! (status={status})")
+                  break
+              except _HttpError as e:
+                  if status == "draft":
+                      raise
+                  print(f"Commit failed with status={status}: {e}. Retrying with draft...")
+                  # Re-create edit for the retry
+                  edit = service.edits().insert(body={}, packageName=package).execute()
+                  edit_id = edit["id"]
+                  print(f"New Edit ID: {edit_id}")
           PYEOF
 
       # ── 14. Summary ───────────────────────────────────────────────────────
