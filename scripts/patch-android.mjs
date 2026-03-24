@@ -63,3 +63,26 @@ writeFileSync(appGradlePath, appGradle, 'utf8');
 console.log('✓ Set versionCode=2 and versionName="1.1" in app/build.gradle');
 
 console.log('\nAndroid Gradle patch complete.');
+
+// ── 4. AndroidManifest.xml — ensure RECORD_AUDIO permission is declared ───────
+//   Capacitor's WebView getUserMedia requires RECORD_AUDIO in the native manifest
+//   to trigger the Android system permission dialog. Without it, Android silently
+//   denies mic access without ever prompting the user.
+const manifestPath = resolve(androidDir, 'app/src/main/AndroidManifest.xml');
+let manifest = readFileSync(manifestPath, 'utf8');
+
+const recordAudioPermission = `<uses-permission android:name="android.permission.RECORD_AUDIO" />`;
+
+if (manifest.includes('android.permission.RECORD_AUDIO')) {
+  console.log('✓ RECORD_AUDIO permission already present in AndroidManifest.xml');
+} else {
+  // Insert before the <application tag
+  manifest = manifest.replace(
+    '<application',
+    `${recordAudioPermission}\n    <application`,
+  );
+  writeFileSync(manifestPath, manifest, 'utf8');
+  console.log('✓ Added RECORD_AUDIO permission to AndroidManifest.xml');
+}
+
+console.log('\nAndroid patch complete.');

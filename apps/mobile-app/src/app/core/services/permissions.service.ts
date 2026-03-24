@@ -61,7 +61,11 @@ export class PermissionsService {
 
   /**
    * Request microphone permission. Returns the resulting state.
-   * If denied, on native platforms opens system settings.
+   *
+   * On Android, the RECORD_AUDIO permission must be declared in AndroidManifest.xml
+   * (handled by patch-android.mjs). Once declared, Capacitor's WebView will show
+   * the native Android system dialog when getUserMedia is called.
+   * On iOS and web, getUserMedia alone triggers the system prompt.
    */
   async requestMicPermission(): Promise<PermissionState> {
     try {
