@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.sruti.voicetuner',
+  appId: 'com.swaraai.app',
   appName: 'Swara AI',
   webDir: '../../dist/apps/mobile-app/browser',
   server: {
