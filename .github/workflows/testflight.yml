@@ -107,6 +107,18 @@ jobs:
           ../../node_modules/.bin/cap add ios
           ../../node_modules/.bin/cap sync ios
 
+      # ── 8a-pre. Restore iOS bundle ID after cap sync ─────────────────────
+      #   capacitor.config.ts uses com.swaraai.app (Android package name).
+      #   cap sync ios copies this into the Xcode pbxproj, overwriting the iOS
+      #   bundle ID. We patch it back to com.sruti.voicetuner so it matches
+      #   the provisioning profile and App Store Connect record.
+      - name: Restore iOS bundle ID after cap sync
+        run: |
+          PBXPROJ="apps/mobile-app/ios/App/App.xcodeproj/project.pbxproj"
+          sed -i 's/PRODUCT_BUNDLE_IDENTIFIER = com\.swaraai\.app/PRODUCT_BUNDLE_IDENTIFIER = com.sruti.voicetuner/g' "$PBXPROJ"
+          echo "── Bundle ID after patch ──"
+          grep "PRODUCT_BUNDLE_IDENTIFIER" "$PBXPROJ"
+
       # ── 8a. Decode GoogleService-Info.plist (Firebase native SDK) ──────
       #   @capacitor-firebase/analytics auto-calls FirebaseApp.configure()
       #   on iOS, which requires GoogleService-Info.plist in the app bundle.
