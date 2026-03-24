@@ -185,25 +185,26 @@ jobs:
           )
           service = build("androidpublisher", "v3", credentials=credentials)
 
-          # 1. Create an edit
-          edit = service.edits().insert(body={}, packageName=package).execute()
-          edit_id = edit["id"]
-          print(f"Edit ID:      {edit_id}")
-
-          # 2. Upload the AAB
-          media = MediaFileUpload(aab_path, mimetype="application/octet-stream", resumable=True)
-          upload = service.edits().bundles().upload(
-              packageName=package, editId=edit_id, media_body=media
-          ).execute()
-          version_code = upload["versionCode"]
-          print(f"Uploaded versionCode: {version_code}")
-
-          # 3. Assign to the internal track
-          # Try "completed" first; fall back to "draft" if the app store listing
-          # is not yet complete (Play Console keeps the app in draft state until
-          # the store listing is fully submitted).
+          # Helper: create edit, upload AAB, update track, commit — all in one shot.
+          # This must be a self-contained function so the draft fallback re-uploads
+          # the AAB into the new edit (AABs are scoped to the edit that uploaded them).
           from googleapiclient.errors import HttpError as _HttpError
-          for status in ("completed", "draft"):
+
+          def upload_with_status(status):
+              # 1. Create a fresh edit
+              edit = service.edits().insert(body={}, packageName=package).execute()
+              edit_id = edit["id"]
+              print(f"Edit ID: {edit_id} (status={status})")
+
+              # 2. Upload the AAB into this edit
+              media = MediaFileUpload(aab_path, mimetype="application/octet-stream", resumable=True)
+              upload = service.edits().bundles().upload(
+                  packageName=package, editId=edit_id, media_body=media
+              ).execute()
+              version_code = upload["versionCode"]
+              print(f"Uploaded versionCode: {version_code}")
+
+              # 3. Assign to the internal track with the requested status
               track_body = {
                   "track": "internal",
                   "releases": [{
@@ -217,19 +218,20 @@ jobs:
               ).execute()
               print(f"Track updated: internal (status={status})")
 
-              # 4. Commit the edit — if app is draft, commit will fail with 400
-              try:
-                  service.edits().commit(packageName=package, editId=edit_id).execute()
-                  print(f"Edit committed — upload complete! (status={status})")
-                  break
-              except _HttpError as e:
-                  if status == "draft":
-                      raise
-                  print(f"Commit failed with status={status}: {e}. Retrying with draft...")
-                  # Re-create edit for the retry
-                  edit = service.edits().insert(body={}, packageName=package).execute()
-                  edit_id = edit["id"]
-                  print(f"New Edit ID: {edit_id}")
+              # 4. Commit — raises HttpError 400 if app is in draft state and status=completed
+              service.edits().commit(packageName=package, editId=edit_id).execute()
+              print(f"Edit committed — upload complete! (status={status})")
+
+          # Try "completed" first; if Play Console rejects it (app still in draft state
+          # because the store listing is not yet fully submitted), fall back to "draft".
+          try:
+              upload_with_status("completed")
+          except _HttpError as e:
+              if "draft app" in str(e).lower() or e.status_code == 400:
+                  print(f"Commit failed (app in draft state): {e}. Retrying with status=draft...")
+                  upload_with_status("draft")
+              else:
+                  raise
           PYEOF
 
       # ── 14. Summary ───────────────────────────────────────────────────────
