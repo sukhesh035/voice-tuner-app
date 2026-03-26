@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, throttleTime } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButton, IonIcon
+  IonButton, IonIcon, ViewWillEnter
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { DecimalPipe } from '@angular/common';
@@ -15,6 +15,7 @@ import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { AuthService } from '@voice-tuner/auth';
+import { PermissionsService } from '../../core/services/permissions.service';
 
 // ── Types ─────────────────────────────────────────────────
 export type WesternNote = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
@@ -246,6 +247,9 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
 
           @if (micError) {
           <div class="mic-error">{{ micError }}</div>
+          @if (micPermDenied) {
+          <button class="open-settings-btn" (click)="openSettings()">Open Settings</button>
+          }
           }
 
           <div class="waveform-bars" [class.silent]="!currentPitch">
@@ -276,7 +280,7 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
   `,
   styleUrls: ['./sing.page.scss']
 })
-export class SingPage implements OnInit, OnDestroy {
+export class SingPage implements OnInit, OnDestroy, ViewWillEnter {
   readonly allNotes:  IndianNote[]       = INDIAN_NOTES;
   readonly scales:    ScaleDefinition[]  = SCALES;
   readonly rootNotes: WesternNote[]      = ROOT_NOTES;
@@ -292,6 +296,7 @@ export class SingPage implements OnInit, OnDestroy {
   detectedNotes  = new Set<IndianNote>();
   sessionStats   = { sampleCount: 0, stabilityScore: 0, averageCentsOff: 0 };
   micError:      string | null = null;
+  micPermDenied  = false;
 
   selectedRoot:  WesternNote     = 'C';
   selectedScale: ScaleDefinition = SCALES[1]; // Major by default
@@ -326,6 +331,7 @@ export class SingPage implements OnInit, OnDestroy {
   readonly api            = inject(ApiService);
   readonly analytics      = inject(AnalyticsService);
   readonly authService    = inject(AuthService);
+  readonly permissions    = inject(PermissionsService);
   private readonly cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
   private readonly _icons = (() => addIcons({ mic, micOff, musicalNotes, statsChart }))();
 
@@ -337,6 +343,17 @@ export class SingPage implements OnInit, OnDestroy {
         if (pitch) this.detectedNotes.add(pitch.indianNote);
         try { this.cdr.markForCheck(); } catch {}
       });
+  }
+
+  // Re-check mic permission when user returns from OS settings
+  async ionViewWillEnter(): Promise<void> {
+    await this.permissions.checkPermissions();
+    // If permission was just granted, clear any previous error
+    if (this.permissions.micPermission === 'granted' && this.micPermDenied) {
+      this.micError = null;
+      this.micPermDenied = false;
+      this.cdr.markForCheck();
+    }
   }
 
   // ── Dropdown handlers ────────────────────────────────────
@@ -369,6 +386,7 @@ export class SingPage implements OnInit, OnDestroy {
       this.sessionStats = stats as any;
       this.isActive = false;
       this.micError = null;
+      this.micPermDenied = false;
       this.analytics.logEvent('mic_stopped', {
         duration_seconds: Math.round(stats.sessionDuration),
         stability_score:  Math.round(stats.stabilityScore),
@@ -396,16 +414,32 @@ export class SingPage implements OnInit, OnDestroy {
       }
     } else {
       try {
+        // On Android, proactively request mic permission so the native
+        // RECORD_AUDIO dialog appears before getUserMedia is called.
+        // This is a no-op if permission is already granted.
+        if (this.permissions.micPermission !== 'granted') {
+          const state = await this.permissions.requestMicPermission();
+          if (state !== 'granted') {
+            this.micError = 'Microphone permission denied. Please allow access and try again.';
+            this.micPermDenied = true;
+            this.analytics.logEvent('mic_permission_denied');
+            this.cdr.markForCheck();
+            return;
+          }
+        }
+
         await this.pitchDetection.start();
         this.detectedNotes.clear();
         this.isActive = true;
         this.micError = null;
+        this.micPermDenied = false;
         this.analytics.logEvent('mic_started');
       } catch (err: any) {
         const isDenied = (err as { name?: string })?.name === 'NotAllowedError';
         this.micError = isDenied
           ? 'Microphone permission denied. Please allow access and try again.'
           : 'Could not start microphone. Please try again.';
+        this.micPermDenied = isDenied;
         if (isDenied) this.analytics.logEvent('mic_permission_denied');
       }
     }
@@ -414,6 +448,10 @@ export class SingPage implements OnInit, OnDestroy {
 
   cos(angle: number): number { return Math.cos(angle); }
   sin(angle: number): number { return Math.sin(angle); }
+
+  async openSettings(): Promise<void> {
+    await this.permissions.openAppSettings();
+  }
 
   ngOnDestroy(): void {
     this.pitchDetection.stop();

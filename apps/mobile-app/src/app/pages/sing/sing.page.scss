@@ -271,6 +271,18 @@
   max-width: 280px;
 }
 
+.open-settings-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--swara-accent, #7C4DFF);
+  background: transparent;
+  border: 1px solid var(--swara-accent, #7C4DFF);
+  border-radius: $radius-full;
+  padding: $spacing-1 $spacing-4;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .sing-btn {
   display: flex;
   align-items: center;
