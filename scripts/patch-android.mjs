@@ -64,25 +64,33 @@ console.log('✓ Set versionCode=2 and versionName="1.1" in app/build.gradle');
 
 console.log('\nAndroid Gradle patch complete.');
 
-// ── 4. AndroidManifest.xml — ensure RECORD_AUDIO permission is declared ───────
-//   Capacitor's WebView getUserMedia requires RECORD_AUDIO in the native manifest
-//   to trigger the Android system permission dialog. Without it, Android silently
-//   denies mic access without ever prompting the user.
+// ── 4. AndroidManifest.xml — ensure RECORD_AUDIO + MODIFY_AUDIO_SETTINGS permissions are declared ─
+//   Capacitor's WebView getUserMedia requires both RECORD_AUDIO and
+//   MODIFY_AUDIO_SETTINGS in the native manifest. Without them, Android
+//   silently denies mic access without ever prompting the user.
+//   (cr_media: "Requires MODIFY_AUDIO_SETTINGS and RECORD_AUDIO. No audio
+//    device will be available for recording")
 const manifestPath = resolve(androidDir, 'app/src/main/AndroidManifest.xml');
 let manifest = readFileSync(manifestPath, 'utf8');
 
-const recordAudioPermission = `<uses-permission android:name="android.permission.RECORD_AUDIO" />`;
+const requiredPermissions = [
+  { name: 'android.permission.RECORD_AUDIO', label: 'RECORD_AUDIO' },
+  { name: 'android.permission.MODIFY_AUDIO_SETTINGS', label: 'MODIFY_AUDIO_SETTINGS' },
+];
 
-if (manifest.includes('android.permission.RECORD_AUDIO')) {
-  console.log('✓ RECORD_AUDIO permission already present in AndroidManifest.xml');
-} else {
-  // Insert before the <application tag
-  manifest = manifest.replace(
-    '<application',
-    `${recordAudioPermission}\n    <application`,
-  );
-  writeFileSync(manifestPath, manifest, 'utf8');
-  console.log('✓ Added RECORD_AUDIO permission to AndroidManifest.xml');
+for (const perm of requiredPermissions) {
+  if (manifest.includes(perm.name)) {
+    console.log(`✓ ${perm.label} permission already present in AndroidManifest.xml`);
+  } else {
+    manifest = manifest.replace(
+      '<application',
+      `<uses-permission android:name="${perm.name}" />\n    <application`,
+    );
+    writeFileSync(manifestPath, manifest, 'utf8');
+    // Re-read after write so the next iteration sees the updated content
+    manifest = readFileSync(manifestPath, 'utf8');
+    console.log(`✓ Added ${perm.label} permission to AndroidManifest.xml`);
+  }
 }
 
 console.log('\nAndroid patch complete.');
