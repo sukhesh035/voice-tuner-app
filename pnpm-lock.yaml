@@ -112,6 +112,9 @@ importers:
       '@capacitor/keyboard':
         specifier: ^7.0.0
         version: 7.0.5(@capacitor/core@7.6.0)
+      '@capacitor/splash-screen':
+        specifier: ^8.0.1
+        version: 8.0.1(@capacitor/core@7.6.0)
       '@capacitor/status-bar':
         specifier: ^7.0.0
         version: 7.0.5(@capacitor/core@7.6.0)
@@ -1810,6 +1813,11 @@ packages:
     resolution: {integrity: sha512-XGqTXvoZLx4gm5TZnH9uDKg9doy8NFhabytyjDOlXDqxNitz9IPWAANUoOyu2W4Ng9a/YaY5csCnAsoUPZesTA==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
+
+  '@capacitor/splash-screen@8.0.1':
+    resolution: {integrity: sha512-c/ew/Z3eA7z8l06WoRAtzVF16VwYYrExmHmfGq1Cg675pVzaC/yuucB8/1xG1vhEfnW4fZ1KhSf/kzR1RiVYgg==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@capacitor/status-bar@7.0.5':
     resolution: {integrity: sha512-d0DI/Usy4RrNiV5xfnypXNRLmWYMixC2yAUAwe6sCQQ0HF7oskDf4RpCxcZqbxnpc4H4A0qqiOSltfJLFAYshg==}
@@ -13861,6 +13869,10 @@ snapshots:
       '@capacitor/core': 7.6.0
 
   '@capacitor/keyboard@7.0.5(@capacitor/core@7.6.0)':
+    dependencies:
+      '@capacitor/core': 7.6.0
+
+  '@capacitor/splash-screen@8.0.1(@capacitor/core@7.6.0)':
     dependencies:
       '@capacitor/core': 7.6.0
 
