@@ -26,16 +26,26 @@ export class PermissionsService {
   /**
    * Check current OS-level permission states for mic and notifications.
    * Updates local state and returns both.
+   *
+   * Note: navigator.permissions.query({ name: 'microphone' }) is unreliable
+   * inside Android WebView — it may return 'prompt' even when the OS has
+   * already denied the permission. We therefore rely on the cached value
+   * set by requestMicPermission() and only fall back to the Permissions API
+   * on platforms where it is known to work (web/PWA).
    */
   async checkPermissions(): Promise<{ mic: PermissionState; notification: PermissionState }> {
-    // Microphone — uses standard browser Permissions API
-    try {
-      const micStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
-      this.micPermission = micStatus.state as PermissionState;
-    } catch {
-      // Permissions API not supported (some WebViews) — assume prompt
-      this.micPermission = 'prompt';
+    // Microphone — on native platforms trust the cached value from the last
+    // requestMicPermission() call rather than the unreliable WebView API.
+    if (!Capacitor.isNativePlatform()) {
+      try {
+        const micStatus = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        this.micPermission = micStatus.state as PermissionState;
+      } catch {
+        // Permissions API not supported — keep existing cached value
+      }
     }
+    // On native, this.micPermission already holds the correct state from the
+    // most recent requestMicPermission() call — no update needed here.
 
     // Notifications — use Capacitor plugin on native, Notification API on web
     if (Capacitor.isNativePlatform()) {
@@ -137,10 +147,15 @@ export class PermissionsService {
       // On iOS, app-settings: opens the app's own Settings page
       window.open('app-settings:', '_system');
     } else if (platform === 'android') {
-      // On Android, open the app's detail settings page
+      // On Android, open the app's detail settings page using a proper intent URI.
+      // The intent:// scheme with the ACTION_APPLICATION_DETAILS_SETTINGS action
+      // is the correct format for navigating to app permissions in Android settings.
       const { App } = await import('@capacitor/app');
       const info = await App.getInfo();
-      window.open(`android.settings.APPLICATION_DETAILS_SETTINGS:package:${info.id}`, '_system');
+      window.open(
+        `intent:#Intent;action=android.settings.APPLICATION_DETAILS_SETTINGS;data=package:${info.id};end`,
+        '_system'
+      );
     }
   }
 
