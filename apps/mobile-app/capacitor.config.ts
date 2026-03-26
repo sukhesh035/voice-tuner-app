@@ -28,12 +28,13 @@ const config: CapacitorConfig = {
       autoDeleteFailed: true,
     },
     SplashScreen: {
-      launchShowDuration: 0,
-      launchAutoHide: false,
+      launchShowDuration: 2500,
+      launchAutoHide: true,
       backgroundColor: '#0A0A1B',
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false,
+      fadeOutDuration: 400,
     },
     StatusBar: {
       style: 'dark',
