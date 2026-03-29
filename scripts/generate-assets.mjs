@@ -49,18 +49,22 @@ async function main() {
   await resize(splashSrc, resolve(iosSplash, 'splash-2732x2732-2.png'), 2732, 2732);
 
   // ── Android mipmaps ───────────────────────────────────────────────────────
+  // ic_launcher / ic_launcher_round: standard launcher icon sizes
+  // ic_launcher_foreground: adaptive icon foreground layer = 2.25× launcher size
+  //   (108dp in mdpi — the safe-zone is the inner 72dp, outer 18dp is bleed area)
   const androidRes = resolve(root, 'apps/mobile-app/android/app/src/main/res');
   const mipmaps = [
-    ['mipmap-mdpi',    48],
-    ['mipmap-hdpi',    72],
-    ['mipmap-xhdpi',   96],
-    ['mipmap-xxhdpi',  144],
-    ['mipmap-xxxhdpi', 192],
+    // [dir, launcher size, foreground size]
+    ['mipmap-mdpi',    48,  108],
+    ['mipmap-hdpi',    72,  162],
+    ['mipmap-xhdpi',   96,  216],
+    ['mipmap-xxhdpi',  144, 324],
+    ['mipmap-xxxhdpi', 192, 432],
   ];
-  for (const [dir, size] of mipmaps) {
-    await resize(iconSrc, resolve(androidRes, dir, 'ic_launcher.png'),       size, size);
-    await resize(iconSrc, resolve(androidRes, dir, 'ic_launcher_round.png'), size, size);
-    await resize(iconSrc, resolve(androidRes, dir, 'ic_launcher_foreground.png'), size, size);
+  for (const [dir, size, fgSize] of mipmaps) {
+    await resize(iconSrc, resolve(androidRes, dir, 'ic_launcher.png'),            size,   size);
+    await resize(iconSrc, resolve(androidRes, dir, 'ic_launcher_round.png'),      size,   size);
+    await resize(iconSrc, resolve(androidRes, dir, 'ic_launcher_foreground.png'), fgSize, fgSize);
   }
 
   // ── Android splash drawables ──────────────────────────────────────────────
