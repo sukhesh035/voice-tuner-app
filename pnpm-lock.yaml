@@ -140,6 +140,9 @@ importers:
       aws-jwt-verify:
         specifier: ^5.1.1
         version: 5.1.1
+      capacitor-plugin-app-tracking-transparency:
+        specifier: ^3.0.0
+        version: 3.0.0(@capacitor/core@7.6.0)
       chart.js:
         specifier: ^4.4.0
         version: 4.5.1
@@ -193,8 +196,8 @@ importers:
         specifier: ^3.0.5
         version: 3.0.5(@types/node@22.19.15)(encoding@0.1.13)(typescript@5.9.3)
       '@capacitor/cli':
-        specifier: ^8.2.0
-        version: 8.2.0
+        specifier: ^7.0.0
+        version: 7.6.1
       '@nx/angular':
         specifier: ^22.0.0
         version: 22.5.4(f594a19de18f52a4ebc34daa67232795)
@@ -1792,9 +1795,9 @@ packages:
     engines: {node: '>=16.0.0'}
     hasBin: true
 
-  '@capacitor/cli@8.2.0':
-    resolution: {integrity: sha512-1cMEk0d/I6tl1U+v/lnJR5Oylpx8ZBIHrvQxD5zK0MkjYOUyQAAGJgh97rkhGJqjAUvrGpa8H4BmyhNQN9a17A==}
-    engines: {node: '>=22.0.0'}
+  '@capacitor/cli@7.6.1':
+    resolution: {integrity: sha512-MdmelaYbwWldKlNxiLOhfHV8F8hoM6bIHPRB/+k81FTQoOqq3HYIdHVMZVl7s2800ubNnr4lSP3FevxU20lDew==}
+    engines: {node: '>=20.0.0'}
     hasBin: true
 
   '@capacitor/core@7.6.0':
@@ -5102,6 +5105,7 @@ packages:
   '@xmldom/xmldom@0.8.11':
     resolution: {integrity: sha512-cQzWCtO6C8TQiYl1ruKNn2U6Ao4o4WBBcbL61yJl84x+j5sOWWFU9X7DpND8XZG3daDppSsigMdfAIl2upQBRw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -5720,6 +5724,12 @@ packages:
 
   caniuse-lite@1.0.30001778:
     resolution: {integrity: sha512-PN7uxFL+ExFJO61aVmP1aIEG4i9whQd4eoSCebav62UwDyp5OHh06zN4jqKSMePVgxHifCw1QJxdRkA1Pisekg==}
+
+  capacitor-plugin-app-tracking-transparency@3.0.0:
+    resolution: {integrity: sha512-paBaxm/7nu83e4U/o2PiM39oI6XKIpUGuG/WuoXyX9olZ6EYFc9YXA4wUvR4fllBDqGqvVYzUrZ7XTSeZxJMVw==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
 
   chalk@2.4.2:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
@@ -13827,7 +13837,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/cli@8.2.0':
+  '@capacitor/cli@7.6.1':
     dependencies:
       '@ionic/cli-framework-output': 2.2.8
       '@ionic/utils-subprocess': 3.0.1
@@ -18555,6 +18565,10 @@ snapshots:
       lodash.uniq: 4.5.0
 
   caniuse-lite@1.0.30001778: {}
+
+  capacitor-plugin-app-tracking-transparency@3.0.0(@capacitor/core@7.6.0):
+    dependencies:
+      '@capacitor/core': 7.6.0
 
   chalk@2.4.2:
     dependencies:

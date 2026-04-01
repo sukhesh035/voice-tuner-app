@@ -585,6 +585,46 @@ jobs:
           # it just tells iOS "this is a modern app, no scaling needed".
           /usr/libexec/PlistBuddy -c "Add :UILaunchScreen dict" "$PLIST" 2>/dev/null || true
 
+          # App Tracking Transparency (ATT) — Guideline 5.1.2(i)
+          # Required whenever any advertising/analytics SDK is present (Firebase Analytics).
+          /usr/libexec/PlistBuddy -c "Set :NSUserTrackingUsageDescription 'Swara AI uses this to measure app performance and improve your experience. No personal data is shared with advertisers.'" "$PLIST" \
+            || /usr/libexec/PlistBuddy -c "Add :NSUserTrackingUsageDescription string 'Swara AI uses this to measure app performance and improve your experience. No personal data is shared with advertisers.'" "$PLIST"
+
+          # UIRequiredDeviceCapabilities: replace legacy 'armv7' with 'microphone'
+          # 'armv7' is no longer a valid capability for modern iOS apps and triggers
+          # App Store binary rejection. Replace with 'microphone' which accurately
+          # reflects this app's hardware requirement.
+          python3 << 'PYEOF'
+          import subprocess, sys
+          plist = "apps/mobile-app/ios/App/App/Info.plist"
+          # Read current array
+          result = subprocess.run(
+              ["/usr/libexec/PlistBuddy", "-c", "Print :UIRequiredDeviceCapabilities", plist],
+              capture_output=True, text=True
+          )
+          if result.returncode != 0:
+              print("UIRequiredDeviceCapabilities not found — skipping armv7 fix")
+              sys.exit(0)
+          entries = [line.strip() for line in result.stdout.strip().splitlines() if line.strip() not in ("Array {", "}")]
+          print(f"Current UIRequiredDeviceCapabilities: {entries}")
+          # Replace armv7 with microphone (deduplicate)
+          new_entries = []
+          for e in entries:
+              if e == "armv7":
+                  if "microphone" not in new_entries:
+                      new_entries.append("microphone")
+              else:
+                  new_entries.append(e)
+          if "microphone" not in new_entries:
+              new_entries.append("microphone")
+          # Rebuild the array
+          subprocess.run(["/usr/libexec/PlistBuddy", "-c", "Delete :UIRequiredDeviceCapabilities", plist], check=True)
+          subprocess.run(["/usr/libexec/PlistBuddy", "-c", "Add :UIRequiredDeviceCapabilities array", plist], check=True)
+          for i, val in enumerate(new_entries):
+              subprocess.run(["/usr/libexec/PlistBuddy", "-c", f"Add :UIRequiredDeviceCapabilities:{i} string {val}", plist], check=True)
+          print(f"Updated UIRequiredDeviceCapabilities: {new_entries}")
+          PYEOF
+
           # ── Push Notifications ──
           # Enable remote-notification background mode for silent/background pushes
           /usr/libexec/PlistBuddy -c "Delete :UIBackgroundModes" "$PLIST" 2>/dev/null || true
@@ -638,6 +678,140 @@ jobs:
           echo ""
           echo "── pbxproj entitlements references ──"
           grep -n "ENTITLEMENTS" "$PBXPROJ" || echo "WARNING: Entitlements not found in pbxproj!"
+
+      # ── 10b. Create PrivacyInfo.xcprivacy ─────────────────────────────
+      #   Apple's binary scanner (App Store review) requires a PrivacyInfo.xcprivacy
+      #   manifest in the app bundle whenever the app (or an SDK it links) uses
+      #   privacy-sensitive APIs. Firebase Analytics and Capacitor both access:
+      #     - NSPrivacyAccessedAPICategoryUserDefaults (UserDefaults storage)
+      #     - NSPrivacyAccessedAPICategoryDiskSpace (disk space APIs)
+      #     - NSPrivacyAccessedAPICategorySystemBootTime (boot time API)
+      #     - NSPrivacyAccessedAPICategoryFileTimestamp (file timestamp APIs)
+      #   This step:
+      #     1. Writes the manifest XML into the App bundle directory.
+      #     2. Registers it in project.pbxproj (PBXFileReference + PBXBuildFile +
+      #        PBXGroup + PBXResourcesBuildPhase) so Xcode includes it in the archive.
+      - name: Create PrivacyInfo.xcprivacy
+        run: |
+          APP_DIR="apps/mobile-app/ios/App/App"
+          PBXPROJ="apps/mobile-app/ios/App/App.xcodeproj/project.pbxproj"
+
+          # ── Write PrivacyInfo.xcprivacy ──
+          cat > "$APP_DIR/PrivacyInfo.xcprivacy" << 'ENDXML'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>NSPrivacyTracking</key>
+            <false/>
+            <key>NSPrivacyTrackingDomains</key>
+            <array/>
+            <key>NSPrivacyCollectedDataTypes</key>
+            <array/>
+            <key>NSPrivacyAccessedAPITypes</key>
+            <array>
+              <dict>
+                <key>NSPrivacyAccessedAPIType</key>
+                <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+                <key>NSPrivacyAccessedAPITypeReasons</key>
+                <array>
+                  <string>CA92.1</string>
+                </array>
+              </dict>
+              <dict>
+                <key>NSPrivacyAccessedAPIType</key>
+                <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+                <key>NSPrivacyAccessedAPITypeReasons</key>
+                <array>
+                  <string>85F4.1</string>
+                </array>
+              </dict>
+              <dict>
+                <key>NSPrivacyAccessedAPIType</key>
+                <string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+                <key>NSPrivacyAccessedAPITypeReasons</key>
+                <array>
+                  <string>35F9.1</string>
+                </array>
+              </dict>
+              <dict>
+                <key>NSPrivacyAccessedAPIType</key>
+                <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+                <key>NSPrivacyAccessedAPITypeReasons</key>
+                <array>
+                  <string>C617.1</string>
+                </array>
+              </dict>
+            </array>
+          </dict>
+          </plist>
+          ENDXML
+
+          # ── Register PrivacyInfo.xcprivacy in project.pbxproj ──
+          python3 << 'ENDPY'
+          import re
+
+          pbx_path = "apps/mobile-app/ios/App/App.xcodeproj/project.pbxproj"
+          with open(pbx_path, "r") as f:
+              content = f.read()
+
+          PRIVACY_FILE_REF  = "C1D2E3F4A5B6C7D8E9F0A1B1"
+          PRIVACY_BUILD_REF = "C1D2E3F4A5B6C7D8E9F0A1B2"
+
+          # Skip if already registered
+          if PRIVACY_FILE_REF in content:
+              print("PrivacyInfo.xcprivacy already registered in pbxproj")
+              exit(0)
+
+          # 1) PBXBuildFile — add after AppDelegate build file
+          anchor_build = '504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };'
+          insert_privacy_build = f'\t\t{PRIVACY_BUILD_REF} /* PrivacyInfo.xcprivacy in Resources */ = {{isa = PBXBuildFile; fileRef = {PRIVACY_FILE_REF} /* PrivacyInfo.xcprivacy */; }};'
+          if anchor_build in content:
+              content = content.replace(anchor_build, anchor_build + "\n" + insert_privacy_build)
+              print("Added PrivacyInfo PBXBuildFile entry")
+          else:
+              print("WARNING: Could not find anchor for PBXBuildFile — PrivacyInfo.xcprivacy NOT added to build files")
+
+          # 2) PBXFileReference — add after AppDelegate file reference
+          anchor_fileref = '504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };'
+          insert_privacy_fileref = f'\t\t{PRIVACY_FILE_REF} /* PrivacyInfo.xcprivacy */ = {{isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; }};'
+          if anchor_fileref in content:
+              content = content.replace(anchor_fileref, anchor_fileref + "\n" + insert_privacy_fileref)
+              print("Added PrivacyInfo PBXFileReference entry")
+          else:
+              print("WARNING: Could not find anchor for PBXFileReference — PrivacyInfo.xcprivacy file ref NOT added")
+
+          # 3) PBXGroup — add after AppDelegate in the App group children
+          group_anchor = '504EC3071FED79650016851F /* AppDelegate.swift */,'
+          group_insert_privacy = f'\t\t\t\t{PRIVACY_FILE_REF} /* PrivacyInfo.xcprivacy */,'
+          if group_anchor in content:
+              content = content.replace(group_anchor, group_anchor + "\n" + group_insert_privacy, 1)
+              print("Added PrivacyInfo to PBXGroup")
+          else:
+              print("WARNING: Could not find PBXGroup anchor — PrivacyInfo.xcprivacy NOT added to group")
+
+          # 4) PBXResourcesBuildPhase — insert into Resources phase
+          resources_phase_match = re.search(
+              r'/\* Resources \*/ = \{[^}]*isa = PBXResourcesBuildPhase;[^}]*files = \(',
+              content
+          )
+          if resources_phase_match:
+              insert_pos = resources_phase_match.end()
+              content = content[:insert_pos] + f'\n\t\t\t\t{PRIVACY_BUILD_REF} /* PrivacyInfo.xcprivacy in Resources */,' + content[insert_pos:]
+              print("Added PrivacyInfo.xcprivacy to PBXResourcesBuildPhase")
+          else:
+              print("WARNING: Could not find PBXResourcesBuildPhase — PrivacyInfo.xcprivacy NOT added to resources")
+
+          with open(pbx_path, "w") as f:
+              f.write(content)
+          print("PrivacyInfo.xcprivacy registered in pbxproj successfully")
+          ENDPY
+
+          echo "── PrivacyInfo.xcprivacy ──"
+          cat "$APP_DIR/PrivacyInfo.xcprivacy"
+          echo ""
+          echo "── pbxproj PrivacyInfo references ──"
+          grep -n "PrivacyInfo" "$PBXPROJ" || echo "WARNING: PrivacyInfo.xcprivacy not found in pbxproj!"
 
       # ── 11. Set version + build number ─────────────────────────────────
       - name: Set version and build number

@@ -3,6 +3,15 @@ import { FirebaseAnalytics } from '@capacitor-firebase/analytics';
 import { Capacitor } from '@capacitor/core';
 import { environment } from '../../../environments/environment';
 
+// On iOS in production, disable analytics collection immediately at module load
+// time — before any event can fire — so we do not collect data before the user
+// has seen and responded to the App Tracking Transparency prompt.
+// PermissionsService.requestTrackingPermission() will call setEnabled(true) once
+// the user authorizes tracking. On Android and web, ATT does not apply.
+if (environment.enableAnalytics && Capacitor.getPlatform() === 'ios') {
+  FirebaseAnalytics.setEnabled({ enabled: false }).catch(() => {});
+}
+
 export type SubscriptionTier = 'free' | 'paid';
 
 export interface UserProperties {
@@ -29,13 +38,8 @@ export interface UserProperties {
 @Injectable({ providedIn: 'root' })
 export class AnalyticsService {
 
-  constructor() {
-    // Disable analytics collection in all non-production environments.
-    // Only call setEnabled when Firebase was actually initialised (projectId present).
-    if (!environment.enableAnalytics && environment.firebase.projectId) {
-      this.setEnabled(false);
-    }
-  }
+  // No constructor needed — iOS analytics is disabled at module load (see top-level
+  // guard above) and re-enabled by PermissionsService after ATT consent is granted.
 
   /** Log a custom analytics event */
   async logEvent(name: string, params?: Record<string, string | number | boolean>): Promise<void> {

@@ -87,6 +87,7 @@
       <!-- AI Coach Summary -->
       <div class="section">
         <div class="section-label">AI Coach Summary</div>
+        @if (overallScore > 0) {
         <div class="swara-card coach-card">
           <div class="coach-icon">🤖</div>
           <div class="coach-content">
@@ -103,6 +104,15 @@
             </div>
           </div>
         </div>
+        } @else {
+        <div class="swara-card coach-card coach-card--empty">
+          <div class="coach-icon">🤖</div>
+          <div class="coach-content">
+            <div class="coach-title">No insights yet</div>
+            <p class="coach-text">Complete a few practice sessions to unlock personalised AI coaching feedback.</p>
+          </div>
+        </div>
+        }
       </div>
 
       <!-- Practice History -->
