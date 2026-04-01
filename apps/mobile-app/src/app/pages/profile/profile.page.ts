@@ -468,9 +468,14 @@ export class ProfilePage implements OnInit, ViewWillEnter {
       this.analytics.logEvent('profile_photo_updated');
     } catch (err: any) {
       console.error('[ProfilePage] changePhoto error', err);
-      // Show error to user (don't swallow silently)
-      const msg = err?.message || String(err);
-      if (!msg.includes('cancelled') && !msg.includes('User cancelled')) {
+      const msg: string = err?.message || String(err);
+      // Silently ignore user-initiated dismissals and permission denials —
+      // these are expected interactions, not errors worth surfacing.
+      const isSilent = [
+        'cancel', 'dismiss', 'no image picked',
+        'user denied', 'access denied', 'permission denied',
+      ].some(s => msg.toLowerCase().includes(s));
+      if (!isSilent) {
         const alert = await this.alertCtrl.create({
           header: 'Photo Upload Failed',
           message: msg,

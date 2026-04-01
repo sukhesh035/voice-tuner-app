@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, isDevMode } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseMessaging } from '@capacitor-firebase/messaging';
 import { ApiService } from './api.service';
@@ -82,7 +82,7 @@ export class PushNotificationService {
 
     // Notification received while app is in foreground
     FirebaseMessaging.addListener('notificationReceived', ({ notification }) => {
-      console.log('[Push] Foreground notification:', notification);
+      if (isDevMode()) console.log('[Push] Foreground notification:', notification);
       this.analytics.logEvent('push_received_foreground', {
         title: notification.title ?? '',
       });
@@ -98,7 +98,7 @@ export class PushNotificationService {
 
     // User tapped a notification
     FirebaseMessaging.addListener('notificationActionPerformed', ({ notification }) => {
-      console.log('[Push] Notification tapped:', notification);
+      if (isDevMode()) console.log('[Push] Notification tapped:', notification);
       this.analytics.logEvent('push_tapped', {
         title: notification.title ?? '',
       });

@@ -1,16 +1,19 @@
 import { Injectable, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseMessaging } from '@capacitor-firebase/messaging';
+import { AppTrackingTransparency } from 'capacitor-plugin-app-tracking-transparency';
 import { ApiService } from './api.service';
 import { PushNotificationService } from './push-notification.service';
+import { AnalyticsService } from './analytics.service';
 
 export type PermissionState = 'granted' | 'denied' | 'prompt';
+export type TrackingStatus = 'authorized' | 'denied' | 'notDetermined' | 'restricted';
 
 /**
- * Centralized service for managing app permissions (microphone + notifications).
+ * Centralized service for managing app permissions (microphone, notifications, tracking).
  * Tracks real OS-level permission state and syncs it to the user profile in DynamoDB.
  *
- * On first launch after auth, call `requestAllOnFirstLaunch()` to prompt both.
+ * On first launch after auth, call `requestAllOnFirstLaunch()` to prompt all permissions.
  * The settings page uses `checkPermissions()` to display current state, and
  * `requestMicPermission()` / `requestNotificationPermission()` to re-prompt
  * or open system settings when denied.
@@ -19,13 +22,15 @@ export type PermissionState = 'granted' | 'denied' | 'prompt';
 export class PermissionsService {
   private readonly api         = inject(ApiService);
   private readonly pushService = inject(PushNotificationService);
+  private readonly analytics   = inject(AnalyticsService);
 
   micPermission: PermissionState = 'prompt';
   notificationPermission: PermissionState = 'prompt';
+  trackingStatus: TrackingStatus = 'notDetermined';
 
   /**
-   * Check current OS-level permission states for mic and notifications.
-   * Updates local state and returns both.
+   * Check current OS-level permission states for mic, notifications, and tracking (iOS).
+   * Updates local state and returns all three.
    *
    * Note: navigator.permissions.query({ name: 'microphone' }) is unreliable
    * inside Android WebView — it may return 'prompt' even when the OS has
@@ -33,7 +38,7 @@ export class PermissionsService {
    * set by requestMicPermission() and only fall back to the Permissions API
    * on platforms where it is known to work (web/PWA).
    */
-  async checkPermissions(): Promise<{ mic: PermissionState; notification: PermissionState }> {
+  async checkPermissions(): Promise<{ mic: PermissionState; notification: PermissionState; tracking: TrackingStatus }> {
     // Microphone — on native platforms trust the cached value from the last
     // requestMicPermission() call rather than the unreliable WebView API.
     if (!Capacitor.isNativePlatform()) {
@@ -66,7 +71,19 @@ export class PermissionsService {
       }
     }
 
-    return { mic: this.micPermission, notification: this.notificationPermission };
+    // ATT tracking — iOS only; on Android/web treat as authorized
+    if (Capacitor.getPlatform() === 'ios') {
+      try {
+        const { status } = await AppTrackingTransparency.getStatus();
+        this.trackingStatus = status as TrackingStatus;
+      } catch {
+        this.trackingStatus = 'notDetermined';
+      }
+    } else {
+      this.trackingStatus = 'authorized';
+    }
+
+    return { mic: this.micPermission, notification: this.notificationPermission, tracking: this.trackingStatus };
   }
 
   /**
@@ -125,11 +142,36 @@ export class PermissionsService {
 
   /**
    * Prompt both permissions on first launch. Called once after first auth.
-   * Mic is requested first (essential for the app), then notifications.
+   * Mic is requested first (essential for the app), then notifications,
+   * then ATT tracking (iOS only).
    */
   async requestAllOnFirstLaunch(): Promise<void> {
     await this.requestMicPermission();
     await this.requestNotificationPermission();
+    await this.requestTrackingPermission();
+  }
+
+  /**
+   * Request App Tracking Transparency permission (iOS 14+ only).
+   * On Android and web this is a no-op and always returns 'authorized'.
+   * Enables or disables Firebase Analytics based on the user's decision.
+   */
+  async requestTrackingPermission(): Promise<TrackingStatus> {
+    if (Capacitor.getPlatform() === 'ios') {
+      try {
+        const { status } = await AppTrackingTransparency.requestPermission();
+        this.trackingStatus = status as TrackingStatus;
+      } catch {
+        this.trackingStatus = 'denied';
+      }
+    } else {
+      this.trackingStatus = 'authorized';
+    }
+
+    // Enable analytics only when the user has explicitly authorized tracking.
+    await this.analytics.setEnabled(this.trackingStatus === 'authorized');
+
+    return this.trackingStatus;
   }
 
   /**

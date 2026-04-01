@@ -9,6 +9,8 @@ import {
   informationCircleOutline, documentTextOutline, shieldCheckmarkOutline,
   heartOutline, chevronForwardOutline, micOutline, lockClosedOutline, trashOutline
 } from 'ionicons/icons';
+import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { ThemeService } from '../../core/services/theme.service';
 import { ApiService, UserPreferences } from '../../core/services/api.service';
 import { PushNotificationService } from '../../core/services/push-notification.service';
@@ -36,6 +38,7 @@ export class SettingsPage {
 
   micPermission: PermissionState = 'prompt';
   notificationPermission: PermissionState = 'prompt';
+  appVersion = '';
 
   selectedInstrument: Instrument = 'tanpura';
   private prefsLoaded = false;
@@ -69,6 +72,7 @@ export class SettingsPage {
   ionViewWillEnter(): void {
     this.loadPreferences();
     this.loadPermissions();
+    this.loadAppVersion();
   }
 
   toggleTheme(event: Event): void {
@@ -137,30 +141,43 @@ export class SettingsPage {
         'This will permanently delete your account, all practice sessions, streaks, and data. This cannot be undone.',
       buttons: [
         { text: 'Cancel', role: 'cancel' },
-        {
-          text: 'Delete',
-          role: 'destructive',
-          cssClass: 'danger-button',
-          handler: async () => {
-            try {
-              await this.api.deleteAccount();
-              await this.authService.deleteAccount();
-              this.analytics.logEvent('account_deleted');
-              this.router.navigate(['/login'], { replaceUrl: true });
-            } catch (err) {
-              console.error('[Settings] Delete account failed', err);
-              const errAlert = await this.alertCtrl.create({
-                header: 'Error',
-                message: 'Failed to delete account. Please try again.',
-                buttons: ['OK'],
-              });
-              await errAlert.present();
-            }
-          },
-        },
+        { text: 'Delete', role: 'destructive', cssClass: 'danger-button' },
       ],
     });
     await alert.present();
+
+    // Use onDidDismiss instead of an async handler — Ionic does not await
+    // async button handlers, so any async work (API calls, navigation) or
+    // a subsequent alert created inside the handler may be silently dropped.
+    const { role } = await alert.onDidDismiss();
+    if (role !== 'destructive') return;
+
+    try {
+      await this.api.deleteAccount();
+      await this.authService.deleteAccount();
+      this.analytics.logEvent('account_deleted');
+      this.router.navigate(['/login'], { replaceUrl: true });
+    } catch (err) {
+      console.error('[Settings] Delete account failed', err);
+      const errAlert = await this.alertCtrl.create({
+        header: 'Error',
+        message: 'Failed to delete account. Please try again.',
+        buttons: ['OK'],
+      });
+      await errAlert.present();
+    }
+  }
+
+  private async loadAppVersion(): Promise<void> {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        const info = await App.getInfo();
+        this.appVersion = info.version;
+      }
+    } catch {
+      // Non-native (web/dev) — leave appVersion empty; template falls back to workspace version
+    }
+    this.cdr.markForCheck();
   }
 
   private async loadPermissions(): Promise<void> {
