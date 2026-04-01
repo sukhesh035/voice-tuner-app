@@ -107,7 +107,8 @@
       "options": {
         "commands": [
           "npx cap sync",
-          "node ../../scripts/patch-android.mjs"
+          "node ../../scripts/patch-android.mjs",
+          "node ../../scripts/patch-ios.mjs"
         ],
         "cwd": "apps/mobile-app",
         "parallel": false

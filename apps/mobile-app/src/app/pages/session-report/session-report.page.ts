@@ -147,10 +147,14 @@ function getGrade(score: number): Grade {
     }
 
     @if (!report) {
-    <ion-content class="ion-padding" style="display:flex; align-items:center; justify-content:center;">
-      <div style="text-align:center;">
-        <ion-spinner name="crescent" style="width:3rem; height:3rem;"></ion-spinner>
-        <p>Loading report…</p>
+    <ion-content class="ion-padding">
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:60vh; gap:1rem; text-align:center;">
+        <div style="font-size:3rem;">🎵</div>
+        <div style="font-size:1.1rem; font-weight:700;">No session data</div>
+        <div style="color:var(--swara-text-secondary); font-size:0.9rem;">
+          Complete a practice session to see your report here.
+        </div>
+        <ion-button fill="outline" (click)="goToProgress()">View Progress</ion-button>
       </div>
     </ion-content>
     }
@@ -195,23 +199,9 @@ export class SessionReportPage implements OnInit {
     const state = nav?.extras?.state as { report?: SessionReportData } | undefined;
     if (state?.report) {
       this.loadReport(state.report);
-    } else {
-      // Fallback: try to load from query params or history (offline storage)
-      const mockReport: SessionReportData = {
-        sessionId:      'demo-session',
-        mode:           'raga',
-        raagaId:        'yaman',
-        key:            'C',
-        duration:       720,
-        score:          82,
-        avgAccuracy:    78,
-        stabilityScore: 0.74,
-        noteAccuracies: { Sa: 92, Re: 88, Ga: 71, Ma: 83, Pa: 65, Dha: 77, Ni: 60 },
-        aiSummary:      'Good session! Your Sa and Re are very stable. Focus on Ni and Pa which are slightly flat. Overall a strong effort — keep up the daily practice.',
-        createdAt:      new Date().toISOString(),
-      };
-      this.loadReport(mockReport);
     }
+    // If no report data was passed (direct navigation, page refresh, etc.),
+    // leave report as null — the template renders an empty state via @if (report).
   }
 
   private loadReport(report: SessionReportData) {

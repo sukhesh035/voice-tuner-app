@@ -45,3 +45,81 @@ ion-content {
 ion-page {
   background: var(--swara-bg-primary);
 }
+
+// ── Ionic overlay components: alerts, action sheets, toasts ──
+// Ionic overlays render outside the main DOM tree and don't inherit CSS
+// custom properties from ion-app. We must target them directly so they
+// respect the app's dark/light theme rather than defaulting to white.
+ion-alert {
+  --background: #1C1C2E;
+  --color: #FFFFFF;
+
+  .alert-title,
+  .alert-sub-title,
+  .alert-message {
+    color: #FFFFFF;
+  }
+
+  .alert-button {
+    color: var(--swara-primary, #7C4DFF);
+  }
+
+  // Destructive action button (e.g. Delete Account confirmation)
+  .alert-button.danger-button {
+    color: #ff453a;
+    font-weight: 700;
+  }
+}
+
+ion-action-sheet {
+  --background: #1C1C2E;
+  --color: #FFFFFF;
+  --button-color: #FFFFFF;
+  --button-background: transparent;
+}
+
+ion-toast {
+  --background: #1C1C2E;
+  --color: #FFFFFF;
+  --button-color: var(--swara-primary, #7C4DFF);
+}
+
+ion-modal {
+  --background: #0F0F2A;
+  --color: #FFFFFF;
+}
+
+[data-theme="light"] {
+  ion-alert {
+    --background: #FFFFFF;
+    --color: #0D0D2B;
+
+    .alert-title,
+    .alert-sub-title,
+    .alert-message {
+      color: #0D0D2B;
+    }
+
+    .alert-button.danger-button {
+      color: #d93025;
+      font-weight: 700;
+    }
+  }
+
+  ion-action-sheet {
+    --background: #FFFFFF;
+    --color: #0D0D2B;
+    --button-color: #0D0D2B;
+  }
+
+  ion-toast {
+    --background: #FFFFFF;
+    --color: #0D0D2B;
+    --button-color: var(--swara-primary, #6200EE);
+  }
+
+  ion-modal {
+    --background: #F5F5FF;
+    --color: #0D0D2B;
+  }
+}
