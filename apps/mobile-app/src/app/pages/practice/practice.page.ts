@@ -5,7 +5,8 @@ import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonSegment, IonSegmentButton, IonLabel
+  IonSegment, IonSegmentButton, IonLabel,
+  ViewWillLeave
 } from '@ionic/angular/standalone';
 import { TrainingEngineService, TrainingMode, TrainingSessionResult } from '@voice-tuner/training-engine';
 import { TanpuraPlayerService, MusicalKey } from '@voice-tuner/tanpura-player';
@@ -828,7 +829,7 @@ function buildFeedback(
   `,
   styleUrls: ['./practice.page.scss']
 })
-export class PracticePage implements OnInit, OnDestroy {
+export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
   readonly ragaList  = RAGA_LIST;
   readonly melakartaRagas = MELAKARTA_LIST;
   readonly popularRagas = RAGA_LIST.filter(r => r.melaNumber == null);
@@ -1678,6 +1679,14 @@ export class PracticePage implements OnInit, OnDestroy {
     }).then(() => {
       this.api.checkin(Math.ceil(result.duration / 60), Math.round(result.overallAccuracy)).catch(() => {});
     }).catch(err => console.warn('[PracticePage] Failed to save session:', err));
+  }
+
+  // Stop all audio & timers when user navigates away from this tab.
+  // ion-tabs caches pages in the DOM so ngOnDestroy does NOT fire on tab switch.
+  ionViewWillLeave(): void {
+    if (this.sessionActive) {
+      this.stopSession();
+    }
   }
 
   ngOnDestroy(): void {

@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonRange
+  IonHeader, IonToolbar, IonTitle, IonContent, IonRange,
+  ViewWillLeave
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { playCircle, stopCircle, musicalNote, volumeMedium, speedometer } from 'ionicons/icons';
@@ -193,7 +194,7 @@ const KEY_DISPLAY: Record<MusicalKey, string> = {
   `,
   styleUrls: ['./tanpura.page.scss']
 })
-export class TanpuraPage implements OnDestroy {
+export class TanpuraPage implements OnDestroy, ViewWillLeave {
   readonly allKeys = ALL_KEYS;
   readonly stringConfigs: StringConfig[] = ['Sa-Pa-Sa', 'Sa-Ma-Sa', 'Sa-Ma#-Sa'];
   readonly stringLabels = ['Sa', 'Pa', 'Sa'];
@@ -243,6 +244,14 @@ export class TanpuraPage implements OnDestroy {
   keyDisplay(key: MusicalKey): string { return KEY_DISPLAY[key]; }
   configLabel(config: StringConfig): string { return this.configLabels[config]; }
   instrumentTitle(instrument: Instrument): string { return this.instrumentTitles[instrument] ?? 'Tanpura'; }
+
+  // Stop tanpura playback when user navigates away from this tab.
+  // ion-tabs caches pages in the DOM so ngOnDestroy does NOT fire on tab switch.
+  ionViewWillLeave(): void {
+    if (this.tanpura.state.isPlaying) {
+      this.tanpura.stop();
+    }
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next();
