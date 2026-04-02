@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, throttleTime } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButton, IonIcon, ViewWillEnter
+  IonButton, IonIcon, ViewWillEnter, ViewWillLeave
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { DecimalPipe } from '@angular/common';
@@ -280,7 +280,7 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
   `,
   styleUrls: ['./sing.page.scss']
 })
-export class SingPage implements OnInit, OnDestroy, ViewWillEnter {
+export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave {
   readonly allNotes:  IndianNote[]       = INDIAN_NOTES;
   readonly scales:    ScaleDefinition[]  = SCALES;
   readonly rootNotes: WesternNote[]      = ROOT_NOTES;
@@ -352,6 +352,45 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter {
     if (this.permissions.micPermission === 'granted' && this.micPermDenied) {
       this.micError = null;
       this.micPermDenied = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  // Stop mic/pitch detection when user navigates away from this tab.
+  // ion-tabs caches pages in the DOM so ngOnDestroy does NOT fire on tab switch.
+  ionViewWillLeave(): void {
+    if (this.isActive) {
+      this.pitchDetection.stop();
+      const stats = this.pitchDetection.getSessionStats();
+      this.sessionStats = stats as any;
+      this.isActive = false;
+      this.micError = null;
+      this.micPermDenied = false;
+      this.analytics.logEvent('mic_stopped', {
+        duration_seconds: Math.round(stats.sessionDuration),
+        stability_score:  Math.round(stats.stabilityScore),
+      });
+
+      const tanpuraState    = this.tanpura.state;
+      const durationSeconds = Math.round(stats.sessionDuration);
+      if (durationSeconds > 0 && this.authService.currentUser?.emailVerified) {
+        const noteAccuracies: Record<string, number> = {};
+        for (const [note, acc] of Object.entries(stats.noteAccuracies)) {
+          noteAccuracies[note] = acc as number;
+        }
+        this.api.createSession({
+          duration:       durationSeconds,
+          mode:           'free',
+          key:            tanpuraState.key,
+          score:          Math.round(stats.stabilityScore),
+          avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
+          stabilityScore: Math.round(stats.stabilityScore),
+          noteAccuracies,
+        }).then(() => {
+          this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
+          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).catch(() => {});
+        }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
+      }
       this.cdr.markForCheck();
     }
   }
