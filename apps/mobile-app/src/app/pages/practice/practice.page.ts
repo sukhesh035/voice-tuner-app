@@ -175,7 +175,7 @@ function buildFeedback(
       <div class="practice-page">
 
         <!-- Mode Selector -->
-        <ion-segment [(ngModel)]="selectedMode" class="mode-segment">
+        <ion-segment [ngModel]="selectedMode" (ngModelChange)="onModeChange($event)" class="mode-segment">
           <ion-segment-button value="shruti">
             <ion-label>Shruti</ion-label>
           </ion-segment-button>
@@ -992,6 +992,38 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
   isAllowed(note: IndianNote): boolean {
     if (!this.selectedRaga) return true;
     return this.selectedRaga.notes.includes(note);
+  }
+
+  // ── Mode switching ───────────────────────────────────────
+
+  onModeChange(mode: TrainingMode): void {
+    if (mode === this.selectedMode) return;
+
+    // Stop any running session / audio before switching sub-tabs
+    if (this.sessionActive) {
+      this.stopSession();
+    } else {
+      // Even if no session is active, kill any in-flight timers and audio
+      // (e.g. the playing phase may be in progress without sessionActive being true
+      // for a split second, and the tanpura may still be sounding from a result phase)
+      this.clearPhaseTimer();
+      this.clearRagaPhaseTimer();
+      this.clearRagaCountdownTimer();
+      this.clearEarPhaseTimer();
+      this.tanpura.stopAndSilence();
+      this.pitchDetection.stop();
+    }
+
+    // Reset per-mode phase state so the new mode starts clean
+    this.shrutiPhase = 'idle';
+    this.ragaPhase   = 'idle';
+    this.earPhase    = 'idle';
+    this.liveNote        = null;
+    this.currentAccuracy = null;
+    this.lastResult      = null;
+
+    this.selectedMode = mode;
+    this.cdr.markForCheck();
   }
 
   // ── Session lifecycle ────────────────────────────────────
