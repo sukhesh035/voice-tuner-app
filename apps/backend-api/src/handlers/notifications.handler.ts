@@ -189,7 +189,18 @@ export const handler = async (event?: NotificationEvent & { clearBadge?: boolean
         ? { title: customTitle, body: customBody }
         : getRandomMessage();
 
+      // Only send to the most recent token per platform — prevents duplicate
+      // notifications when a user has multiple stale tokens stored (e.g. after
+      // reinstalling or after an FCM token refresh).
+      const latestByPlatform = new Map<string, DeviceToken>();
       for (const dt of user.deviceTokens) {
+        const existing = latestByPlatform.get(dt.platform);
+        if (!existing || dt.createdAt > existing.createdAt) {
+          latestByPlatform.set(dt.platform, dt);
+        }
+      }
+
+      for (const dt of latestByPlatform.values()) {
         // When clearBadgeOnly is true, send an APNs payload with badge:0 to
         // force the OS to clear the app icon badge on devices that currently
         // show a stale number. We keep the Android payload minimal.
