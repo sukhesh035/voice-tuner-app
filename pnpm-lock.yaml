@@ -199,8 +199,8 @@ importers:
         specifier: ^3.0.5
         version: 3.0.5(@types/node@22.19.15)(encoding@0.1.13)(typescript@5.9.3)
       '@capacitor/cli':
-        specifier: ^7.0.0
-        version: 7.6.1
+        specifier: ^8.2.0
+        version: 8.3.0
       '@nx/angular':
         specifier: ^22.0.0
         version: 22.5.4(f594a19de18f52a4ebc34daa67232795)
@@ -1798,9 +1798,9 @@ packages:
     engines: {node: '>=16.0.0'}
     hasBin: true
 
-  '@capacitor/cli@7.6.1':
-    resolution: {integrity: sha512-MdmelaYbwWldKlNxiLOhfHV8F8hoM6bIHPRB/+k81FTQoOqq3HYIdHVMZVl7s2800ubNnr4lSP3FevxU20lDew==}
-    engines: {node: '>=20.0.0'}
+  '@capacitor/cli@8.3.0':
+    resolution: {integrity: sha512-n3QDUimtFNbagoo8kLdjvTz3i3Y4jX1fOjvo6ptUKLzErmuqeamL8kECASoyQvg/OzJisZToGZrgLphBsptJcw==}
+    engines: {node: '>=22.0.0'}
     hasBin: true
 
   '@capacitor/core@7.6.0':
@@ -13834,7 +13834,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@capacitor/cli@7.6.1':
+  '@capacitor/cli@8.3.0':
     dependencies:
       '@ionic/cli-framework-output': 2.2.8
       '@ionic/utils-subprocess': 3.0.1
