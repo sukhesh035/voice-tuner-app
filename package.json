@@ -117,7 +117,7 @@
     "@angular/cli": "~21.2.0",
     "@angular/compiler-cli": "~21.2.0",
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^7.0.0",
+    "@capacitor/cli": "^8.2.0",
     "@nx/angular": "^22.0.0",
     "@nx/esbuild": "^22.0.0",
     "@nx/eslint-plugin": "^22.0.0",
