@@ -45,7 +45,7 @@ import { ViewWillEnter } from '@ionic/angular';
 
           <div class="hero-title">
             Your Daily<br />
-            <span class="hero-highlight">Riyaz Companion ✦</span>
+            <span class="hero-highlight">Practice Companion ✦</span>
           </div>
 
           @if (authService.isAuthenticated$ | async) {
@@ -126,7 +126,7 @@ import { ViewWillEnter } from '@ionic/angular';
                 </div>
               }
               <a [routerLink]="['/practice']" class="swara-btn swara-btn--primary today-btn">
-                {{ todaySessions > 0 ? 'Continue' : 'Start Riyaz' }}
+                {{ todaySessions > 0 ? 'Continue' : 'Start Practice' }}
               </a>
             </div>
           } @else {
@@ -147,7 +147,7 @@ import { ViewWillEnter } from '@ionic/angular';
               </div>
               <div class="today-cta">
                 <a [routerLink]="['/practice']" class="swara-btn swara-btn--primary">
-                  Start Riyaz
+                  Start Practice
                 </a>
               </div>
             </div>

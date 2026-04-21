@@ -114,7 +114,7 @@
       <div class="settings-row swara-card" (click)="requestNotificationPermission()">
         <div class="setting-info">
           <div class="setting-name">Push Notifications</div>
-          <div class="setting-sub">Daily Riyaz reminders and updates</div>
+          <div class="setting-sub">Daily Practice reminders and updates</div>
         </div>
         <span class="permission-badge" [class.granted]="notificationPermission === 'granted'" [class.denied]="notificationPermission === 'denied'">
           {{ notificationPermission === 'granted' ? 'Enabled' : notificationPermission === 'denied' ? 'Denied' : 'Not Set' }}
@@ -137,7 +137,7 @@
       </div>
       <div class="settings-row swara-card">
         <div class="setting-info">
-          <div class="setting-name">Daily Riyaz Reminder</div>
+          <div class="setting-name">Daily Practice Reminder</div>
           <div class="setting-sub">Get reminded to practice every day</div>
         </div>
         <ion-toggle

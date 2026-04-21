@@ -127,10 +127,10 @@ async function sendPush(
 // ── Reminder messages ────────────────────────────────────────────────────────
 
 const REMINDER_MESSAGES = [
-  { title: 'Time for Riyaz!', body: 'A few minutes of practice keeps your voice in shape. Start your session now.' },
+  { title: 'Time for Practice!', body: 'A few minutes of practice keeps your voice in shape. Start your session now.' },
   { title: 'Your voice is waiting', body: 'Keep your streak alive with a quick practice session today.' },
-  { title: 'Daily Riyaz reminder', body: 'Consistency is key. Open Swara AI and practice your scales.' },
-  { title: 'Namaste, musician!', body: 'Your tanpura is ready. Start your daily Riyaz now.' },
+  { title: 'Daily Practice reminder', body: 'Consistency is key. Open Swara AI and practice your scales.' },
+  { title: 'Namaste, musician!', body: 'Your tanpura is ready. Start your daily Practice now.' },
   { title: 'Keep the streak going!', body: "Don't break your practice streak. A short session is all it takes." },
 ];
 

@@ -5,6 +5,9 @@
     </ion-buttons>
     <ion-title>Create Account</ion-title>
   </ion-toolbar>
+  @if (isLoading) {
+    <ion-progress-bar type="indeterminate"></ion-progress-bar>
+  }
 </ion-header>
 
 <ion-content>

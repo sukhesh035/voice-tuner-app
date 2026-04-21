@@ -168,7 +168,7 @@ export class TrainingEngineService {
 
     const topRecommendation = topNote && topNote[1].avgAccuracy < 75
       ? `Practice ${topNote[0]} slowly with tanpura for ${topNote[1].avgAccuracy < 55 ? 10 : 5} minutes.`
-      : 'Continue daily riyaz. Focus on maintaining pitch across octave transitions.';
+      : 'Continue daily practice. Focus on maintaining pitch across octave transitions.';
 
     // Determine weekly trend from historical data
     const recent = this.allSessionResults.slice(-7);

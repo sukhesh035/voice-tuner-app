@@ -1,9 +1,9 @@
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonIcon, IonBackButton, IonButtons
+  IonIcon, IonBackButton, IonButtons, IonProgressBar
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { arrowBackOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
@@ -15,7 +15,7 @@ import { AnalyticsService } from '../../core/services/analytics.service';
   selector: 'app-login',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonBackButton, IonButtons],
+  imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonBackButton, IonButtons, IonProgressBar],
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
 })
@@ -24,6 +24,7 @@ export class LoginPage {
   private readonly api         = inject(ApiService);
   private readonly router      = inject(Router);
   private readonly analytics   = inject(AnalyticsService);
+  private readonly cdr         = inject(ChangeDetectorRef);
 
   private readonly _icons = (() => addIcons({ arrowBackOutline, eyeOutline, eyeOffOutline }))();
 
@@ -55,6 +56,7 @@ export class LoginPage {
       }
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -71,6 +73,7 @@ export class LoginPage {
       this.errorMsg = err.message ?? 'Could not resend confirmation email.';
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
