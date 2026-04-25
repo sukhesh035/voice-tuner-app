@@ -112,8 +112,11 @@ export class AuthService {
     });
     if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
       this._pendingConfirmation.set(email);
+      sessionStorage.setItem('pendingConfirmationEmail', email);
       // Hold the password in memory so verify-email page doesn't need to pass it via router state
       this.pendingPassword = password;
+      // Auto-login immediately so user lands on /home without waiting for email verify
+      await this.signIn(email, password);
       return 'CONFIRM_SIGN_UP';
     }
     // Auto-confirmed (shouldn't happen anymore, but handle gracefully)
@@ -127,13 +130,22 @@ export class AuthService {
     this.pendingPassword = null; // clear immediately — single use
     await amplifyConfirmSignUp({ username: email, confirmationCode: code });
     this._pendingConfirmation.set(null);
-    await this.signIn(email, password);
+    sessionStorage.removeItem('pendingConfirmationEmail');
+    if (password) {
+      await this.signIn(email, password);
+    }
   }
 
   async signOut(): Promise<void> {
     await amplifySignOut();
     this._pendingConfirmation.set(null);
+    sessionStorage.removeItem('pendingConfirmationEmail');
     this._user.set(null);
+  }
+
+  /** Returns the pending confirmation email from memory or sessionStorage fallback. */
+  getPendingEmail(): string | null {
+    return this._pendingConfirmation() ?? sessionStorage.getItem('pendingConfirmationEmail');
   }
 
   /** Delete the current Cognito user account permanently. */
