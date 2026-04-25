@@ -1,9 +1,9 @@
-import { Component, ChangeDetectionStrategy, OnInit, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonIcon, IonBackButton, IonButtons
+  IonIcon, IonBackButton, IonButtons, IonProgressBar
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { arrowBackOutline, mailOutline } from 'ionicons/icons';
@@ -15,31 +15,30 @@ import { AnalyticsService } from '../../core/services/analytics.service';
   selector: 'app-verify-email',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonBackButton, IonButtons],
+  imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonIcon, IonBackButton, IonButtons, IonProgressBar],
   templateUrl: './verify-email.page.html',
   styleUrls: ['./verify-email.page.scss'],
 })
 export class VerifyEmailPage implements OnInit {
-  readonly authService = inject(AuthService);
-  readonly api = inject(ApiService);
-  readonly router = inject(Router);
-  readonly analytics = inject(AnalyticsService);
+  private readonly authService = inject(AuthService);
+  private readonly api = inject(ApiService);
+  private readonly router = inject(Router);
+  private readonly analytics = inject(AnalyticsService);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly _icons = (() => addIcons({ arrowBackOutline, mailOutline }))();
 
   code = '';
   isLoading = false;
   errorMsg = '';
   successMsg = '';
-
-  // Passed via router state from signup.page after a successful signUp() call
   email = '';
 
   ngOnInit(): void {
     const nav = this.router.getCurrentNavigation();
     const state = nav?.extras?.state as { email?: string } | undefined;
-    this.email = state?.email ?? '';
+    // Primary: router state. Fallback: service signal / localStorage (survives app switch)
+    this.email = state?.email ?? this.authService.getPendingEmail() ?? '';
 
-    // If we landed here without email (e.g. direct navigation), go back to login
     if (!this.email) {
       this.router.navigate(['/login'], { replaceUrl: true });
     }
@@ -48,22 +47,24 @@ export class VerifyEmailPage implements OnInit {
   async verify(): Promise<void> {
     if (!this.code.trim()) {
       this.errorMsg = 'Please enter the 6-digit code from your email.';
+      this.cdr.markForCheck();
       return;
     }
     this.isLoading = true;
     this.errorMsg = '';
     this.successMsg = '';
+    this.cdr.markForCheck();
     try {
       await this.authService.confirmSignUp(this.email, this.code.trim());
-      // Provision user record in DynamoDB after verified sign-in
       this.api.getProfile().catch(() => {});
       this.analytics.logEvent('email_verified');
       await this.router.navigate(['/home'], { replaceUrl: true });
     } catch (err: any) {
-      this.errorMsg = err.message ?? 'Verification failed. Please try again.';
+      this.errorMsg = this.mapError(err);
       this.analytics.logEvent('email_verify_error', { error: err.name ?? 'unknown' });
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -71,6 +72,7 @@ export class VerifyEmailPage implements OnInit {
     this.isLoading = true;
     this.errorMsg = '';
     this.successMsg = '';
+    this.cdr.markForCheck();
     try {
       await this.authService.resendConfirmation(this.email);
       this.successMsg = 'A new code has been sent to your inbox.';
@@ -79,6 +81,22 @@ export class VerifyEmailPage implements OnInit {
       this.errorMsg = err.message ?? 'Could not resend code. Please try again.';
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private mapError(err: any): string {
+    const name = err?.name ?? err?.code ?? '';
+    switch (name) {
+      case 'CodeMismatchException':
+        return 'Incorrect code. Please check and try again.';
+      case 'ExpiredCodeException':
+        return 'This code has expired. Tap "Resend code" to get a new one.';
+      case 'TooManyFailedAttemptsException':
+      case 'LimitExceededException':
+        return 'Too many attempts. Please wait a moment and try again.';
+      default:
+        return err?.message ?? 'Verification failed. Please try again.';
     }
   }
 }

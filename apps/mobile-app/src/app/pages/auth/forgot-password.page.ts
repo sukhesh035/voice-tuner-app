@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonBackButton, IonButtons
+  IonBackButton, IonButtons, IonProgressBar
 } from '@ionic/angular/standalone';
 import { AuthService } from '@voice-tuner/auth';
 import { AnalyticsService } from '../../core/services/analytics.service';
@@ -12,7 +12,7 @@ import { AnalyticsService } from '../../core/services/analytics.service';
   selector: 'app-forgot-password',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons],
+  imports: [FormsModule, IonHeader, IonToolbar, IonTitle, IonContent, IonBackButton, IonButtons, IonProgressBar],
   templateUrl: './forgot-password.page.html',
   styleUrls: ['./forgot-password.page.scss'],
 })
@@ -39,7 +39,7 @@ export class ForgotPasswordPage {
         state: { email: this.email.trim() },
       });
     } catch (err: any) {
-      this.errorMsg = err.message ?? 'Could not send reset email. Please try again.';
+      this.errorMsg = this.mapError(err);
     } finally {
       this.isLoading = false;
     }
@@ -47,5 +47,22 @@ export class ForgotPasswordPage {
 
   goToSignIn(): void {
     this.router.navigate(['/login'], { replaceUrl: true });
+  }
+
+  private mapError(err: any): string {
+    const name = err?.name ?? err?.code ?? '';
+    switch (name) {
+      case 'UserNotFoundException':
+        return 'No account found with this email address.';
+      case 'InvalidParameterException':
+        return 'Please enter a valid email address.';
+      case 'LimitExceededException':
+      case 'TooManyRequestsException':
+        return 'Too many requests. Please wait a moment and try again.';
+      case 'NetworkError':
+        return 'Network error. Please check your connection and try again.';
+      default:
+        return err?.message ?? 'Could not send reset email. Please try again.';
+    }
   }
 }

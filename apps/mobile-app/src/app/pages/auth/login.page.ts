@@ -49,11 +49,9 @@ export class LoginPage {
     } catch (err: any) {
       if (err.name === 'UserNotConfirmedException') {
         this.unconfirmedEmail = this.email;
-        this.errorMsg = 'Your email address hasn\'t been confirmed yet.';
-      } else {
-        this.errorMsg = err.message ?? 'Sign in failed. Please try again.';
-        this.analytics.logEvent('login_error', { error: err.name ?? 'unknown' });
       }
+      this.errorMsg = this.mapError(err);
+      this.analytics.logEvent('login_error', { error: err.name ?? 'unknown' });
     } finally {
       this.isLoading = false;
       this.cdr.markForCheck();
@@ -83,6 +81,27 @@ export class LoginPage {
 
   goToForgotPassword(): void {
     this.router.navigate(['/forgot-password']);
+  }
+
+  private mapError(err: any): string {
+    const name = err?.name ?? err?.code ?? '';
+    switch (name) {
+      case 'NotAuthorizedException':
+        return 'Incorrect email or password. Please try again.';
+      case 'UserNotFoundException':
+        return 'No account found with this email. Please sign up first.';
+      case 'UserNotConfirmedException':
+        return 'Your email address hasn\'t been confirmed yet.';
+      case 'PasswordResetRequiredException':
+        return 'You need to reset your password before signing in.';
+      case 'TooManyRequestsException':
+      case 'LimitExceededException':
+        return 'Too many sign-in attempts. Please wait and try again.';
+      case 'NetworkError':
+        return 'Network error. Please check your connection and try again.';
+      default:
+        return err?.message ?? 'Sign in failed. Please try again.';
+    }
   }
 
   continueAsGuest(): void {

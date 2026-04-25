@@ -33,12 +33,12 @@ export class SignupPage {
   showPass  = false;
   isLoading = false;
   errorMsg  = '';
+  /** When true, show a "Sign In Instead" action button alongside the error message */
+  showSignInAction = false;
 
   private mapError(err: any): string {
     const name = err?.name ?? err?.code ?? '';
     switch (name) {
-      case 'UsernameExistsException':
-        return 'An account with this email already exists. Try signing in instead.';
       case 'InvalidPasswordException':
         return 'Password must be at least 8 characters and include a number.';
       case 'InvalidParameterException':
@@ -56,14 +56,18 @@ export class SignupPage {
   async signUp(): Promise<void> {
     if (!this.email || !this.password) {
       this.errorMsg = 'Please enter your email and a password.';
+      this.cdr.markForCheck();
       return;
     }
     if (this.password.length < 8) {
       this.errorMsg = 'Password must be at least 8 characters.';
+      this.cdr.markForCheck();
       return;
     }
     this.isLoading = true;
     this.errorMsg  = '';
+    this.showSignInAction = false;
+    this.cdr.markForCheck();
     try {
       const result = await this.authService.signUp(this.email, this.password);
       this.analytics.logEvent('sign_up', { method: 'email' });
@@ -77,7 +81,20 @@ export class SignupPage {
         await this.router.navigate(['/home'], { replaceUrl: true });
       }
     } catch (err: any) {
-      this.errorMsg = this.mapError(err);
+      if (err?.name === 'UsernameExistsException') {
+        try {
+          await this.authService.resendConfirmation(this.email);
+          // Unconfirmed account — navigate to verify-email page
+          await this.router.navigate(['/verify-email'], { state: { email: this.email } });
+          return;
+        } catch {
+          // Confirmed account exists — show sign-in prompt
+          this.errorMsg = 'An account with this email already exists.';
+          this.showSignInAction = true;
+        }
+      } else {
+        this.errorMsg = this.mapError(err);
+      }
     } finally {
       this.isLoading = false;
       this.cdr.markForCheck();
