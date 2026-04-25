@@ -42,6 +42,11 @@
       @if (errorMsg) {
         <div class="error-msg">{{ errorMsg }}</div>
       }
+      @if (showSignInAction) {
+        <button class="swara-btn swara-btn--secondary signup-btn" type="button" (click)="goToSignIn()">
+          Sign In Instead
+        </button>
+      }
 
       <button class="swara-btn swara-btn--primary signup-btn" (click)="signUp()" [disabled]="isLoading">
         {{ isLoading ? 'Creating account...' : 'Create Account' }}
