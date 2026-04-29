@@ -63,13 +63,13 @@ export class LoginPage {
     this.isLoading  = true;
     this.errorMsg   = '';
     this.successMsg = '';
+    const emailToVerify = this.unconfirmedEmail;
     try {
-      await this.authService.resendConfirmation(this.unconfirmedEmail);
-      this.successMsg = 'Confirmation email resent. Check your inbox.';
-      this.unconfirmedEmail = '';
+      await this.authService.resendConfirmation(emailToVerify);
+      // Navigate to verify-email so the user can enter the code immediately
+      await this.router.navigate(['/verify-email'], { state: { email: emailToVerify } });
     } catch (err: any) {
       this.errorMsg = err.message ?? 'Could not resend confirmation email.';
-    } finally {
       this.isLoading = false;
       this.cdr.markForCheck();
     }

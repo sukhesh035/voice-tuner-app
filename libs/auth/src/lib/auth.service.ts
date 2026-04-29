@@ -165,6 +165,9 @@ export class AuthService {
 
   async resendConfirmation(email: string): Promise<void> {
     await resendSignUpCode({ username: email });
+    // Persist so verify-email page can recover the email after an app switch
+    this._pendingConfirmation.set(email);
+    localStorage.setItem('pendingConfirmationEmail', email);
   }
 
   /** Trigger Cognito to send a password-reset code to the user's email. */
