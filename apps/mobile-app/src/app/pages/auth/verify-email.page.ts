@@ -34,12 +34,24 @@ export class VerifyEmailPage implements OnInit {
   email = '';
 
   ngOnInit(): void {
+    this.resolveEmail();
+  }
+
+  /** Called every time the page becomes active (initial load AND app resume). */
+  ionViewWillEnter(): void {
+    this.resolveEmail();
+  }
+
+  private resolveEmail(): void {
     const nav = this.router.getCurrentNavigation();
     const state = nav?.extras?.state as { email?: string } | undefined;
-    // Primary: router state. Fallback: service signal / localStorage (survives app switch)
-    this.email = state?.email ?? this.authService.getPendingEmail() ?? '';
-
-    if (!this.email) {
+    // Primary: router state on first navigation.
+    // Fallback: service signal / localStorage (survives app switch / kill+relaunch).
+    const resolved = state?.email ?? this.authService.getPendingEmail() ?? '';
+    if (resolved) {
+      this.email = resolved;
+      this.cdr.markForCheck();
+    } else if (!this.email) {
       this.router.navigate(['/login'], { replaceUrl: true });
     }
   }
