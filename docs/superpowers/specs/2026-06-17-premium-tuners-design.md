@@ -53,12 +53,12 @@ Both cards display a visible premium badge. Free users can navigate to the hub a
 
 Two products configured in App Store Connect and Google Play Console, then mirrored in RevenueCat:
 
-| Product ID | Type | Suggested price |
-|------------|------|----------------|
+| Product ID | Type | Example price (India) |
+|------------|------|----------------------|
 | `swara_premium_monthly` | Auto-renewing subscription | ₹199/month |
 | `swara_premium_annual` | Auto-renewing subscription | ₹1499/year (~37% saving) |
 
-Prices are illustrative. They are set in the store consoles and fetched dynamically by RevenueCat — no hardcoding in app code.
+**Multi-currency:** Prices are set as price tiers in App Store Connect and Google Play Console (not as fixed currency amounts). Both stores automatically convert to the user's local currency for 175+ countries. Per-country overrides are possible from the store consoles. The app never handles currency — `SubscriptionService.getOfferings()` returns `package.product.priceString` already formatted in the user's local currency and locale (e.g. `"$4.99"` for US, `"£3.99"` for UK, `"₹199"` for India). The paywall modal renders this string directly.
 
 ### 3.2 RevenueCat Configuration
 
