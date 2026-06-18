@@ -19,8 +19,8 @@ Introduce the first paid features in Swara AI — an Indian-scale guitar tuner a
 | Before | After |
 |--------|-------|
 | Home | Home |
-| Tanpura | Sing |
-| Sing | Practice |
+| Tanpura | Practice |
+| Sing | Sing |
 | Practice | **Tune** (new) |
 | Profile | Profile |
 
@@ -58,7 +58,7 @@ Two products configured in App Store Connect and Google Play Console, then mirro
 | `swara_premium_monthly` | Auto-renewing subscription | $1.99/month (App Store Tier 1) |
 | `swara_premium_annual` | Auto-renewing subscription | $14.99/year — closest tier to $15 (~37% saving) |
 
-**Multi-currency:** Prices are set as price tiers in App Store Connect and Google Play Console (not as fixed currency amounts). Both stores automatically convert to the user's local currency for 175+ countries. Per-country overrides are possible from the store consoles. The app never handles currency — `SubscriptionService.getOfferings()` returns `package.product.priceString` already formatted in the user's local currency and locale (e.g. `"$4.99"` for US, `"£3.99"` for UK, `"₹199"` for India). The paywall modal renders this string directly.
+**Multi-currency:** Prices are set as price tiers in App Store Connect and Google Play Console (not as fixed currency amounts). Both stores automatically convert to the user's local currency for 175+ countries. Per-country overrides are possible from the store consoles. The app never handles currency — `SubscriptionService.getOfferings()` returns `package.product.priceString` already formatted in the user's local currency and locale (e.g. `"$1.99"` for US, `"£1.49"` for UK, `"₹169"` for India). The paywall modal renders this string directly.
 
 ### 3.2 RevenueCat Configuration
 
@@ -72,6 +72,8 @@ Two products configured in App Store Connect and Google Play Console, then mirro
 Both products offer a **3-day free trial**. After 3 days, the subscription auto-renews at the selected price. Apple and Google handle trial eligibility — users who have previously subscribed do not receive a second trial. No code changes needed to enforce this; the stores manage it.
 
 The paywall modal displays "Try 3 days free, then $1.99/month" or "Try 3 days free, then $14.99/year" — the exact string is returned by RevenueCat in `package.product.introPrice` and rendered dynamically.
+
+**Note:** The 3-day trial must be configured in App Store Connect and Google Play Console when creating the subscription products, not in code.
 
 ### 3.4 Restore Purchases
 
@@ -345,8 +347,7 @@ Also set `subscription_tier: isPremium ? 'paid' : 'free'` on the Firebase Analyt
 - Pricing UI A/B testing (can be done via RevenueCat offerings without code changes)
 - Server-side feature gating using `isPremium` from DynamoDB (the app gates client-side; backend `isPremium` is available for future use)
 - Western-scale tuning modes for guitar/violin
-- Free trial
-- Promotional offers or introductory pricing
+- Promotional offers or introductory pricing beyond the 3-day trial
 - Admin tooling to manually grant/revoke premium
 
 ---
