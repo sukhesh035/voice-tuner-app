@@ -69,7 +69,9 @@ Two products configured in App Store Connect and Google Play Console, then mirro
 
 ### 3.3 Free Trial
 
-No free trial. Users are charged immediately on subscribe.
+Both products offer a **3-day free trial**. After 3 days, the subscription auto-renews at the selected price. Apple and Google handle trial eligibility — users who have previously subscribed do not receive a second trial. No code changes needed to enforce this; the stores manage it.
+
+The paywall modal displays "Try 3 days free, then $1.99/month" or "Try 3 days free, then $14.99/year" — the exact string is returned by RevenueCat in `package.product.introPrice` and rendered dynamically.
 
 ### 3.4 Restore Purchases
 
@@ -355,7 +357,7 @@ Also set `subscription_tier: isPremium ? 'paid' : 'free'` on the Firebase Analyt
 |----------|----------|
 | IAP vs Stripe vs PWA | RevenueCat native IAP — required for App Store/Play Store |
 | Subscription model | Single tier: monthly + annual |
-| Free trial | None |
+| Free trial | 3-day free trial on both monthly and annual products |
 | Feature gate style | Soft gate — pages visible, paywall fires on mic activation |
 | Tanpura navigation | Moved to Home quick action card; tab removed |
 | Tuner placement | New Tune tab (5th tab) |
