@@ -161,7 +161,16 @@ ionViewWillLeave() {
 }
 ```
 
-If the user subscribes inside the paywall modal, the modal dismisses and the tuner page calls `ionViewWillEnter` logic again — this time `isPremium()` returns true and the tuner starts.
+If the user subscribes inside the paywall modal, the modal dismisses with `role: 'purchased'`. The tuner page listens to the modal dismiss event:
+
+```typescript
+const { role } = await modal.onWillDismiss();
+if (role === 'purchased') {
+  await this.startTuner(); // isPremium() is now true
+}
+```
+
+This avoids relying on `ionViewWillEnter` re-firing (which Ionic does not guarantee after a modal dismiss on the same page).
 
 ### 4.5 `app.config.ts` Changes
 
@@ -305,7 +314,7 @@ Also set `subscription_tier: isPremium ? 'paid' : 'free'` on the Firebase Analyt
 |------|---------|
 | `libs/subscription/src/index.ts` | Barrel export |
 | `libs/subscription/src/lib/subscription.service.ts` | RevenueCat wrapper |
-| `libs/subscription/project.json` | Nx project config |
+| `libs/subscription/project.json` | Nx project config (follows same pattern as `libs/auth/project.json` — `@nx/js:tsc` build target, `@nx/eslint:lint` target) |
 | `apps/mobile-app/src/app/shared/components/paywall-modal/paywall-modal.component.ts` | Paywall modal |
 | `apps/mobile-app/src/app/pages/tune/tune.page.ts` | Tune hub page |
 | `apps/mobile-app/src/app/pages/tune/guitar-tuner/guitar-tuner.page.ts` | Guitar tuner page |
