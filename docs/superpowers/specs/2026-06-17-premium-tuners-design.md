@@ -55,8 +55,8 @@ Two products configured in App Store Connect and Google Play Console, then mirro
 
 | Product ID | Type | Price |
 |------------|------|-------|
-| `swara_premium_monthly` | Auto-renewing subscription | $1.99/month |
-| `swara_premium_annual` | Auto-renewing subscription | $15.00/year (~37% saving) |
+| `swara_premium_monthly` | Auto-renewing subscription | $1.99/month (App Store Tier 1) |
+| `swara_premium_annual` | Auto-renewing subscription | $14.99/year — closest tier to $15 (~37% saving) |
 
 **Multi-currency:** Prices are set as price tiers in App Store Connect and Google Play Console (not as fixed currency amounts). Both stores automatically convert to the user's local currency for 175+ countries. Per-country overrides are possible from the store consoles. The app never handles currency — `SubscriptionService.getOfferings()` returns `package.product.priceString` already formatted in the user's local currency and locale (e.g. `"$4.99"` for US, `"£3.99"` for UK, `"₹199"` for India). The paywall modal renders this string directly.
 
