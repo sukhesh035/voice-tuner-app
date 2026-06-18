@@ -139,8 +139,8 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       '@revenuecat/purchases-capacitor':
-        specifier: ^13.2.0
-        version: 13.2.0(@capacitor/core@7.6.0)
+        specifier: 11.3.2
+        version: 11.3.2(@capacitor/core@7.6.0)
       '@types/jsonwebtoken':
         specifier: ^9.0.10
         version: 9.0.10
@@ -3988,13 +3988,13 @@ packages:
   '@protobufjs/utf8@1.1.0':
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
-  '@revenuecat/purchases-capacitor@13.2.0':
-    resolution: {integrity: sha512-vRIEMkL3oqfdRWDU6FusGHV+iYyVPLMC7nVPyISw1iWmaa1gaETnLJumzmeQIrODTF2dYD20JFmWf1/hpNBUmQ==}
+  '@revenuecat/purchases-capacitor@11.3.2':
+    resolution: {integrity: sha512-3T4/lcAwpbPagrT4DuXvJ+8RewzFmHf3fQJQuhVy+uTQk5HGMHNlXcm2A/UdyHtWqU+/VqWbCClPFYGnpnNXAQ==}
     peerDependencies:
-      '@capacitor/core': '>=8.0.0'
+      '@capacitor/core': '>=7.0.0'
 
-  '@revenuecat/purchases-typescript-internal-esm@18.15.1':
-    resolution: {integrity: sha512-hIjrJ5B1nJQWEdn3B7SBvY9iwVrjS+AwJOO2BpWvN+hlb9ovUfqpnLtSDpSRQNGSroTa2VtesKjjDdsfeyXo5A==}
+  '@revenuecat/purchases-typescript-internal-esm@17.25.0':
+    resolution: {integrity: sha512-KC4BjFaQclXqFafG1Enh7t8GSwdg8p905by7UrHq0WSJmLhOR6yXSj6WDv1iwsFSAZxPPwgozNxt+U6IOFTdCA==}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.16':
     resolution: {integrity: sha512-rhY3k7Bsae9qQfOtph2Pm2jZEA+s8Gmjoz4hhmx70K9iMQ/ddeae+xhRQcM5IuVx5ry1+bGfkvMn7D6MJggVSA==}
@@ -16641,12 +16641,12 @@ snapshots:
 
   '@protobufjs/utf8@1.1.0': {}
 
-  '@revenuecat/purchases-capacitor@13.2.0(@capacitor/core@7.6.0)':
+  '@revenuecat/purchases-capacitor@11.3.2(@capacitor/core@7.6.0)':
     dependencies:
       '@capacitor/core': 7.6.0
-      '@revenuecat/purchases-typescript-internal-esm': 18.15.1
+      '@revenuecat/purchases-typescript-internal-esm': 17.25.0
 
-  '@revenuecat/purchases-typescript-internal-esm@18.15.1': {}
+  '@revenuecat/purchases-typescript-internal-esm@17.25.0': {}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.16':
     optional: true
