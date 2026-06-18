@@ -39,4 +39,8 @@ export const environment = {
     appId: '',
     measurementId: '',
   },
+  revenueCat: {
+    appleApiKey: 'appl_REPLACE_WITH_DEV_KEY',
+    googleApiKey: 'goog_REPLACE_WITH_DEV_KEY',
+  },
 };
