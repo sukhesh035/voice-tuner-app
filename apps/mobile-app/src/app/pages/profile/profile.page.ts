@@ -15,6 +15,7 @@ import { filter, take } from 'rxjs/operators';
 import { Capacitor } from '@capacitor/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { AuthService } from '@voice-tuner/auth';
+import { SubscriptionService } from '@voice-tuner/subscription';
 import { ApiService, UserProfile, StreaksResponse } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { compressProfilePhoto } from '../../core/utils/image-compress';
@@ -267,6 +268,7 @@ export class ProfilePage implements OnInit, ViewWillEnter {
   readonly alertCtrl = inject(AlertController);
   readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly subscriptionService = inject(SubscriptionService);
   private readonly _icons = (() => addIcons({
     personCircle, trendingUp, flame, musicalNote,
     settingsOutline, chevronForward, logOutOutline,
@@ -382,7 +384,7 @@ export class ProfilePage implements OnInit, ViewWillEnter {
         : 0;
       this.analytics.setUserProperties({
         practice_streak:  profile?.stats?.currentStreak ?? 0,
-        subscription_tier: 'free',
+        subscription_tier: this.subscriptionService.isPremium() ? 'paid' : 'free',
         days_since_signup: daysSinceSignup,
       });
     } catch (err) {
