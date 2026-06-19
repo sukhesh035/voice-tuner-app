@@ -153,17 +153,17 @@ export class AnalyticsService {
     await this.logEvent('daily_session_count', { count });
   }
 
-  /** IAP flow events (stub — wire to real purchase flow when ready) */
-  async logPurchaseInitiated(productId: string): Promise<void> {
-    await this.logEvent('purchase_initiated', { product_id: productId });
+  /** IAP flow events */
+  logPurchaseInitiated(productId: string, price: number, currency: string): void {
+    this.logEvent('purchase_initiated', { product_id: productId, price, currency });
   }
 
-  async logPurchaseCompleted(productId: string, price: number): Promise<void> {
-    await this.logEvent('purchase_completed', { product_id: productId, price });
+  logPurchaseCompleted(productId: string, price: number, currency: string): void {
+    this.logEvent('purchase_completed', { product_id: productId, price, currency });
   }
 
-  async logPurchaseFailed(productId: string, reason: string): Promise<void> {
-    await this.logEvent('purchase_failed', { product_id: productId, reason });
+  logPurchaseFailed(productId: string, error: string): void {
+    this.logEvent('purchase_failed', { product_id: productId, error });
   }
 
   /** User dismissed a push notification banner */

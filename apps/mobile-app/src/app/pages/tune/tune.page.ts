@@ -2,8 +2,9 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {
-  IonContent, IonHeader, IonTitle, IonToolbar, IonIcon
+  IonContent, IonHeader, IonTitle, IonToolbar, IonIcon, ModalController
 } from '@ionic/angular/standalone';
+import { PaywallModalComponent } from '../../shared/components/paywall-modal/paywall-modal.component';
 import { addIcons } from 'ionicons';
 import { lockClosedOutline, chevronForwardOutline } from 'ionicons/icons';
 import { SubscriptionService } from '@voice-tuner/subscription';
@@ -92,11 +93,24 @@ export class TunePage {
   constructor(
     private readonly subscriptionService: SubscriptionService,
     private readonly router: Router,
+    private readonly modalCtrl: ModalController,
   ) {
     addIcons({ lockClosedOutline, chevronForwardOutline });
   }
 
-  navigate(route: string): void {
+  async navigate(route: string): Promise<void> {
+    if (!this.subscriptionService.isPremium()) {
+      const modal = await this.modalCtrl.create({
+        component: PaywallModalComponent,
+        cssClass: 'paywall-modal',
+      });
+      await modal.present();
+      const { role } = await modal.onWillDismiss();
+      if (role === 'purchased') {
+        this.router.navigate([route]);
+      }
+      return;
+    }
     this.router.navigate([route]);
   }
 }
