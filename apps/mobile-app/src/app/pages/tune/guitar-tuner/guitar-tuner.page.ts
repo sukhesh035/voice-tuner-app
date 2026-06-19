@@ -120,6 +120,7 @@ export class GuitarTunerPage implements OnDestroy {
 
   private pitchSub: Subscription | null = null;
   private saFrequency = SA_FREQUENCY_DEFAULT;
+  private paywallModal: HTMLIonModalElement | null = null;
 
   constructor(
     private readonly audioEngine: AudioEngineService,
@@ -132,12 +133,13 @@ export class GuitarTunerPage implements OnDestroy {
 
   async ionViewWillEnter(): Promise<void> {
     if (!this.subscriptionService.isPremium()) {
-      const modal = await this.modalCtrl.create({
+      this.paywallModal = await this.modalCtrl.create({
         component: PaywallModalComponent,
         cssClass: 'paywall-modal',
       });
-      await modal.present();
-      const { role } = await modal.onWillDismiss();
+      await this.paywallModal.present();
+      const { role } = await this.paywallModal.onWillDismiss();
+      this.paywallModal = null;
       if (role === 'purchased') {
         await this.startTuner();
       }
@@ -147,6 +149,8 @@ export class GuitarTunerPage implements OnDestroy {
   }
 
   ionViewWillLeave(): void {
+    this.paywallModal?.dismiss();
+    this.paywallModal = null;
     this.stopTuner();
   }
 
