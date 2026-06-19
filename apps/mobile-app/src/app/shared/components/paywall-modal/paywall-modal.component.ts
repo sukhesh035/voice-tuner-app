@@ -88,6 +88,10 @@ type LoadState = 'loading' | 'ready' | 'error';
           }
         </div>
 
+        @if (errorMessage()) {
+          <p class="purchase-error">{{ errorMessage() }}</p>
+        }
+
         <ion-button
           expand="block"
           class="subscribe-btn"
@@ -130,6 +134,7 @@ type LoadState = 'loading' | 'ready' | 'error';
     .paywall-footer { text-align: center; padding: 16px; }
     .restore-btn { background: none; border: none; color: var(--ion-color-medium); font-size: 0.85rem; cursor: pointer; text-decoration: underline; }
     .legal { font-size: 0.75rem; color: var(--ion-color-medium); margin-top: 8px; }
+    .purchase-error { color: var(--ion-color-danger); text-align: center; font-size: 0.85rem; padding: 0 16px 8px; }
   `]
 })
 export class PaywallModalComponent implements OnInit {
@@ -137,6 +142,7 @@ export class PaywallModalComponent implements OnInit {
   readonly packages = signal<PurchasesPackage[]>([]);
   readonly selectedPackage = signal<PurchasesPackage | null>(null);
   readonly subscribing = signal<boolean>(false);
+  readonly errorMessage = signal<string | null>(null);
 
   constructor(
     private readonly modalCtrl: ModalController,
@@ -172,6 +178,7 @@ export class PaywallModalComponent implements OnInit {
     const pkg = this.selectedPackage();
     if (!pkg) return;
 
+    this.errorMessage.set(null);
     this.analytics.logPurchaseInitiated(
       pkg.product.identifier,
       pkg.product.price,
@@ -194,6 +201,7 @@ export class PaywallModalComponent implements OnInit {
           pkg.product.identifier,
           String(err)
         );
+        this.errorMessage.set('Purchase failed. Please try again.');
       }
     } finally {
       this.subscribing.set(false);
@@ -201,9 +209,13 @@ export class PaywallModalComponent implements OnInit {
   }
 
   async restore(): Promise<void> {
-    await this.subscriptionService.restorePurchases();
-    if (this.subscriptionService.isPremium()) {
-      await this.modalCtrl.dismiss(null, 'purchased');
+    try {
+      await this.subscriptionService.restorePurchases();
+      if (this.subscriptionService.isPremium()) {
+        await this.modalCtrl.dismiss(null, 'purchased');
+      }
+    } catch {
+      // Restore failed silently — user can try again
     }
   }
 
