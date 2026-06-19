@@ -1,10 +1,24 @@
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
 
 const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const secretsManager = new SecretsManagerClient({});
 const USERS_TABLE = process.env['USERS_TABLE']!;
-const WEBHOOK_SECRET = process.env['REVENUECAT_WEBHOOK_SECRET']!;
+const REVENUECAT_WEBHOOK_SECRET_ARN = process.env['REVENUECAT_WEBHOOK_SECRET_ARN']!;
+
+// Cache the secret value across warm invocations
+let cachedWebhookSecret: string | null = null;
+
+async function getWebhookSecret(): Promise<string> {
+  if (cachedWebhookSecret) return cachedWebhookSecret;
+  const result = await secretsManager.send(
+    new GetSecretValueCommand({ SecretId: REVENUECAT_WEBHOOK_SECRET_ARN })
+  );
+  cachedWebhookSecret = result.SecretString ?? '';
+  return cachedWebhookSecret;
+}
 
 interface RevenueCatEvent {
   type: string;
@@ -19,7 +33,8 @@ interface RevenueCatWebhookBody {
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   const authHeader = event.headers?.['authorization'] ?? '';
-  if (authHeader !== WEBHOOK_SECRET) {
+  const webhookSecret = await getWebhookSecret();
+  if (authHeader !== webhookSecret) {
     console.warn('RevenueCat webhook: invalid secret');
     return { statusCode: 401, body: 'Unauthorized' };
   }

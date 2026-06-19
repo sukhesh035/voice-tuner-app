@@ -429,11 +429,12 @@ export class SwaraStack extends cdk.Stack {
 
     // ─── Webhook Lambda (no JWT authorizer) ──────────────────────────────────
     const webhookFn = makeFn('WebhookFn', 'webhook');
-    webhookFn.addEnvironment('REVENUECAT_WEBHOOK_SECRET', webhookSecret.secretValue.unsafeUnwrap());
+    webhookFn.addEnvironment('REVENUECAT_WEBHOOK_SECRET_ARN', webhookSecret.secretArn);
+    webhookSecret.grantRead(webhookFn);
     usersTable.grantWriteData(webhookFn);
 
     api.addRoutes({
-      path:        '/api/webhooks/revenuecat',
+      path:        '/v1/api/webhooks/revenuecat',
       methods:     [apigwv2.HttpMethod.POST],
       integration: new integ.HttpLambdaIntegration('WebhookIntegration', webhookFn),
     });
