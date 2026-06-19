@@ -15,6 +15,7 @@ import * as events  from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as ssm     from 'aws-cdk-lib/aws-ssm';
 import * as kms     from 'aws-cdk-lib/aws-kms';
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
 export interface SwaraStackProps extends cdk.StackProps {
   stage:        'dev' | 'prod';
@@ -169,6 +170,12 @@ export class SwaraStack extends cdk.Stack {
       partitionKey: { name: 'sessionCode', type: dynamodb.AttributeType.STRING },
       sortKey:      { name: 'studentId',   type: dynamodb.AttributeType.STRING },
       removalPolicy: stage === 'dev' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
+    });
+
+    // ─── RevenueCat Webhook Secret ────────────────────────────────────────────
+    const webhookSecret = new secretsmanager.Secret(this, 'RevenueCatWebhookSecret', {
+      secretName:  `swara-${stage}-revenuecat-webhook-secret`,
+      description: 'RevenueCat webhook Authorization header value — set manually after deploy',
     });
 
     // ─── S3 Audio Assets Bucket ───────────────────────────────────────────────
@@ -419,6 +426,17 @@ export class SwaraStack extends cdk.Stack {
     addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.DELETE], '/v1/api/classroom/sessions/{code}', classroomLambda);
     addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/classroom/join',    classroomLambda);
     addRoute([apigwv2.HttpMethod.PUT],                          '/v1/api/classroom/sessions/{code}/result', classroomLambda);
+
+    // ─── Webhook Lambda (no JWT authorizer) ──────────────────────────────────
+    const webhookFn = makeFn('WebhookFn', 'webhook');
+    webhookFn.addEnvironment('REVENUECAT_WEBHOOK_SECRET', webhookSecret.secretValue.unsafeUnwrap());
+    usersTable.grantWriteData(webhookFn);
+
+    api.addRoutes({
+      path:        '/api/webhooks/revenuecat',
+      methods:     [apigwv2.HttpMethod.POST],
+      integration: new integ.HttpLambdaIntegration('WebhookIntegration', webhookFn),
+    });
 
     // ─── Outputs (read by CI to generate environment.ts) ─────────────────────
     new cdk.CfnOutput(this, 'ApiUrl',              { value: api.apiEndpoint });
