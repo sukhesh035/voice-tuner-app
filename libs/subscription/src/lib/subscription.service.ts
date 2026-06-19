@@ -34,19 +34,25 @@ export class SubscriptionService {
 
     const apiKey = Capacitor.getPlatform() === 'ios' ? appleApiKey : googleApiKey;
 
-    await Purchases.setLogLevel({ level: LOG_LEVEL.ERROR });
-    await Purchases.configure({ apiKey });
+    try {
+      await Purchases.setLogLevel({ level: LOG_LEVEL.ERROR });
+      await Purchases.configure({ apiKey });
 
-    // Sync current entitlement state immediately
-    const { customerInfo } = await Purchases.getCustomerInfo();
-    this._updateFromCustomerInfo(customerInfo);
+      // Sync current entitlement state immediately
+      const { customerInfo } = await Purchases.getCustomerInfo();
+      this._updateFromCustomerInfo(customerInfo);
 
-    // Listen for background changes (renewals, expirations, etc.)
-    this._listenerCallbackId = await Purchases.addCustomerInfoUpdateListener((info: CustomerInfo) => {
-      this._updateFromCustomerInfo(info);
-    });
-
-    this._initialized.set(true);
+      // Listen for background changes (renewals, expirations, etc.)
+      this._listenerCallbackId = await Purchases.addCustomerInfoUpdateListener((info: CustomerInfo) => {
+        this._updateFromCustomerInfo(info);
+      });
+    } catch (err) {
+      console.error('SubscriptionService: failed to initialize RevenueCat', err);
+      // isPremium stays false — safe default (user is treated as non-premium)
+    } finally {
+      // Always mark initialized so the auth-sync guard doesn't block permanently
+      this._initialized.set(true);
+    }
   }
 
   /**
