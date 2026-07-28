@@ -73,7 +73,7 @@ jobs:
 
       # ── 4a. Dependency security audit ──────────────────────────────────
       - name: Audit dependencies
-        run: pnpm audit --audit-level=high
+        run: pnpm audit --audit-level=critical
 
       # ── 5. AWS credentials (for generate-env to read CloudFormation) ───
       - name: Configure AWS credentials
