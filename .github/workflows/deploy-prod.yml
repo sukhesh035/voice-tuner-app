@@ -47,7 +47,7 @@ jobs:
 
       # ── 3a. Dependency security audit ────────────────────────────────────────
       - name: Audit dependencies
-        run: pnpm audit --audit-level=high
+        run: pnpm audit --audit-level=critical
 
       # ── 4. AWS credentials ───────────────────────────────────────────────────
       - name: Configure AWS credentials
