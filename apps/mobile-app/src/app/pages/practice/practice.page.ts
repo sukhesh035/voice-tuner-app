@@ -1,13 +1,16 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject, ChangeDetectorRef } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { AsyncPipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonSegment, IonSegmentButton, IonLabel,
+  IonSegment, IonSegmentButton, IonLabel, IonIcon,
   ViewWillLeave
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { closeOutline } from 'ionicons/icons';
 import { TrainingEngineService, TrainingMode, TrainingSessionResult } from '@voice-tuner/training-engine';
 import { TanpuraPlayerService, MusicalKey } from '@voice-tuner/tanpura-player';
 import { PitchDetectionService, IndianNote, PitchResult } from '@voice-tuner/pitch-detection';
@@ -303,7 +306,9 @@ function buildFeedback(
                   </div>
                 </div>
                 @if (!sessionActive) {
-                <button class="change-raga-btn" (click)="clearRaga()">Change</button>
+                <button class="change-raga-btn" (click)="clearRaga()">
+                  <ion-icon name="close-outline"></ion-icon>
+                </button>
                 }
               </div>
               @if (selectedRaga.mood) {
@@ -337,48 +342,6 @@ function buildFeedback(
               </div>
             </div>
             }
-
-            <!-- Aroh / Avaroh with progress highlight -->
-            <div class="raga-sequence-section">
-              <div class="sequence-row">
-                <div class="sequence-label" [class.sequence-label--active]="sessionActive && ragaSequencePart === 'aroh'">Aroh</div>
-                <div class="sequence-notes">
-                  @for (note of selectedRaga.aroh; track $index; let i = $index; let last = $last) {
-                  <span
-                    class="seq-note"
-                    [class.seq-note--vadi]="note === selectedRaga.vadi"
-                    [class.seq-note--samvadi]="note === selectedRaga.samvadi"
-                    [class.seq-note--singing]="sessionActive && ragaPhase === 'practice' && liveNote === note"
-                    [class.seq-note--current]="sessionActive && ragaPhase === 'playback' && ragaSequencePart === 'aroh' && i === ragaPlaybackIndex"
-                    [class.seq-note--done]="sessionActive && ragaPhase === 'playback' && (ragaSequencePart === 'avaroh' || (ragaSequencePart === 'aroh' && i < ragaPlaybackIndex))"
-                  >
-                    {{ note }}@if (!last) {<span class="seq-arrow"> &rarr; </span>}
-                  </span>
-                  }
-                </div>
-              </div>
-              <div class="sequence-row">
-                <div class="sequence-label" [class.sequence-label--active]="sessionActive && ragaSequencePart === 'avaroh'">Avaroh</div>
-                <div class="sequence-notes">
-                  @for (note of selectedRaga.avaroh; track $index; let i = $index; let last = $last) {
-                  <span
-                    class="seq-note"
-                    [class.seq-note--vadi]="note === selectedRaga.vadi"
-                    [class.seq-note--samvadi]="note === selectedRaga.samvadi"
-                    [class.seq-note--singing]="sessionActive && ragaPhase === 'practice' && liveNote === note"
-                    [class.seq-note--current]="sessionActive && ragaPhase === 'playback' && ragaSequencePart === 'avaroh' && i === (ragaPlaybackIndex - selectedRaga.aroh.length)"
-                    [class.seq-note--done]="sessionActive && ragaPhase === 'playback' && ragaSequencePart === 'avaroh' && i < (ragaPlaybackIndex - selectedRaga.aroh.length)"
-                  >
-                    {{ note }}@if (!last) {<span class="seq-arrow"> &rarr; </span>}
-                  </span>
-                  }
-                </div>
-              </div>
-              <div class="vadi-legend">
-                <span class="legend-item"><span class="legend-dot legend-dot--vadi"></span>Vadi ({{ selectedRaga.vadi }})</span>
-                <span class="legend-item"><span class="legend-dot legend-dot--samvadi"></span>Samvadi ({{ selectedRaga.samvadi }})</span>
-              </div>
-            </div>
 
             <!-- Playback progress indicator -->
             @if (sessionActive && ragaPhase === 'playback') {
@@ -799,12 +762,23 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
   readonly analytics = inject(AnalyticsService);
   readonly perf = inject(PerformanceService);
   readonly authService = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly _icons = (() => addIcons({ closeOutline }))();
 
   constructor() {
     this.liveNotes$ = this.trainingEngine.liveNotes$;
   }
 
   ngOnInit(): void {
+    const ragaName = this.route.snapshot.queryParamMap.get('raga');
+    if (ragaName) {
+      const raga = RAGA_LIST.find(r => r.englishName === ragaName) ?? MELAKARTA_LIST.find(r => r.englishName === ragaName);
+      if (raga) {
+        this.selectedMode = 'raga';
+        this.selectRaga(raga);
+      }
+    }
+
     this.trainingEngine.liveNotes$
       .pipe(takeUntil(this.destroy$))
       .subscribe(notes => {

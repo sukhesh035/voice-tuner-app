@@ -1,10 +1,11 @@
-import { Component, OnDestroy, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar,
   IonRange,
   ViewWillLeave
 } from '@ionic/angular/standalone';
+import { AnalyticsService } from '../../core/services/analytics.service';
 
 const BEAT_FLASH_MS = 100;
 
@@ -117,6 +118,7 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
   private audioCtx: AudioContext | null = null;
   private timerId: ReturnType<typeof setInterval> | null = null;
   private flashTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private readonly analytics = inject(AnalyticsService);
 
   tempoLabel = tempoLabel;
 
@@ -157,12 +159,14 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
       }
     }
     this.isPlaying.set(true);
+    this.analytics.logEvent('metronome_started', { bpm: this.bpm() });
     this.scheduleTick();
   }
 
   private stop(): void {
     this.isPlaying.set(false);
     this.beatActive.set(false);
+    this.analytics.logEvent('metronome_stopped', { bpm: this.bpm(), duration_seconds: 0 });
     if (this.timerId !== null) {
       clearInterval(this.timerId);
       this.timerId = null;

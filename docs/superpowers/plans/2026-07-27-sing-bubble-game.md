@@ -2,25 +2,23 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the static "Notes Detected" grid on the Sing page with an interactive bubble game where a random note bounces around and pops when the user sings it correctly.
+**Goal:** Replace the static "Notes Detected" grid on the Sing page with an interactive bubble game where notes bounce around and pop when sung correctly.
 
-**Architecture:** All changes within the existing `sing.page.ts` and `sing.page.scss`. The note grid template section is replaced with a game area containing a bouncing bubble, guidance arrows, and score display. Game state managed via class properties. Bubble animation uses `requestAnimationFrame`.
+**Architecture:** CSS + requestAnimationFrame hybrid — bubble position via `requestAnimationFrame`, pop animation via CSS `@keyframes`. Tokens for guidance arrows (go higher/lower) and score display.
 
-**Tech Stack:** Angular, Ionic standalone, requestAnimationFrame, CSS keyframes
+**Tech Stack:** Angular standalone, Ionic standalone, Web Audio API (existing), CSS keyframes
 
 ---
 
-### Task 1: Add Game State and Logic to SingPage Component
+### Task 1: Add Game State and Animation Logic
 
 **Files:**
 - Modify: `apps/mobile-app/src/app/pages/sing/sing.page.ts`
 
-- [ ] **Add game state properties to the `SingPage` class**
-
-Add these properties after the existing `sessionStats` and before `micError`:
+- [ ] **Add game state properties** after the existing `sessionStats`:
 
 ```typescript
-  // ── Game state ───────────────────────────────────────────
+  // ── Game state ──
   targetNote: IndianNote | null = null;
   correctCount = 0;
   totalCount = 0;
@@ -35,7 +33,15 @@ Add these properties after the existing `sessionStats` and before `micError`:
   private gameAreaEl: HTMLElement | null = null;
 ```
 
-- [ ] **Add the `pickRandomNote` method after `updateScaleNoteSet`**
+- [ ] **Add ViewChild setter** for the game area element:
+
+```typescript
+  @ViewChild('gameArea', { static: false }) set gameAreaRef(el: ElementRef<HTMLElement>) {
+    if (el) this.gameAreaEl = el.nativeElement;
+  }
+```
+
+- [ ] **Add game methods** after `updateScaleNoteSet()`:
 
 ```typescript
   private pickRandomNote(): void {
@@ -46,11 +52,7 @@ Add these properties after the existing `sessionStats` and before `micError`:
     this.guidance = '';
     this.spawnBubble();
   }
-```
 
-- [ ] **Add bubble animation methods after `pickRandomNote`**
-
-```typescript
   private spawnBubble(): void {
     if (!this.gameAreaEl) return;
     const rect = this.gameAreaEl.getBoundingClientRect();
@@ -94,9 +96,7 @@ Add these properties after the existing `sessionStats` and before `micError`:
   }
 ```
 
-- [ ] **Update the pitch subscription in `ngOnInit` to handle game logic**
-
-Replace the existing subscription:
+- [ ] **Update pitch subscription in `ngOnInit`** to add game logic:
 
 ```typescript
     this.pitchDetection.pitch$
@@ -130,21 +130,24 @@ Replace the existing subscription:
       });
 ```
 
-- [ ] **Reset game state when "Start Singing" is pressed**
-
-In `toggleMic()`, inside the `else` branch (start), after `this.detectedNotes.clear()` add:
+- [ ] **Reset game state on start** — in `toggleMic()` else branch, after `this.detectedNotes.clear()`:
 
 ```typescript
         this.correctCount = 0;
         this.totalCount = 0;
         this.streak = 0;
         this.isPopping = false;
+```
+
+And after `this.isActive = true;` add:
+
+```typescript
         this.pickRandomNote();
 ```
 
-- [ ] **Reset game state when stopping**
+- [ ] **Reset game state on stop** — in `toggleMic()` if branch and `ionViewWillLeave()`:
 
-In `toggleMic()`, in the `if (this.isActive)` branch (stop), before `this.analytics.logEvent('mic_stopped', ...)` add:
+After `this.isActive = false;` in both:
 
 ```typescript
       this.stopBounceLoop();
@@ -153,44 +156,15 @@ In `toggleMic()`, in the `if (this.isActive)` branch (stop), before `this.analyt
       this.isPopping = false;
 ```
 
-Also add the same in `ionViewWillLeave()` before `this.analytics.logEvent('mic_stopped', ...)`.
-
 ---
 
-### Task 2: Replace Template and Add Game Styles
+### Task 2: Replace Template and Add Styles
 
 **Files:**
 - Modify: `apps/mobile-app/src/app/pages/sing/sing.page.ts` — replace note grid template
 - Modify: `apps/mobile-app/src/app/pages/sing/sing.page.scss` — add game styles
 
-- [ ] **Replace the "Notes Detected" grid template with the game area**
-
-Find the note-grid-section div (lines 218-236 in the current file):
-
-```html
-        <!-- Note Grid (Carnatic / Sargam) -->
-        <div class="note-grid-section">
-          <div class="section-title">
-            Notes Detected
-            <span class="scale-badge">{{ selectedRoot }} {{ selectedScale.label }}</span>
-          </div>
-          <div class="swara-note-grid">
-            @for (note of allNotes; track note; let i = $index) {
-            <div
-              class="note-chip"
-              [class.active]="detectedNotes.has(note)"
-              [class.current]="currentPitch?.indianNote === note"
-              [class.out-of-scale]="!scaleNoteSet.has(note)"
-              [style.--note-color]="noteColors[i]"
-            >
-              <span class="note-name">{{ note }}</span>
-            </div>
-            }
-          </div>
-        </div>
-```
-
-Replace with:
+- [ ] **Replace the "Notes Detected" grid** with the game area + score:
 
 ```html
         <!-- Bubble Game Area -->
@@ -233,23 +207,7 @@ Replace with:
         }
 ```
 
-Also add `#gameArea` template reference — add `ViewChild` import and property. Add to imports:
-
-```typescript
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject, ViewChild, ElementRef } from '@angular/core';
-```
-
-And add this property to the class:
-
-```typescript
-  @ViewChild('gameArea', { static: false }) set gameAreaRef(el: ElementRef<HTMLElement>) {
-    if (el) this.gameAreaEl = el.nativeElement;
-  }
-```
-
-- [ ] **Remove the note grid styles and add game styles to `sing.page.scss`**
-
-Replace the entire "Note Grid" section (lines 154-194) with:
+- [ ] **Add game styles to `sing.page.scss`** — replace the note-grid-section block:
 
 ```scss
 // ── Bubble Game Area ──────────────────────────────────────
@@ -335,7 +293,6 @@ Replace the entire "Note Grid" section (lines 154-194) with:
   background: var(--swara-border);
 }
 
-// ── Keyframes ─────────────────────────────────────────────
 @keyframes bubble-pop {
   0%   { transform: scale(1); opacity: 1; }
   40%  { transform: scale(1.4); opacity: 0.8; }

@@ -93,6 +93,7 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-3;
+  margin-top: $spacing-4;
 }
 
 .raga-section-header {
@@ -328,6 +329,12 @@
 }
 
 // ── Raga Detail ───────────────────────────────────────────
+.raga-detail {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-4;
+}
+
 .raga-info-card {
   .raga-info-header {
     display: flex;
@@ -365,20 +372,25 @@
   }
   .raga-info-meta { font-size: 12px; color: var(--swara-text-tertiary); margin-top: 2px; }
 
-  .change-raga-btn {
+.change-raga-btn {
     margin-left: auto;
-    font-size: 13px;
-    color: var(--swara-primary);
-    background: none;
-    border: none;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ion-color-medium);
+    background: var(--swara-bg-card);
+    border: 1px solid var(--swara-border);
+    border-radius: 50%;
     cursor: pointer;
-    font-weight: 600;
-    font-family: var(--swara-font-sans);
-    padding: $spacing-1 $spacing-2;
-    border-radius: $radius-md;
     -webkit-tap-highlight-color: transparent;
     flex-shrink: 0;
-    &:active { opacity: 0.7; }
+    font-size: 18px;
+
+    ion-icon {
+      font-size: 20px;
+    }
   }
 
   .raga-mood-badge {
@@ -401,102 +413,6 @@
 }
 
 // ── Aroh / Avaroh Sequence ────────────────────────────────
-.raga-sequence-section {
-  background: var(--swara-bg-card);
-  border: 1px solid var(--swara-glass-border);
-  border-radius: $radius-xl;
-  padding: $spacing-4;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-3;
-}
-
-.sequence-row {
-  display: flex;
-  align-items: center;
-  gap: $spacing-3;
-}
-
-.sequence-label {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--swara-text-tertiary);
-  min-width: 48px;
-  flex-shrink: 0;
-}
-
-.sequence-notes {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px;
-}
-
-.seq-note {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--swara-text-primary);
-  padding: 3px 6px;
-  border-radius: $radius-sm;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-
-  &--vadi {
-    background: rgba(var(--swara-primary-rgb), 0.15);
-    color: var(--swara-primary);
-    border: 1px solid rgba(var(--swara-primary-rgb), 0.3);
-  }
-
-  &--samvadi {
-    background: rgba(0, 188, 212, 0.12);
-    color: #00BCD4;
-    border: 1px solid rgba(0, 188, 212, 0.25);
-  }
-
-  &--singing {
-    background: rgba(76, 175, 80, 0.2);
-    color: #4caf50;
-    transform: scale(1.1);
-  }
-}
-
-.seq-arrow {
-  font-size: 11px;
-  color: var(--swara-text-tertiary);
-  margin: 0 1px;
-}
-
-.vadi-legend {
-  display: flex;
-  gap: $spacing-4;
-  padding-top: $spacing-2;
-  border-top: 1px solid var(--swara-border);
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: $spacing-1;
-  font-size: 11px;
-  color: var(--swara-text-tertiary);
-}
-
-.legend-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-
-  &--vadi {
-    background: var(--swara-primary);
-  }
-
-  &--samvadi {
-    background: #00BCD4;
-  }
-}
-
 // ── Note chip enhancements (vadi/samvadi) ─────────────────
 .note-chip {
   position: relative;
@@ -693,27 +609,6 @@
   font-weight: 600;
   color: var(--swara-text-tertiary);
   text-align: center;
-}
-
-// ── Sequence note progress highlights ─────────────────────
-.seq-note {
-  &--current {
-    background: rgba(var(--swara-primary-rgb), 0.25) !important;
-    color: var(--swara-primary) !important;
-    border: 1.5px solid var(--swara-primary);
-    transform: scale(1.15);
-    font-weight: 800;
-  }
-
-  &--done {
-    opacity: 0.4;
-  }
-}
-
-.sequence-label {
-  &--active {
-    color: var(--swara-primary) !important;
-  }
 }
 
 // ── Raga phase display (uses shared .phase-display) ───────

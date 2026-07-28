@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   gap: $spacing-4;
+  position: relative;
 }
 
 // ── Section Label ─────────────────────────────────────────
@@ -18,129 +19,91 @@
   margin-bottom: $spacing-2;
 }
 
-// ── Hero ──────────────────────────────────────────────────
-.hero-section {
-  padding: $spacing-4 0 $spacing-2;
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-2;
+// ── Greeting ──────────────────────────────────────────────
+.greeting-section {
+  padding: $spacing-2 0;
+  position: relative;
 }
 
-.hero-greeting {
-  font-size: 13px;
-  color: var(--swara-text-secondary);
-  font-weight: 500;
-}
-
-.hero-title {
-  font-size: 28px;
+.greeting {
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
   color: var(--swara-text-primary);
+  letter-spacing: -0.02em;
 }
 
-.hero-highlight {
-  background: var(--swara-gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.user-name {
+  font-size: 14px;
+  color: var(--swara-text-secondary);
+  margin-top: 2px;
 }
 
-// ── Action Grid ───────────────────────────────────────────
+// ── Action Cards ──────────────────────────────────────────
 .action-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: $spacing-2;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-3;
 }
 
 .action-card {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: $spacing-3;
+  gap: $spacing-2;
+  padding: $spacing-4 $spacing-3;
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-border);
+  border-radius: $radius-lg;
   text-decoration: none;
   color: var(--swara-text-primary);
   cursor: pointer;
-  padding: $spacing-3 $spacing-3 !important;
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
 
   &__icon {
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
     border-radius: $radius-md;
     display: flex;
     align-items: center;
     justify-content: center;
 
-    ion-icon { font-size: 20px; color: white; }
+    ion-icon { font-size: 24px; color: white; }
+    svg { color: white; }
   }
 
   &__text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
   }
 
-  &__label { font-size: 14px; font-weight: 700; }
-  &__sub   { font-size: 11px; color: var(--swara-text-secondary); }
-
-  .tanpura-icon  { background: linear-gradient(135deg, #7C4DFF, #9E6BFF); }
-  .sing-icon     { background: linear-gradient(135deg, #FF6B6B, #FF8E53); }
-  .practice-icon { background: linear-gradient(135deg, #00BCD4, #00E5C2); }
+  .metronome-icon { background: linear-gradient(135deg, #667eea, #764ba2); }
+  .sing-icon      { background: linear-gradient(135deg, #FF6B6B, #FF8E53); }
+  .practice-icon  { background: linear-gradient(135deg, #00BCD4, #00E5C2); }
 }
 
-// ── Today Card ────────────────────────────────────────────
-.today-card {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-4;
-}
-
-.today-btn {
-  width: 100%;
-}
-
-.today-stats {
-  display: flex;
-  justify-content: space-around;
-}
-
-.today-stat {
-  text-align: center;
-
-  &__value {
-    font-size: 22px;
-    font-weight: 800;
-    font-family: var(--swara-font-display);
-    color: var(--swara-text-primary);
-  }
-
-  &__label {
-    font-size: 10px;
-    color: var(--swara-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 2px;
-  }
-}
-
-.today-cta {
-  display: flex;
-  justify-content: center;
-
-  .swara-btn { width: 100%; max-width: 200px; }
-}
-
-// ── Raga of the Day ───────────────────────────────────────
-.raga-day-card {
+// ── Raga Card ─────────────────────────────────────────────
+.raga-card {
   display: flex;
   gap: $spacing-4;
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-border);
+  border-radius: $radius-lg;
   overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.99);
+  }
 }
 
-.raga-day-accent {
+.raga-accent {
   width: 4px;
   background: var(--swara-primary);
   border-radius: $radius-full;
@@ -148,118 +111,33 @@
   flex-shrink: 0;
 }
 
-.raga-day-content {
+.raga-body {
   flex: 1;
-  .raga-day-name  { font-size: 18px; font-weight: 800; }
-  .raga-day-hindi { font-size: 13px; color: var(--swara-text-secondary); }
-  .raga-day-time  { font-size: 11px; color: var(--swara-text-secondary); margin: $spacing-1 0; }
-  .raga-day-desc  { font-size: 12px; color: var(--swara-text-secondary); line-height: 1.4; }
+  padding: $spacing-4 $spacing-4 $spacing-4 0;
 }
 
-// ── Today Card locked state ───────────────────────────────
-.today-stats--blurred {
-  .today-stat__value {
-    color: var(--swara-text-tertiary);
-    letter-spacing: 0.05em;
-  }
-}
-
-// ── Weekly locked card ────────────────────────────────────
-.weekly-locked-card {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  padding: $spacing-4 !important;
-  text-decoration: none;
-  min-height: 120px;
-}
-
-.weekly-locked-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: $spacing-2;
-  height: 80px;
-  padding: 0 $spacing-2;
-  opacity: 0.18;
-  filter: blur(2px);
-  pointer-events: none;
-}
-
-.day-bar-ghost {
-  flex: 1;
-  border-radius: $radius-sm $radius-sm 0 0;
-  background: var(--swara-gradient-primary);
-  min-height: 4px;
-}
-
-.weekly-locked-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: $spacing-2;
-  text-align: center;
-  padding: $spacing-4;
-
-  .lock-icon {
-    font-size: 22px;
-    color: var(--swara-primary);
-    margin-bottom: 2px;
-  }
-}
-
-.weekly-locked-title {
-  font-size: 16px;
-  font-weight: 700;
+.raga-name {
+  font-size: 18px;
+  font-weight: 800;
   color: var(--swara-text-primary);
 }
 
-.weekly-locked-sub {
+.raga-hindi {
   font-size: 13px;
   color: var(--swara-text-secondary);
-  line-height: 1.4;
+  margin-top: 2px;
 }
 
-.weekly-locked-btn {
+.raga-time {
+  font-size: 11px;
+  color: var(--ion-color-medium);
   margin-top: $spacing-1;
-  font-size: 14px !important;
-  padding: $spacing-2 $spacing-6 !important;
-  pointer-events: none; // the whole card is the tap target
+  text-transform: capitalize;
 }
 
-// ── Weekly Bars ───────────────────────────────────────────
-.weekly-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: $spacing-2;
-  height: 80px;
-  padding: 0 $spacing-2;
-}
-
-.day-bar {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-
-  &__fill {
-    width: 100%;
-    border-radius: $radius-sm $radius-sm 0 0;
-    background: var(--swara-gradient-primary);
-    min-height: 4px;
-    position: relative;
-    transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    box-shadow: 0 -2px 12px rgba(var(--swara-primary-rgb), 0.4);
-  }
-
-  &__label {
-    font-size: 11px;
-    color: var(--swara-text-tertiary);
-    margin-top: 4px;
-    text-align: center;
-  }
+.raga-desc {
+  font-size: 13px;
+  color: var(--swara-text-secondary);
+  line-height: 1.5;
+  margin-top: $spacing-2;
 }
