@@ -1,0 +1,226 @@
+.metronome-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 24px;
+  min-height: 100%;
+}
+
+// ── BPM Card ──────────────────────────────────────────────
+.bpm-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 48px 20px;
+  margin-bottom: 28px;
+  border-radius: 24px;
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-border);
+  overflow: hidden;
+  width: 100%;
+  max-width: 260px;
+}
+
+.bpm-glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  background: radial-gradient(ellipse at center, rgba(102, 126, 234, 0.15) 0%, transparent 70%);
+
+  &.active {
+    opacity: 1;
+  }
+}
+
+.bpm-input {
+  position: relative;
+  font-size: 4.5rem;
+  font-weight: 800;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: var(--ion-text-color);
+  width: 200px;
+  outline: none;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  margin-bottom: 2px;
+  -moz-appearance: textfield;
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+.bpm-label {
+  position: relative;
+  font-size: 0.7rem;
+  color: var(--ion-color-medium);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-weight: 600;
+}
+
+.tempo-label {
+  position: relative;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
+// ── Beat Rings ────────────────────────────────────────────
+.beat-rings {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: all 0.1s ease;
+
+  &.active {
+    border-color: #667eea;
+  }
+}
+
+.ring-1 {
+  width: 120px;
+  height: 120px;
+  &.active {
+    width: 140px;
+    height: 140px;
+    border-color: rgba(102, 126, 234, 0.08);
+  }
+}
+
+.ring-2 {
+  width: 100px;
+  height: 100px;
+  &.active {
+    width: 130px;
+    height: 130px;
+    border-color: rgba(102, 126, 234, 0.2);
+  }
+}
+
+.ring-3 {
+  width: 80px;
+  height: 80px;
+  &.active {
+    width: 120px;
+    height: 120px;
+    border-color: rgba(102, 126, 234, 0.4);
+  }
+}
+
+.ring-4 {
+  width: 60px;
+  height: 60px;
+  &.active {
+    width: 100px;
+    height: 100px;
+    border-color: rgba(102, 126, 234, 0.6);
+  }
+}
+
+.beat-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--swara-bg-card);
+  border: 2px solid var(--swara-border);
+  transition: all 0.1s ease;
+  z-index: 1;
+
+  &.active {
+    background: #667eea;
+    border-color: #667eea;
+    box-shadow: 0 0 24px rgba(102, 126, 234, 0.6);
+  }
+}
+
+// ── Slider ────────────────────────────────────────────────
+.slider-section {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 28px;
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--ion-color-medium);
+  padding: 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+// ── Play Button ───────────────────────────────────────────
+.play-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 40px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 24px rgba(102, 126, 234, 0.35);
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &.is-playing {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    box-shadow: 0 4px 24px rgba(231, 76, 60, 0.35);
+  }
+}
+
+.play-btn__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.stop-bars {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+
+  span {
+    display: block;
+    width: 4px;
+    height: 16px;
+    background: white;
+    border-radius: 2px;
+  }
+}
+
+.play-btn__label {
+  letter-spacing: 1px;
+}

@@ -26,7 +26,7 @@
     "generate-env:prod": "node scripts/generate-env.mjs prod",
     "dev:api": "tsx --env-file=.env.local apps/backend-api/src/local-server.ts",
     "dev:ui": "nx serve mobile-app --configuration=local",
-    "dev": "concurrently --names \"API,UI\" --prefix-colors \"cyan,magenta\" \"pnpm dev:api\" \"pnpm dev:ui\""
+    "dev": "bash dev.sh"
   },
   "private": true,
   "pnpm": {

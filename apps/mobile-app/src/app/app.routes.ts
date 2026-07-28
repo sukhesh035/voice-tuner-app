@@ -11,8 +11,8 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/home/home.page').then(m => m.HomePage)
       },
       {
-        path: 'tanpura',
-        loadComponent: () => import('./pages/tanpura/tanpura.page').then(m => m.TanpuraPage)
+        path: 'metronome',
+        loadComponent: () => import('./pages/metronome/metronome.page').then(m => m.MetronomePage)
       },
       {
         path: 'sing',
