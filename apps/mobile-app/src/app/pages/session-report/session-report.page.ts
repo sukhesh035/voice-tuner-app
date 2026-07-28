@@ -5,8 +5,8 @@ import {
 import { DecimalPipe, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
-  IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon,
-  IonChip, IonSpinner, IonBackButton, IonButtons
+  IonHeader, IonToolbar, IonTitle, IonContent,
+  IonButton, IonIcon, IonChip, IonBackButton, IonButtons
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { sparklesOutline, refreshOutline, barChartOutline } from 'ionicons/icons';
@@ -43,7 +43,7 @@ function getGrade(score: number): Grade {
   selector: 'app-session-report',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, TitleCasePipe, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, IonSpinner, IonBackButton, IonButtons],
+  imports: [DecimalPipe, TitleCasePipe, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonChip, IonBackButton, IonButtons],
   template: `
     <ion-header>
       <ion-toolbar>

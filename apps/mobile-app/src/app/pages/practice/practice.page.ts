@@ -20,9 +20,6 @@ import { AnalyticsService } from '../../core/services/analytics.service';
 import { PerformanceService } from '../../core/services/performance.service';
 import { AuthService } from '@voice-tuner/auth';
 
-/** Phases of a single Shruti round */
-export type ShrutiPhase = 'idle' | 'playing' | 'ready' | 'listening' | 'result';
-
 /**
  * Phases of whole-raga practice:
  *   idle     → not started
@@ -176,123 +173,13 @@ function buildFeedback(
 
         <!-- Mode Selector -->
         <ion-segment [ngModel]="selectedMode" (ngModelChange)="onModeChange($event)" class="mode-segment">
-          <ion-segment-button value="shruti">
-            <ion-label>Shruti</ion-label>
+          <ion-segment-button value="free">
+            <ion-label>Ear Training</ion-label>
           </ion-segment-button>
           <ion-segment-button value="raga">
             <ion-label>Raga</ion-label>
           </ion-segment-button>
-          <ion-segment-button value="free">
-            <ion-label>Ear Training</ion-label>
-          </ion-segment-button>
         </ion-segment>
-
-        <!-- ── Shruti Trainer ──────────────────────────────── -->
-        @if (selectedMode === 'shruti') {
-        <div class="shruti-section animate-fade-in">
-          <div class="mode-card swara-card">
-            <div class="mode-card__title">Shruti Trainer</div>
-            <div class="mode-card__desc">App plays a note — then you sing it back. Match pitch perfectly.</div>
-          </div>
-
-          <!-- Phase: PLAYING -->
-          @if (shrutiPhase === 'playing') {
-          <div class="phase-display phase-playing">
-            <div class="phase-icon">&#9654;</div>
-            <div class="phase-note">{{ currentTargetNote }}</div>
-            <div class="phase-label">Listen to the note&hellip;</div>
-            <div class="phase-hint">Mic is off &mdash; just listen</div>
-          </div>
-          }
-
-          <!-- Phase: READY (silence gap) -->
-          @if (shrutiPhase === 'ready') {
-          <div class="phase-display phase-ready">
-            <div class="phase-icon ready-icon">&#8987;</div>
-            <div class="phase-note">{{ currentTargetNote }}</div>
-            <div class="phase-label">Get ready to sing&hellip;</div>
-            <div class="phase-hint">Mic opens in a moment</div>
-          </div>
-          }
-
-          <!-- Phase: LISTENING -->
-          @if (shrutiPhase === 'listening') {
-          <div class="phase-display phase-listening">
-            <div class="phase-icon pulse-icon">&#9679;</div>
-            <div class="phase-note">{{ currentTargetNote }}</div>
-            <div class="phase-label">Now sing <strong>{{ currentTargetNote }}</strong></div>
-            <div class="live-pitch-row">
-              <span class="live-pitch-note" [class.on-target]="liveNote === currentTargetNote">
-                {{ liveNote ?? '&ndash;' }}
-              </span>
-              @if (currentAccuracy !== null) {
-              <span class="live-pitch-accuracy">
-                {{ currentAccuracy | number:'1.0-0' }}%
-              </span>
-              }
-            </div>
-            <div class="phase-hint">Mic is active &mdash; sing now</div>
-          </div>
-          }
-
-          <!-- Phase: RESULT -->
-          @if (shrutiPhase === 'result') {
-          <div class="phase-display phase-result">
-            <div class="result-notes-compared">
-              <div class="result-note-block">
-                <div class="result-note-label">Target</div>
-                <div class="result-note-value">{{ currentTargetNote }}</div>
-              </div>
-              <div class="result-arrow">&#8594;</div>
-              <div class="result-note-block">
-                <div class="result-note-label">You sang</div>
-                <div class="result-note-value"
-                  [class.note-match]="roundSungNote === currentTargetNote"
-                  [class.note-miss]="roundSungNote !== currentTargetNote && roundSungNote !== null">
-                  {{ roundSungNote ?? '&ndash;' }}
-                </div>
-              </div>
-              <div class="round-accuracy-badge"
-                [class.good]="roundAccuracy >= 70"
-                [class.great]="roundAccuracy >= 90">
-                {{ roundAccuracy }}%
-              </div>
-            </div>
-            <div class="round-feedback">{{ roundFeedback }}</div>
-            <div class="phase-hint">Tap "Next Note" to continue</div>
-          </div>
-          }
-
-          <!-- Round controls -->
-          @if (sessionActive) {
-          <div class="shruti-round-controls">
-            @if (shrutiPhase === 'result') {
-            <button
-              class="swara-btn swara-btn--secondary round-btn"
-              (click)="nextShrutiRound()"
-            >
-              Next Note
-            </button>
-            }
-            @if (shrutiPhase === 'playing') {
-            <div class="round-status-pill">
-              <span class="pill-dot playing-dot"></span>Playing
-            </div>
-            }
-            @if (shrutiPhase === 'ready') {
-            <div class="round-status-pill">
-              <span class="pill-dot ready-dot"></span>Get ready&hellip;
-            </div>
-            }
-            @if (shrutiPhase === 'listening') {
-            <div class="round-status-pill">
-              <span class="pill-dot listening-dot"></span>Listening
-            </div>
-            }
-          </div>
-          }
-        </div>
-        }
 
         <!-- ── Raga Practice ───────────────────────────────── -->
         @if (selectedMode === 'raga') {
@@ -601,7 +488,7 @@ function buildFeedback(
 
             <!-- Round controls during playback/practice -->
             @if (sessionActive && (ragaPhase === 'playback' || ragaPhase === 'practice')) {
-            <div class="shruti-round-controls">
+            <div class="round-controls">
               @if (ragaPhase === 'playback') {
               <div class="round-status-pill">
                 <span class="pill-dot playing-dot"></span>Playing raga
@@ -838,7 +725,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
   ];
   readonly chakras = MELAKARTA_CHAKRAS;
 
-  selectedMode: TrainingMode = 'shruti';
+  selectedMode: TrainingMode = 'raga';
   selectedRaga: RagaDefinition | null = null;
   sessionActive  = false;
   lastResult: TrainingSessionResult | null = null;
@@ -849,22 +736,16 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
   selectedChakra: MelakartaChakra | null = null;
   filteredRagas: RagaDefinition[] = MELAKARTA_LIST;
 
-  // ── Shruti round state ──
-  shrutiPhase: ShrutiPhase = 'idle';
+  // ── Shared round state ──
   currentTargetNote: IndianNote = 'Sa';
   liveNote: IndianNote | null = null;
   currentAccuracy: number | null = null;
   roundAccuracy   = 0;
   roundSungNote: IndianNote | null = null;
   roundFeedback   = '';
-
   private accuracySamples: RoundPitchSample[] = [];
   /** Shuffled queue of notes not yet played this cycle */
   private notePool: IndianNote[] = [];
-  /** All round accuracies collected across the shruti session (for session-level score) */
-  private shrutiRoundScores: number[] = [];
-  /** Timestamp when the shruti session started (for computing duration) */
-  private shrutiSessionStart = 0;
 
   // ── Raga practice state ──
   ragaPhase: RagaPhase = 'idle';
@@ -1015,7 +896,6 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
     }
 
     // Reset per-mode phase state so the new mode starts clean
-    this.shrutiPhase = 'idle';
     this.ragaPhase   = 'idle';
     this.earPhase    = 'idle';
     this.liveNote        = null;
@@ -1035,11 +915,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
     this.analytics.logEvent('practice_started', { mode: this.selectedMode });
     this.cdr.markForCheck();
 
-    if (this.selectedMode === 'shruti') {
-      this.shrutiSessionStart = Date.now();
-      this.shrutiRoundScores  = [];
-      await this.startShrutiRound();
-    } else if (this.selectedMode === 'raga' && this.selectedRaga) {
+    if (this.selectedMode === 'raga' && this.selectedRaga) {
       // Build the note sequence: aroh (ascending) then avaroh (descending)
       this.ragaNoteSequence = [
         ...this.selectedRaga.aroh,
@@ -1066,6 +942,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
       this.earGuessedNote = null;
       this.earIsCorrect   = false;
       this.notePool       = [];
+      this.earNotePool    = [];
       await this.startEarRound();
     }
   }
@@ -1074,35 +951,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
     this.clearPhaseTimer();
     this.clearRagaPhaseTimer();
 
-    if (this.selectedMode === 'shruti') {
-      if (this.shrutiPhase === 'playing') {
-        this.tanpura.stopAndSilence();
-      } else if (this.shrutiPhase === 'listening') {
-        this.pitchDetection.stop();
-      }
-      this.shrutiPhase = 'idle';
-
-      // Persist shruti session (was previously missing — sessions were lost)
-      const durationSeconds = Math.round((Date.now() - this.shrutiSessionStart) / 1000);
-      const scores = this.shrutiRoundScores;
-      const avgScore = scores.length
-        ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-        : 0;
-      if (durationSeconds > 0 && scores.length > 0 && this.authService.currentUser?.emailVerified) {
-        const tanpuraState = this.tanpura.state;
-        this.api.createSession({
-          duration:       durationSeconds,
-          mode:           'shruti',
-          key:            tanpuraState.key,
-          score:          avgScore,
-          avgAccuracy:    avgScore,
-          stabilityScore: avgScore,
-          noteAccuracies: {},
-        }).then(() => {
-          this.api.checkin(Math.ceil(durationSeconds / 60), avgScore).catch(() => {});
-        }).catch(err => console.warn('[PracticePage] Failed to save shruti session:', err));
-      }
-    } else if (this.selectedMode === 'raga') {
+    if (this.selectedMode === 'raga') {
       if (this.ragaPhase === 'playback') {
         this.tanpura.stopAndSilence();
       } else if (this.ragaPhase === 'practice') {
@@ -1163,9 +1012,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
     }
 
     this.sessionActive   = false;
-    const durationSeconds = this.selectedMode === 'shruti'
-      ? Math.round((Date.now() - this.shrutiSessionStart) / 1000)
-      : this.selectedMode === 'raga'
+    const durationSeconds = this.selectedMode === 'raga'
         ? Math.round((Date.now() - this.ragaSessionStart) / 1000)
         : Math.round((Date.now() - this.earSessionStart) / 1000);
 
@@ -1174,9 +1021,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
       duration_seconds: durationSeconds,
     });
     // Log as abandoned if stopped mid-session (before a natural result phase)
-    const isAbandoned = this.selectedMode === 'shruti'
-      ? this.shrutiPhase !== 'result' && this.shrutiPhase !== 'idle'
-      : this.selectedMode === 'raga'
+    const isAbandoned = this.selectedMode === 'raga'
         ? this.ragaPhase !== 'result' && this.ragaPhase !== 'idle'
         : this.earPhase !== 'reveal' && this.earPhase !== 'idle';
     if (isAbandoned && durationSeconds > 0) {
@@ -1188,114 +1033,6 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
     this.liveNote        = null;
     this.currentAccuracy = null;
     this.cdr.markForCheck();
-  }
-
-  // ── Shruti round state machine ───────────────────────────
-
-  private async startShrutiRound(): Promise<void> {
-    if (!this.sessionActive) return;
-
-    // Pick the next note from the shuffled pool
-    this.currentTargetNote = this.drawNextNote();
-
-    // Tune the tanpura so its Sa drone plays the target frequency.
-    // ALL_SHRUTI_NOTES[i] is i semitones above C; setting key to
-    // SEMITONE_TO_KEY[i] makes the tanpura drone ring on exactly that pitch.
-    const semitone = ALL_SHRUTI_NOTES.indexOf(this.currentTargetNote);
-    this.tanpura.setKey(SEMITONE_TO_KEY[semitone]);
-
-    // ── Phase 1: PLAYING ──
-    this.shrutiPhase     = 'playing';
-    this.liveNote        = null;
-    this.currentAccuracy = null;
-    this.accuracySamples = [];
-    this.roundSungNote   = null;
-    this.roundFeedback   = '';
-    this.cdr.markForCheck();
-
-    await this.perf.trace('audio_load', () => this.tanpura.play());
-
-    this.phaseTimer = setTimeout(() => {
-      if (!this.sessionActive) return;
-
-      // ── Phase 2: READY (silence gap — oscillator tails die out) ──
-      this.tanpura.stopAndSilence();
-      this.shrutiPhase = 'ready';
-      this.cdr.markForCheck();
-
-      this.phaseTimer = setTimeout(async () => {
-        if (!this.sessionActive) return;
-
-        // ── Phase 3: LISTENING ──
-        this.shrutiPhase = 'listening';
-        this.cdr.markForCheck();
-
-        await this.pitchDetection.start();
-        const micOpenedAt = Date.now();
-
-        const pitchSub = this.pitchDetection.smoothPitch$
-          .pipe(takeUntil(this.destroy$))
-          .subscribe((pitch: PitchResult) => {
-            // Discard warmup samples (residual reverb tail)
-            if (Date.now() - micOpenedAt < MIC_WARMUP_MS) return;
-            this.liveNote        = pitch.indianNote;
-            this.currentAccuracy = pitch.accuracy;
-            this.accuracySamples.push({
-              note:     pitch.indianNote,
-              accuracy: pitch.accuracy,
-              centsOff: pitch.centsOff
-            });
-            this.cdr.markForCheck();
-          });
-
-        this.phaseTimer = setTimeout(() => {
-          pitchSub.unsubscribe();
-          this.pitchDetection.stop();
-          this.liveNote = null;
-
-          // ── Phase 4: RESULT ──
-          const samples = this.accuracySamples;
-
-          this.roundAccuracy = samples.length
-            ? Math.round(samples.reduce((a, b) => a + b.accuracy, 0) / samples.length)
-            : 0;
-
-          // Track round score for session-level persistence
-          if (this.roundAccuracy > 0) this.shrutiRoundScores.push(this.roundAccuracy);
-
-          // Most frequently detected note = what the user sang
-          if (samples.length > 0) {
-            const counts: Partial<Record<IndianNote, number>> = {};
-            for (const s of samples) counts[s.note] = (counts[s.note] ?? 0) + 1;
-            this.roundSungNote = (Object.entries(counts) as [IndianNote, number][])
-              .sort((a, b) => b[1] - a[1])[0][0];
-          } else {
-            this.roundSungNote = null;
-          }
-
-          this.roundFeedback = buildFeedback(
-            this.currentTargetNote,
-            samples,
-            this.roundAccuracy
-          );
-
-          this.shrutiPhase = 'result';
-          this.analytics.logEvent('shruti_round_completed', {
-            note:     this.currentTargetNote,
-            accuracy: this.roundAccuracy,
-            correct:  this.roundSungNote === this.currentTargetNote,
-          });
-          this.cdr.markForCheck();
-        }, LISTEN_DURATION_MS);
-
-      }, REVERB_GAP_MS);
-
-    }, PLAY_DURATION_MS);
-  }
-
-  async nextShrutiRound(): Promise<void> {
-    if (!this.sessionActive) return;
-    await this.startShrutiRound();
   }
 
   // ── Raga practice state machine (whole-raga: playback → practice → result) ──
@@ -1547,7 +1284,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
     if (!this.sessionActive) return;
 
     this.earRound++;
-    this.earTargetNote  = this.drawNextNote();
+    this.earTargetNote  = this.drawEarNote();
     this.earGuessedNote = null;
     this.earIsCorrect   = false;
     this.earPhase       = 'playing';
@@ -1656,6 +1393,15 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
       this.notePool = this.shuffle(candidates);
     }
     return this.notePool.pop()!;
+  }
+
+  private earNotePool: IndianNote[] = [];
+
+  private drawEarNote(): IndianNote {
+    if (this.earNotePool.length === 0) {
+      this.earNotePool = this.shuffle(ALL_SHRUTI_NOTES);
+    }
+    return this.earNotePool.pop()!;
   }
 
   private shuffle<T>(arr: T[]): T[] {

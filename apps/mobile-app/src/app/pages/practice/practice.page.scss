@@ -39,14 +39,8 @@
   }
 }
 
-// ── Shruti Section ────────────────────────────────────────
-.shruti-section {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-4;
-}
-
-.mode-card {
+// ── Round controls ────────────────────────────────────────
+.round-controls {
   &__title { font-size: 18px; font-weight: 700; margin-bottom: $spacing-1; }
   &__desc  { font-size: 14px; color: var(--swara-text-secondary); }
 }
@@ -1131,7 +1125,7 @@
 }
 
 // Round-level status pill & next-round button
-.shruti-round-controls {
+.round-controls {
   display: flex;
   justify-content: center;
   align-items: center;
