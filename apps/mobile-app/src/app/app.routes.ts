@@ -23,18 +23,6 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/practice/practice.page').then(m => m.PracticePage)
       },
       {
-        path: 'tune',
-        loadComponent: () => import('./pages/tune/tune.page').then(m => m.TunePage)
-      },
-      {
-        path: 'tune-guitar',
-        loadComponent: () => import('./pages/tune/guitar-tuner/guitar-tuner.page').then(m => m.GuitarTunerPage)
-      },
-      {
-        path: 'tune-violin',
-        loadComponent: () => import('./pages/tune/violin-tuner/violin-tuner.page').then(m => m.ViolinTunerPage)
-      },
-      {
         path: 'progress',
         loadComponent: () => import('./pages/progress/progress.page').then(m => m.ProgressPage),
         canActivate: [authGuard]

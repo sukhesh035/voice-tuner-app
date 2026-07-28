@@ -4,11 +4,9 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { provideIonicAngular } from '@ionic/angular/standalone';
-import { filter, switchMap } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 import { routes } from './app.routes';
-import { authInterceptor, AuthService } from '@voice-tuner/auth';
-import { SubscriptionService } from '@voice-tuner/subscription';
-import { environment } from '../environments/environment';
+import { authInterceptor } from '@voice-tuner/auth';
 import { AnalyticsService } from './core/services/analytics.service';
 import { PerformanceService } from './core/services/performance.service';
 import { RemoteConfigService } from './core/services/remote-config.service';
@@ -19,9 +17,6 @@ const SCREEN_NAMES: Record<string, string> = {
   tanpura:  'Tanpura',
   sing:     'Sing',
   practice: 'Practice',
-  tune:           'Tune',
-  'tune-guitar':  'Guitar Tuner',
-  'tune-violin':  'Violin Tuner',
   progress: 'Progress',
   settings: 'Settings',
   profile:  'Profile',
@@ -69,24 +64,6 @@ function remoteConfigInitializer(remoteConfig: RemoteConfigService): () => Promi
   return () => remoteConfig.initialize();
 }
 
-function subscriptionAuthSyncInitializer(
-  auth: AuthService,
-  subscription: SubscriptionService,
-): () => void {
-  return () => {
-    auth.initialized$.pipe(
-      switchMap(() => auth.user$),
-    ).subscribe(user => {
-      if (!subscription.initialized()) return;
-      if (user) {
-        subscription.logIn(user.id).catch(console.error);
-      } else {
-        subscription.logOut().catch(console.error);
-      }
-    });
-  };
-}
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withPreloading(PreloadAllModules)),
@@ -122,28 +99,6 @@ export const appConfig: ApplicationConfig = {
         return routerAnalyticsInitializer(router, analytics, perf);
       },
       multi: true,
-    },
-    // Subscription: initialize RevenueCat on app boot
-    {
-      provide: APP_INITIALIZER,
-      useFactory: () => {
-        const subscription = inject(SubscriptionService);
-        return () => subscription.initialize(
-          environment.revenueCat.appleApiKey,
-          environment.revenueCat.googleApiKey
-        );
-      },
-      multi: true,
-    },
-    // Subscription: sync RevenueCat login state with Cognito auth state
-    {
-      provide: APP_INITIALIZER,
-      useFactory: () => {
-        const auth = inject(AuthService);
-        const subscription = inject(SubscriptionService);
-        return subscriptionAuthSyncInitializer(auth, subscription);
-      },
-      multi: true,
-    },
+    }
   ]
 };

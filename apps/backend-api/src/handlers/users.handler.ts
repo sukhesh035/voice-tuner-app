@@ -47,10 +47,6 @@ export interface UserProfile {
   guruCode?: string;        // set if user is a teacher
   photoUrl?: string;        // CloudFront URL to profile photo
   deviceTokens?: DeviceToken[];
-  // --- premium fields ---
-  isPremium: boolean;
-  premiumSince?: string;
-  premiumExpiresAt?: string;
 }
 
 export interface DeviceToken {
@@ -109,7 +105,6 @@ export const handler = async (
         preferences:  DEFAULT_PREFS,
         stats:        DEFAULT_STATS,
         favoriteRagas: [],
-        isPremium:    false,
       };
       await ddb.send(new PutCommand({ TableName: TABLE, Item: profile }));
       return created(profile);
