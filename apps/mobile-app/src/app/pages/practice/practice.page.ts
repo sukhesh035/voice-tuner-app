@@ -688,7 +688,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
   ];
   readonly chakras = MELAKARTA_CHAKRAS;
 
-  selectedMode: TrainingMode = 'raga';
+  selectedMode: TrainingMode = 'free';
   selectedRaga: RagaDefinition | null = null;
   sessionActive  = false;
   lastResult: TrainingSessionResult | null = null;
@@ -810,11 +810,13 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
       raga_name:   raga.englishName,
       mela_number: raga.melaNumber ?? 0,
     });
+    this.analytics.logSelectContent({ content_type: 'raga', content_id: raga.englishName });
     this.cdr.markForCheck();
   }
 
   clearRaga(): void {
     this.selectedRaga = null;
+    this.analytics.logAction('clear_raga');
     this.cdr.markForCheck();
   }
 
@@ -877,6 +879,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
     this.lastResult      = null;
 
     this.selectedMode = mode;
+    this.analytics.logSelectContent({ content_type: 'practice_mode', content_id: mode });
     this.cdr.markForCheck();
   }
 
@@ -887,6 +890,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
     this.lastResult    = null;
     this.notePool      = [];
     this.analytics.logEvent('practice_started', { mode: this.selectedMode });
+    this.analytics.logCtaTap(`practice_start_${this.selectedMode}`);
     this.cdr.markForCheck();
 
     if (this.selectedMode === 'raga' && this.selectedRaga) {
@@ -994,6 +998,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
       mode: this.selectedMode,
       duration_seconds: durationSeconds,
     });
+    this.analytics.logCtaTap(`practice_stop_${this.selectedMode}`, { duration_seconds: durationSeconds });
     // Log as abandoned if stopped mid-session (before a natural result phase)
     const isAbandoned = this.selectedMode === 'raga'
         ? this.ragaPhase !== 'result' && this.ragaPhase !== 'idle'

@@ -377,9 +377,11 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
           avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
           stabilityScore: Math.round(stats.stabilityScore),
           noteAccuracies,
-        }).then(() => {
+        }).then((res) => {
           this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
-          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).catch(() => {});
+          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).then((r) => {
+            this.analytics.setUserProperty('practice_streak', String(r.currentStreak));
+          }).catch(() => {});
         }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
       }
       this.cdr.markForCheck();
@@ -434,7 +436,9 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
           noteAccuracies,
         }).then(() => {
           this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
-          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).catch(() => {});
+          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).then((r) => {
+            this.analytics.setUserProperty('practice_streak', String(r.currentStreak));
+          }).catch(() => {});
         }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
       }
     } else {
@@ -459,6 +463,7 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
         this.micError = null;
         this.micPermDenied = false;
         this.analytics.logEvent('mic_started');
+        this.analytics.logCtaTap('sing_start');
       } catch (err: any) {
         const isDenied = (err as { name?: string })?.name === 'NotAllowedError';
         this.micError = isDenied

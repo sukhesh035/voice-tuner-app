@@ -78,8 +78,10 @@ export class SettingsPage {
   toggleTheme(event: Event): void {
     const checked = (event as CustomEvent).detail.checked as boolean;
     this.themeService.setTheme(checked ? 'dark' : 'light');
-    this.analytics.logEvent('theme_changed', { theme: checked ? 'dark' : 'light' });
-    this.persistPreference({ theme: checked ? 'dark' : 'light' });
+    const theme = checked ? 'dark' : 'light';
+    this.analytics.logEvent('theme_changed', { theme });
+    this.analytics.setUserProperty('theme', theme);
+    this.persistPreference({ theme });
   }
 
   selectInstrument(instrument: Instrument): void {
@@ -87,6 +89,7 @@ export class SettingsPage {
     this.selectedInstrument = instrument;
     this.tanpura.setInstrument(instrument);
     this.analytics.logEvent('instrument_changed', { instrument });
+    this.analytics.setUserProperty('instrument', instrument);
     this.persistPreference({ instrument });
     this.cdr.markForCheck();
   }

@@ -41,10 +41,12 @@ export class LoginPage {
     this.errorMsg         = '';
     this.successMsg       = '';
     this.unconfirmedEmail = '';
+    this.analytics.logLoginFunnelStep('submitted');
     try {
       await this.authService.signIn(this.email, this.password);
       this.api.getProfile().catch(() => {});
       this.analytics.logEvent('login', { method: 'email' });
+      this.analytics.logCtaTap('login_submit');
       await this.router.navigate(['/home']);
     } catch (err: any) {
       if (err.name === 'UserNotConfirmedException') {

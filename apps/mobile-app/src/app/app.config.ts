@@ -5,6 +5,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { provideIonicAngular } from '@ionic/angular/standalone';
 import { filter } from 'rxjs/operators';
+import { Capacitor } from '@capacitor/core';
 import { routes } from './app.routes';
 import { authInterceptor } from '@voice-tuner/auth';
 import { AnalyticsService } from './core/services/analytics.service';
@@ -76,6 +77,31 @@ function remoteConfigInitializer(remoteConfig: RemoteConfigService): () => Promi
   return () => remoteConfig.initialize();
 }
 
+/**
+ * Tracks app lifecycle events for analytics.
+ * - Logs `app_open` on launch.
+ * - Listens to appStateChange to log `app_background` / `app_foreground`.
+ * Uses @capacitor/app (works on native + PWA via the web implementation).
+ */
+function appLifecycleAnalyticsInitializer(
+  analytics: AnalyticsService,
+): () => void {
+  return () => {
+    // Native + PWA both support the App plugin; guard anyway.
+    analytics.logAppOpen();
+
+    import('@capacitor/app').then(({ App }) => {
+      App.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) {
+          analytics.logAppForeground();
+        } else {
+          analytics.logAppBackground();
+        }
+      });
+    }).catch(() => { /* not available on this platform */ });
+  };
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes, withPreloading(PreloadAllModules)),
@@ -109,6 +135,15 @@ export const appConfig: ApplicationConfig = {
         const analytics = inject(AnalyticsService);
         const perf      = inject(PerformanceService);
         return routerAnalyticsInitializer(router, analytics, perf);
+      },
+      multi: true,
+    },
+    // Analytics: app lifecycle events (app_open / background / foreground)
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => {
+        const analytics = inject(AnalyticsService);
+        return appLifecycleAnalyticsInitializer(analytics);
       },
       multi: true,
     }

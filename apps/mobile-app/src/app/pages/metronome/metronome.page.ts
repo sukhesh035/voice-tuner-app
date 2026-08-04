@@ -118,6 +118,7 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
   private audioCtx: AudioContext | null = null;
   private timerId: ReturnType<typeof setInterval> | null = null;
   private flashTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private sessionStartAt: number | null = null;
   private readonly analytics = inject(AnalyticsService);
 
   tempoLabel = tempoLabel;
@@ -159,14 +160,17 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
       }
     }
     this.isPlaying.set(true);
-    this.analytics.logEvent('metronome_started', { bpm: this.bpm() });
+    this.sessionStartAt = Date.now();
+    this.analytics.logCtaTap('metronome_start', { bpm: this.bpm() });
     this.scheduleTick();
   }
 
   private stop(): void {
+    const durationSeconds = this.sessionStartAt ? Math.round((Date.now() - this.sessionStartAt) / 1000) : 0;
+    this.sessionStartAt = null;
     this.isPlaying.set(false);
     this.beatActive.set(false);
-    this.analytics.logEvent('metronome_stopped', { bpm: this.bpm(), duration_seconds: 0 });
+    this.analytics.logCtaTap('metronome_stop', { bpm: this.bpm(), duration_seconds: durationSeconds });
     if (this.timerId !== null) {
       clearInterval(this.timerId);
       this.timerId = null;

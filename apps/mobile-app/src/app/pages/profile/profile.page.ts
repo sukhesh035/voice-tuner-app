@@ -17,6 +17,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { AuthService } from '@voice-tuner/auth';
 import { ApiService, UserProfile, StreaksResponse } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
+import { CrashlyticsService } from '../../core/services/crashlytics.service';
 import { compressProfilePhoto } from '../../core/utils/image-compress';
 interface Achievement {
   icon: string;
@@ -263,6 +264,7 @@ export class ProfilePage implements OnInit, ViewWillEnter {
   readonly authService = inject(AuthService);
   readonly api = inject(ApiService);
   readonly analytics = inject(AnalyticsService);
+  readonly crashlytics = inject(CrashlyticsService);
   readonly actionSheet = inject(ActionSheetController);
   readonly alertCtrl = inject(AlertController);
   readonly router = inject(Router);
@@ -375,6 +377,7 @@ export class ProfilePage implements OnInit, ViewWillEnter {
       // Associate analytics events with the logged-in user
       if (profile?.userId) {
         this.analytics.setUserId(profile.userId);
+        this.crashlytics.setUserId(profile.userId);
       }
       // Set persistent user properties for segmentation in Firebase Analytics
       const daysSinceSignup = profile?.createdAt
@@ -498,6 +501,7 @@ export class ProfilePage implements OnInit, ViewWillEnter {
   async signOut(): Promise<void> {
     this.analytics.logEvent('sign_out');
     this.analytics.setUserId(null);
+    this.crashlytics.clearUserId();
     await this.authService.signOut();
     this.cdr.markForCheck();
   }
