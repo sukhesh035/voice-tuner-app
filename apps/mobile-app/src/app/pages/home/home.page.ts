@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AsyncPipe } from '@angular/common';
+import { Capacitor } from '@capacitor/core';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonIcon
 } from '@ionic/angular/standalone';
@@ -84,10 +85,8 @@ import { AnalyticsService } from '../../core/services/analytics.service';
         <div class="section-label">Learn</div>
         <a
           class="learn-card"
-          href="https://www.youtube.com/channel/UCscdHfW7R88s20FnWsBiy4A?sub_confirmation=1"
-          target="_blank"
-          rel="noopener noreferrer"
-          (click)="trackTap('learn_youtube')"
+          href="#"
+          (click)="openLearnChannel($event)"
         >
           <div class="learn-card__icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="#FF0000">
@@ -132,5 +131,18 @@ export class HomePage {
     // Standard GA4 select_content + a CTA tap for funnel attribution
     this.analytics.logSelectContent({ content_type: 'home_quick_action', content_id: target });
     this.analytics.logCtaTap(`home_${target}`);
+  }
+
+  openLearnChannel(event: Event): void {
+    event.preventDefault();
+    this.trackTap('learn_youtube');
+    const url = 'https://www.youtube.com/channel/UCscdHfW7R88s20FnWsBiy4A?sub_confirmation=1';
+    if (Capacitor.isNativePlatform()) {
+      import('@capacitor/browser').then(({ Browser }) => {
+        Browser.open({ url }).catch(() => window.open(url, '_blank'));
+      });
+    } else {
+      window.open(url, '_blank', 'noopener');
+    }
   }
 }
