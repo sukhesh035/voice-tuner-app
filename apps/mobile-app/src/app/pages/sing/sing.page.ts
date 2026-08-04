@@ -263,6 +263,7 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
 
         <!-- Start / Stop Button -->
         <div class="mic-section">
+          @if (singMode === 'free') {
           <button
             class="sing-btn"
             [class.is-active]="isActive"
@@ -270,6 +271,19 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
           >
             {{ isActive ? 'Stop Singing' : 'Start Singing' }}
           </button>
+          } @else {
+          @if (isActive) {
+          <button
+            class="sing-btn"
+            [class.is-active]="isActive"
+            (click)="toggleMic()"
+          >
+            Stop Singing
+          </button>
+          } @else {
+          <div class="guided-hint">Select a note to start listening</div>
+          }
+          }
 
           @if (micError) {
           <div class="mic-error">{{ micError }}</div>
@@ -386,6 +400,10 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   selectTarget(note: IndianNote): void {
     this.targetNote = note;
     this.analytics.logEvent('sing_target_selected', { note });
+    if (!this.isActive) {
+      // Auto-start listening in guided mode when a note is selected.
+      this.startListening();
+    }
     this.cdr.markForCheck();
   }
 
@@ -524,38 +542,43 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
         }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
       }
     } else {
-      try {
-        // On Android, proactively request mic permission so the native
-        // RECORD_AUDIO dialog appears before getUserMedia is called.
-        // This is a no-op if permission is already granted.
-        if (this.permissions.micPermission !== 'granted') {
-          const state = await this.permissions.requestMicPermission();
-          if (state !== 'granted') {
-            this.micError = 'Microphone permission denied. Please allow access and try again.';
-            this.micPermDenied = true;
-            this.analytics.logEvent('mic_permission_denied');
-            this.cdr.markForCheck();
-            return;
-          }
-        }
-
-        await this.pitchDetection.start();
-        this.detectedNotes.clear();
-        this.isActive = true;
-        this.micError = null;
-        this.micPermDenied = false;
-        this.analytics.logEvent('mic_started');
-        this.analytics.logCtaTap('sing_start');
-      } catch (err: any) {
-        const isDenied = (err as { name?: string })?.name === 'NotAllowedError';
-        this.micError = isDenied
-          ? 'Microphone permission denied. Please allow access and try again.'
-          : 'Could not start microphone. Please try again.';
-        this.micPermDenied = isDenied;
-        if (isDenied) this.analytics.logEvent('mic_permission_denied');
-      }
+      await this.startListening();
     }
     this.cdr.markForCheck();
+  }
+
+  /** Start the mic + pitch detection (shared by free-flow start and guided note selection). */
+  private async startListening(): Promise<void> {
+    try {
+      // On Android, proactively request mic permission so the native
+      // RECORD_AUDIO dialog appears before getUserMedia is called.
+      // This is a no-op if permission is already granted.
+      if (this.permissions.micPermission !== 'granted') {
+        const state = await this.permissions.requestMicPermission();
+        if (state !== 'granted') {
+          this.micError = 'Microphone permission denied. Please allow access and try again.';
+          this.micPermDenied = true;
+          this.analytics.logEvent('mic_permission_denied');
+          this.cdr.markForCheck();
+          return;
+        }
+      }
+
+      await this.pitchDetection.start();
+      this.detectedNotes.clear();
+      this.isActive = true;
+      this.micError = null;
+      this.micPermDenied = false;
+      this.analytics.logEvent('mic_started');
+      this.analytics.logCtaTap('sing_start');
+    } catch (err: any) {
+      const isDenied = (err as { name?: string })?.name === 'NotAllowedError';
+      this.micError = isDenied
+        ? 'Microphone permission denied. Please allow access and try again.'
+        : 'Could not start microphone. Please try again.';
+      this.micPermDenied = isDenied;
+      if (isDenied) this.analytics.logEvent('mic_permission_denied');
+    }
   }
 
   cos(angle: number): number { return Math.cos(angle); }

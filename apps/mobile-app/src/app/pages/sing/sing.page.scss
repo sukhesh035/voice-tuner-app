@@ -310,6 +310,13 @@
   gap: $spacing-3;
 }
 
+.guided-hint {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--swara-text-secondary);
+  text-align: center;
+}
+
 .mic-error {
   font-size: 13px;
   color: #FF5252;
