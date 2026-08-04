@@ -48,6 +48,7 @@ export interface PracticeSession {
   mode:           string;
   raagaId?:       string;
   key:            string;
+  targetNote?:    string;
   score:          number;
   avgAccuracy:    number;
 }
@@ -57,6 +58,7 @@ export interface CreateSessionPayload {
   mode:           string;
   raagaId?:       string;
   key:            string;
+  targetNote?:    string;       // Indian note target (guided sing mode)
   score:          number;
   avgAccuracy:    number;
   stabilityScore: number;
