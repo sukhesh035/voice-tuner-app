@@ -5,6 +5,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { provideIonicAngular } from '@ionic/angular/standalone';
 import { filter } from 'rxjs/operators';
+import { Capacitor } from '@capacitor/core';
 import { routes } from './app.routes';
 import { authInterceptor } from '@voice-tuner/auth';
 import { AnalyticsService } from './core/services/analytics.service';
@@ -13,18 +14,22 @@ import { RemoteConfigService } from './core/services/remote-config.service';
 
 /** Screen name map: route path segment → human-readable name */
 const SCREEN_NAMES: Record<string, string> = {
-  home:     'Home',
-  tanpura:  'Tanpura',
-  sing:     'Sing',
-  practice: 'Practice',
-  progress: 'Progress',
-  settings: 'Settings',
-  profile:  'Profile',
+  home:      'Home',
+  metronome: 'Metronome',
+  sing:      'Sing',
+  practice:  'Practice',
+  progress:  'Progress',
+  settings:  'Settings',
+  profile:   'Profile',
   login:            'Login',
   signup:           'Sign Up',
   'forgot-password': 'Forgot Password',
   'verify-email':   'Verify Email',
   'reset-password': 'Reset Password',
+  classroom:        'Classroom',
+  'session-report': 'Session Report',
+  'privacy-policy': 'Privacy Policy',
+  'terms-of-service': 'Terms of Service',
 };
 
 function routerAnalyticsInitializer(
@@ -32,6 +37,16 @@ function routerAnalyticsInitializer(
   analytics: AnalyticsService,
   perf: PerformanceService,
 ): () => void {
+  const screenNameFromUrl = (url: string): string => {
+    const segments = url.split('/').filter(Boolean);
+    // Dynamic routes: match on the first segment (classroom/:code, session-report/:id)
+    if (segments[0] === 'classroom' || segments[0] === 'session-report') {
+      return SCREEN_NAMES[segments[0]] ?? segments[0];
+    }
+    const segment = segments.pop() ?? 'home';
+    return SCREEN_NAMES[segment] ?? segment;
+  };
+
   return () => {
     // Start app_startup trace as early as possible; stop on first NavigationEnd
     perf.startAppStartupTrace();
@@ -39,15 +54,13 @@ function routerAnalyticsInitializer(
 
     router.events.pipe(filter(e => e instanceof NavigationStart)).subscribe((e) => {
       const nav = e as NavigationStart;
-      const segment = nav.url.split('/').filter(Boolean).pop() ?? 'home';
-      const screenName = SCREEN_NAMES[segment] ?? segment;
+      const screenName = screenNameFromUrl(nav.url);
       perf.startScreenTrace(screenName);
     });
 
     router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e) => {
       const nav = e as NavigationEnd;
-      const segment = nav.urlAfterRedirects.split('/').filter(Boolean).pop() ?? 'home';
-      const screenName = SCREEN_NAMES[segment] ?? segment;
+      const screenName = screenNameFromUrl(nav.urlAfterRedirects);
 
       analytics.setScreen(screenName);
       perf.stopScreenTrace(screenName);
@@ -62,6 +75,31 @@ function routerAnalyticsInitializer(
 
 function remoteConfigInitializer(remoteConfig: RemoteConfigService): () => Promise<void> {
   return () => remoteConfig.initialize();
+}
+
+/**
+ * Tracks app lifecycle events for analytics.
+ * - Logs `app_open` on launch.
+ * - Listens to appStateChange to log `app_background` / `app_foreground`.
+ * Uses @capacitor/app (works on native + PWA via the web implementation).
+ */
+function appLifecycleAnalyticsInitializer(
+  analytics: AnalyticsService,
+): () => void {
+  return () => {
+    // Native + PWA both support the App plugin; guard anyway.
+    analytics.logAppOpen();
+
+    import('@capacitor/app').then(({ App }) => {
+      App.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) {
+          analytics.logAppForeground();
+        } else {
+          analytics.logAppBackground();
+        }
+      });
+    }).catch(() => { /* not available on this platform */ });
+  };
 }
 
 export const appConfig: ApplicationConfig = {
@@ -97,6 +135,15 @@ export const appConfig: ApplicationConfig = {
         const analytics = inject(AnalyticsService);
         const perf      = inject(PerformanceService);
         return routerAnalyticsInitializer(router, analytics, perf);
+      },
+      multi: true,
+    },
+    // Analytics: app lifecycle events (app_open / background / foreground)
+    {
+      provide: APP_INITIALIZER,
+      useFactory: () => {
+        const analytics = inject(AnalyticsService);
+        return appLifecycleAnalyticsInitializer(analytics);
       },
       multi: true,
     }

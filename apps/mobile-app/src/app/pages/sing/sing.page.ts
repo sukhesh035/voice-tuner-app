@@ -1,14 +1,15 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil, throttleTime } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButton, IonIcon, ViewWillEnter, ViewWillLeave
+  ViewWillEnter, ViewWillLeave
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { DecimalPipe } from '@angular/common';
 import { mic, micOff, statsChart } from 'ionicons/icons';
 import { PitchDetectionService, PitchResult, IndianNote } from '@voice-tuner/pitch-detection';
+import { ChangeDetectorRef } from '@angular/core';
 import { TanpuraPlayerService } from '@voice-tuner/tanpura-player';
 import { ApiService } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
@@ -16,15 +17,47 @@ import { AuthService } from '@voice-tuner/auth';
 import { PermissionsService } from '../../core/services/permissions.service';
 
 // ── Types ─────────────────────────────────────────────────
-
+export type WesternNote = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
 const INDIAN_NOTES: IndianNote[] = ['Sa','Re♭','Re','Ga♭','Ga','Ma','Ma#','Pa','Dha♭','Dha','Ni♭','Ni'];
+export const ROOT_NOTES: WesternNote[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 
-const BUBBLE_WIDTH = 100;
-const BUBBLE_HEIGHT = 44;
-const BUBBLE_SPEED_MIN = 0.4;
-const BUBBLE_SPEED_RANGE = 0.3;
-const BUBBLE_SPAWN_MARGIN = 20;
-const POP_ANIMATION_MS = 3000;
+// Sa frequency for each key (C4 reference, equal temperament)
+const SA_FREQS: Record<WesternNote, number> = {
+  'C':  261.63, 'C#': 277.18, 'D':  293.66, 'D#': 311.13,
+  'E':  329.63, 'F':  349.23, 'F#': 369.99, 'G':  392.00,
+  'G#': 415.30, 'A':  440.00, 'A#': 466.16, 'B':  493.88,
+};
+
+// ── Scale definitions ─────────────────────────────────────
+export interface ScaleDefinition {
+  id:        string;
+  label:     string;
+  intervals: number[]; // semitone offsets from root
+}
+
+export const SCALES: ScaleDefinition[] = [
+  { id: 'chromatic',  label: 'Chromatic',       intervals: [0,1,2,3,4,5,6,7,8,9,10,11] },
+  { id: 'major',      label: 'Major',            intervals: [0,2,4,5,7,9,11] },
+  { id: 'minor',      label: 'Natural Minor',    intervals: [0,2,3,5,7,8,10] },
+  { id: 'harm_min',   label: 'Harmonic Minor',   intervals: [0,2,3,5,7,8,11] },
+  { id: 'mel_min',    label: 'Melodic Minor',    intervals: [0,2,3,5,7,9,11] },
+  { id: 'pent_maj',   label: 'Pentatonic Major', intervals: [0,2,4,7,9] },
+  { id: 'pent_min',   label: 'Pentatonic Minor', intervals: [0,3,5,7,10] },
+  { id: 'blues',      label: 'Blues',            intervals: [0,3,5,6,7,10] },
+  { id: 'dorian',     label: 'Dorian',           intervals: [0,2,3,5,7,9,10] },
+  { id: 'phrygian',   label: 'Phrygian',         intervals: [0,1,3,5,7,8,10] },
+  { id: 'lydian',     label: 'Lydian',           intervals: [0,2,4,6,7,9,11] },
+  { id: 'mixolydian', label: 'Mixolydian',       intervals: [0,2,4,5,7,9,10] },
+];
+
+/**
+ * Given a scale, return the set of IndianNote names that belong to it.
+ * IndianNote is always relative to Sa (index 0), so scale intervals
+ * map directly onto INDIAN_NOTES indices.
+ */
+function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
+  return new Set(scale.intervals.map(i => INDIAN_NOTES[i % 12]));
+}
 
 @Component({
   selector: 'app-sing',
@@ -101,12 +134,6 @@ const POP_ANIMATION_MS = 3000;
             @if (!currentPitch && isActive) {
             <div class="no-pitch">Sing...</div>
             }
-            @if (isActive && targetNote && guidance && !isHit && !isPopping) {
-            <div class="guidance-meter" [class.guidance-up]="guidance === 'higher'" [class.guidance-down]="guidance === 'lower'">
-              @if (guidance === 'higher') { ↑ Raise frequency to hit {{ targetNote }} }
-              @if (guidance === 'lower') { ↓ Lower frequency to hit {{ targetNote }} }
-            </div>
-            }
           </div>
         </div>
 
@@ -143,36 +170,61 @@ const POP_ANIMATION_MS = 3000;
           </div>
         </div>
 
-        <!-- Bubble Game Area -->
-        <div class="game-area" #gameArea>
-          @if (isActive && targetNote) {
-          <div
-            class="bubble"
-            [class.popping]="isPopping"
-            [class.hit]="isHit"
-            [style.transform]="'translate(' + bubbleX + 'px, ' + bubbleY + 'px)'"
-          >
-            <span class="bubble-note">{{ targetNote }}</span>
-            @if (isHit) {
-            <span class="bubble-countdown">Lock {{ countdown }}</span>
-            }
+        <!-- Key + Scale Selectors -->
+        <div class="selectors-row">
+          <div class="selector-group">
+            <label class="selector-label" for="key-select">Key</label>
+            <div class="select-wrapper">
+              <select
+                id="key-select"
+                class="selector-select"
+                [value]="selectedRoot"
+                (change)="onRootChange($event)"
+              >
+                @for (root of rootNotes; track root) {
+                <option [value]="root" [selected]="root === selectedRoot">{{ root }}</option>
+                }
+              </select>
+            </div>
           </div>
-          } @else if (isActive && !targetNote) {
-          <div class="game-idle">Get ready...</div>
-          }
-          @if (!isActive) {
-          <div class="game-idle">Start singing to play</div>
-          }
+
+          <div class="selector-group">
+            <label class="selector-label" for="scale-select">Scale</label>
+            <div class="select-wrapper">
+              <select
+                id="scale-select"
+                class="selector-select"
+                [value]="selectedScale.id"
+                (change)="onScaleChange($event)"
+              >
+                @for (scale of scales; track scale.id) {
+                <option [value]="scale.id" [selected]="scale.id === selectedScale.id">{{ scale.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
         </div>
 
-        <!-- Score (logged-in only) -->
-        @if (authService.currentUser && isActive) {
-        <div class="score-row">
-          <span class="score-item">✓ {{ correctCount }}/{{ totalCount }}</span>
-          <span class="score-divider"></span>
-          <span class="score-item">Streak {{ streak }}</span>
+        <!-- Note Grid (Carnatic / Sargam) -->
+        <div class="note-grid-section">
+          <div class="section-title">
+            Notes Detected
+            <span class="scale-badge">{{ selectedRoot }} {{ selectedScale.label }}</span>
+          </div>
+          <div class="swara-note-grid">
+            @for (note of allNotes; track note; let i = $index) {
+            <div
+              class="note-chip"
+              [class.active]="detectedNotes.has(note)"
+              [class.current]="currentPitch?.indianNote === note"
+              [class.out-of-scale]="!scaleNoteSet.has(note)"
+              [style.--note-color]="noteColors[i]"
+            >
+              <span class="note-name">{{ note }}</span>
+            </div>
+            }
+          </div>
         </div>
-        }
 
         <!-- Start / Stop Button -->
         <div class="mic-section">
@@ -220,6 +272,16 @@ const POP_ANIMATION_MS = 3000;
   styleUrls: ['./sing.page.scss']
 })
 export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave {
+  readonly allNotes:  IndianNote[]       = INDIAN_NOTES;
+  readonly scales:    ScaleDefinition[]  = SCALES;
+  readonly rootNotes: WesternNote[]      = ROOT_NOTES;
+
+  readonly noteColors = [
+    '#FF6B6B','#FF8E53','#FFC300','#A8FF78','#4CAF50',
+    '#26C6DA','#7C4DFF','#2196F3','#9C27B0','#CE93D8','#E91E63','#FF80AB'
+  ];
+  readonly noteAngles = Array.from({ length: 12 }, (_, i) => (i / 12) * Math.PI * 2 - Math.PI / 2);
+
   currentPitch:  PitchResult | null = null;
   isActive       = false;
   detectedNotes  = new Set<IndianNote>();
@@ -227,28 +289,9 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   micError:      string | null = null;
   micPermDenied  = false;
 
-  // ── Game state ───────────────────────────────────────────
-  targetNote: IndianNote | null = null;
-  correctCount = 0;
-  totalCount = 0;
-  streak = 0;
-  bubbleX = 150;
-  bubbleY = 100;
-  bubbleVx = 1.5;
-  bubbleVy = 1.2;
-  isPopping = false;
-  isHit = false;
-  countdown = 0;
-  guidance: '' | 'higher' | 'lower' = '';
-  readonly noteAngles = Array.from({ length: 12 }, (_, i) => (i / 12) * Math.PI * 2 - Math.PI / 2);
-  private animFrameId: number | null = null;
-  private gameAreaEl: HTMLElement | null = null;
-
-  @ViewChild('gameArea', { static: false }) set gameAreaRef(el: ElementRef<HTMLElement>) {
-    if (el) this.gameAreaEl = el.nativeElement;
-  }
-
-  scaleNoteSet: Set<IndianNote> = new Set(INDIAN_NOTES); // all 12 notes
+  selectedRoot:  WesternNote     = 'C';
+  selectedScale: ScaleDefinition = SCALES[1]; // Major by default
+  scaleNoteSet: Set<IndianNote> = buildIndianScaleSet(SCALES[1]);
 
   private destroy$ = new Subject<void>();
 
@@ -289,38 +332,6 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
       .subscribe(pitch => {
         this.currentPitch = pitch;
         if (pitch) this.detectedNotes.add(pitch.indianNote);
-        if (pitch && this.targetNote && this.isActive && !this.isPopping && !this.isHit) {
-          if (pitch.indianNote === this.targetNote && pitch.isInTune) {
-            this.totalCount++;
-            this.streak++;
-            this.correctCount++;
-            this.guidance = '';
-            this.isHit = true;
-            this.countdown = 3;
-            this.stopBounceLoop();
-            const countdownId = setInterval(() => {
-              this.countdown--;
-              if (this.countdown <= 0) {
-                clearInterval(countdownId);
-                this.isHit = false;
-                this.isPopping = true;
-                setTimeout(() => {
-                  this.isPopping = false;
-                  this.pickRandomNote();
-                }, 400);
-              }
-              try { this.cdr.markForCheck(); } catch {}
-            }, 1000);
-          } else {
-            if (pitch.indianNote !== this.targetNote) {
-              const targetIdx = INDIAN_NOTES.indexOf(this.targetNote);
-              const pitchIdx = INDIAN_NOTES.indexOf(pitch.indianNote);
-              this.guidance = pitchIdx < targetIdx ? 'higher' : 'lower';
-            } else {
-              this.guidance = '';
-            }
-          }
-        }
         try { this.cdr.markForCheck(); } catch {}
       });
   }
@@ -344,12 +355,6 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
       const stats = this.pitchDetection.getSessionStats();
       this.sessionStats = stats as any;
       this.isActive = false;
-      this.stopBounceLoop();
-      this.targetNote = null;
-      this.guidance = '';
-      this.isPopping = false;
-      this.isHit = false;
-      this.countdown = 0;
       this.micError = null;
       this.micPermDenied = false;
       this.analytics.logEvent('mic_stopped', {
@@ -372,65 +377,32 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
           avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
           stabilityScore: Math.round(stats.stabilityScore),
           noteAccuracies,
-        }).then(() => {
+        }).then((res) => {
           this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
-          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).catch(() => {});
+          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).then((r) => {
+            this.analytics.setUserProperty('practice_streak', String(r.currentStreak));
+          }).catch(() => {});
         }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
       }
       this.cdr.markForCheck();
     }
   }
 
-  // ── Bubble game ──────────────────────────────────────────
-  private pickRandomNote(): void {
-    const scaleNotes = Array.from(this.scaleNoteSet);
-    if (scaleNotes.length === 0) return;
-    const idx = Math.floor(Math.random() * scaleNotes.length);
-    this.targetNote = scaleNotes[idx];
-    this.guidance = '';
-    this.spawnBubble();
-  }
-
-  private spawnBubble(): void {
-    if (!this.gameAreaEl) return;
-    const rect = this.gameAreaEl.getBoundingClientRect();
-    this.bubbleX = BUBBLE_SPAWN_MARGIN + Math.random() * (rect.width - BUBBLE_WIDTH - BUBBLE_SPAWN_MARGIN);
-    this.bubbleY = BUBBLE_SPAWN_MARGIN + Math.random() * (rect.height - BUBBLE_HEIGHT - BUBBLE_SPAWN_MARGIN);
-    const angle = Math.random() * Math.PI * 2;
-    const speed = BUBBLE_SPEED_MIN + Math.random() * BUBBLE_SPEED_RANGE;
-    this.bubbleVx = Math.cos(angle) * speed;
-    this.bubbleVy = Math.sin(angle) * speed;
+  // ── Key + Scale selectors ───────────────────────────────
+  onRootChange(event: Event): void {
+    this.selectedRoot = (event.target as HTMLSelectElement).value as WesternNote;
+    this.pitchDetection.setSa(SA_FREQS[this.selectedRoot]);
+    this.detectedNotes.clear();
     this.cdr.markForCheck();
-    this.startBounceLoop();
   }
 
-  private startBounceLoop(): void {
-    if (this.animFrameId !== null) return;
-    const loop = () => {
-      if (!this.isActive || this.isPopping || !this.gameAreaEl) {
-        this.animFrameId = null;
-        return;
-      }
-      this.bubbleX += this.bubbleVx;
-      this.bubbleY += this.bubbleVy;
-      const rect = this.gameAreaEl.getBoundingClientRect();
-      const bubbleW = BUBBLE_WIDTH;
-      const bubbleH = BUBBLE_HEIGHT;
-      if (this.bubbleX <= 0) { this.bubbleX = 0; this.bubbleVx = Math.abs(this.bubbleVx); }
-      if (this.bubbleX >= rect.width - bubbleW) { this.bubbleX = rect.width - bubbleW; this.bubbleVx = -Math.abs(this.bubbleVx); }
-      if (this.bubbleY <= 0) { this.bubbleY = 0; this.bubbleVy = Math.abs(this.bubbleVy); }
-      if (this.bubbleY >= rect.height - bubbleH) { this.bubbleY = rect.height - bubbleH; this.bubbleVy = -Math.abs(this.bubbleVy); }
-      try { this.cdr.markForCheck(); } catch {}
-      this.animFrameId = requestAnimationFrame(loop);
-    };
-    this.animFrameId = requestAnimationFrame(loop);
-  }
-
-  private stopBounceLoop(): void {
-    if (this.animFrameId !== null) {
-      cancelAnimationFrame(this.animFrameId);
-      this.animFrameId = null;
-    }
+  onScaleChange(event: Event): void {
+    const id = (event.target as HTMLSelectElement).value;
+    this.selectedScale = SCALES.find(s => s.id === id) ?? SCALES[1];
+    this.scaleNoteSet = buildIndianScaleSet(this.selectedScale);
+    this.detectedNotes.clear();
+    this.analytics.logEvent('scale_selected', { scale_id: this.selectedScale.id });
+    this.cdr.markForCheck();
   }
 
   // ── Mic toggle ───────────────────────────────────────────
@@ -440,11 +412,6 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
       const stats = this.pitchDetection.getSessionStats();
       this.sessionStats = stats as any;
       this.isActive = false;
-      this.stopBounceLoop();
-      this.targetNote = null;
-      this.guidance = '';
-      this.isPopping = false;
-      this.isHit = false;
       this.micError = null;
       this.micPermDenied = false;
       this.analytics.logEvent('mic_stopped', {
@@ -469,7 +436,9 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
           noteAccuracies,
         }).then(() => {
           this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
-          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).catch(() => {});
+          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).then((r) => {
+            this.analytics.setUserProperty('practice_streak', String(r.currentStreak));
+          }).catch(() => {});
         }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
       }
     } else {
@@ -490,17 +459,11 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
 
         await this.pitchDetection.start();
         this.detectedNotes.clear();
-        this.correctCount = 0;
-        this.totalCount = 0;
-        this.streak = 0;
-        this.isPopping = false;
-        this.isHit = false;
-        this.countdown = 0;
         this.isActive = true;
-        this.pickRandomNote();
         this.micError = null;
         this.micPermDenied = false;
         this.analytics.logEvent('mic_started');
+        this.analytics.logCtaTap('sing_start');
       } catch (err: any) {
         const isDenied = (err as { name?: string })?.name === 'NotAllowedError';
         this.micError = isDenied

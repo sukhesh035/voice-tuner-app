@@ -55,7 +55,16 @@ export class AnalyticsService {
   async setScreen(screenName: string): Promise<void> {
     if (!environment.enableAnalytics) return;
     try {
-      await FirebaseAnalytics.setCurrentScreen({ screenName });
+      // Log a screen_view event with the firebase_screen param. This populates the
+      // "Views" report by page title/screen class on both native and web, unlike
+      // setCurrentScreen which is deprecated and unreliable on Capacitor native.
+      await FirebaseAnalytics.logEvent({
+        name: 'screen_view',
+        params: {
+          firebase_screen: screenName,
+          firebase_screen_class: screenName,
+        },
+      });
     } catch (err) {
       console.warn('[Analytics] setScreen failed:', err);
     }
@@ -108,6 +117,62 @@ export class AnalyticsService {
   /** Returns true when running on a real native device (not browser) */
   get isNative(): boolean {
     return Capacitor.isNativePlatform();
+  }
+
+  // ── App lifecycle ──────────────────────────────────────────────────────────
+
+  /** Fired once when the app is launched / opened to the foreground */
+  async logAppOpen(): Promise<void> {
+    await this.logEvent('app_open', { platform: Capacitor.getPlatform() });
+  }
+
+  /** Fired when the app moves to the background */
+  async logAppBackground(): Promise<void> {
+    await this.logEvent('app_background');
+  }
+
+  /** Fired when the app returns to the foreground from background */
+  async logAppForeground(): Promise<void> {
+    await this.logEvent('app_foreground', { platform: Capacitor.getPlatform() });
+  }
+
+  // ── Standard GA4 events ──────────────────────────────────────────────────────
+
+  /** Standard select_content event — use for any card / link / button that navigates */
+  async logSelectContent(params: {
+    content_type: string;
+    content_id?: string;
+    item_id?: string;
+  }): Promise<void> {
+    await this.logEvent('select_content', { ...params });
+  }
+
+  /** Standard generate_lead — fired when a user initiates a conversion action */
+  async logGenerateLead(params: Record<string, string | number | boolean> = {}): Promise<void> {
+    await this.logEvent('generate_lead', params);
+  }
+
+  // ── CTA / engagement helpers ───────────────────────────────────────────────
+
+  /**
+   * Log a CTA button tap with engagement time so GA4 can attribute the action
+   * to a screen. content_type is the button name (e.g. 'start_practice').
+   */
+  async logCtaTap(
+    contentType: string,
+    params: Record<string, string | number | boolean> = {},
+  ): Promise<void> {
+    await this.logEvent('cta_tap', {
+      content_type: contentType,
+      ...params,
+    });
+  }
+
+  /**
+   * Log a generic UI interaction (toggle, selector change, permission request…).
+   */
+  async logAction(action: string, params: Record<string, string | number | boolean> = {}): Promise<void> {
+    await this.logEvent('ui_action', { action, ...params });
   }
 
   // ── Typed event helpers ──────────────────────────────────────────────────────

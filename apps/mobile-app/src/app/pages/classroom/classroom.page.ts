@@ -249,6 +249,7 @@ export class ClassroomPage implements OnInit, OnDestroy {
         this.currentView = 'student-waiting';
         this.joining     = false;
         this.analytics.logEvent('classroom_joined', { session_code: this.joinCode });
+        this.analytics.logCtaTap('classroom_join');
         this.cdr.markForCheck();
       },
       error: (err) => {

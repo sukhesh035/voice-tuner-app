@@ -107,6 +107,8 @@ export class HomePage {
   }
 
   trackTap(target: string): void {
-    this.analytics.logEvent('home_tap', { target });
+    // Standard GA4 select_content + a CTA tap for funnel attribution
+    this.analytics.logSelectContent({ content_type: 'home_quick_action', content_id: target });
+    this.analytics.logCtaTap(`home_${target}`);
   }
 }

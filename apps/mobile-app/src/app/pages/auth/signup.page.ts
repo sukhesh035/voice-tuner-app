@@ -68,9 +68,11 @@ export class SignupPage {
     this.errorMsg  = '';
     this.showSignInAction = false;
     this.cdr.markForCheck();
+    this.analytics.logSignupFunnelStep('submitted');
     try {
       const result = await this.authService.signUp(this.email, this.password);
       this.analytics.logEvent('sign_up', { method: 'email' });
+      this.analytics.logCtaTap('signup_submit');
       if (result === 'CONFIRM_SIGN_UP') {
         await this.router.navigate(['/verify-email'], {
           state: { email: this.email },
