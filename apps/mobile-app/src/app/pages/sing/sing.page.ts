@@ -17,7 +17,16 @@ import { AuthService } from '@voice-tuner/auth';
 import { PermissionsService } from '../../core/services/permissions.service';
 
 // ── Types ─────────────────────────────────────────────────
+export type WesternNote = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
 const INDIAN_NOTES: IndianNote[] = ['Sa','Re♭','Re','Ga♭','Ga','Ma','Ma#','Pa','Dha♭','Dha','Ni♭','Ni'];
+export const ROOT_NOTES: WesternNote[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+// Sa frequency for each key (C4 reference, equal temperament)
+const SA_FREQS: Record<WesternNote, number> = {
+  'C':  261.63, 'C#': 277.18, 'D':  293.66, 'D#': 311.13,
+  'E':  329.63, 'F':  349.23, 'F#': 369.99, 'G':  392.00,
+  'G#': 415.30, 'A':  440.00, 'A#': 466.16, 'B':  493.88,
+};
 
 // ── Scale definitions ─────────────────────────────────────
 export interface ScaleDefinition {
@@ -161,8 +170,24 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
           </div>
         </div>
 
-        <!-- Scale Selector -->
+        <!-- Key + Scale Selectors -->
         <div class="selectors-row">
+          <div class="selector-group">
+            <label class="selector-label" for="key-select">Key</label>
+            <div class="select-wrapper">
+              <select
+                id="key-select"
+                class="selector-select"
+                [value]="selectedRoot"
+                (change)="onRootChange($event)"
+              >
+                @for (root of rootNotes; track root) {
+                <option [value]="root">{{ root }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
           <div class="selector-group">
             <label class="selector-label" for="scale-select">Scale</label>
             <div class="select-wrapper">
@@ -184,6 +209,7 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
         <div class="note-grid-section">
           <div class="section-title">
             Notes Detected
+            <span class="scale-badge">{{ selectedRoot }} {{ selectedScale.label }}</span>
           </div>
           <div class="swara-note-grid">
             @for (note of allNotes; track note; let i = $index) {
@@ -248,6 +274,7 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
 export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave {
   readonly allNotes:  IndianNote[]       = INDIAN_NOTES;
   readonly scales:    ScaleDefinition[]  = SCALES;
+  readonly rootNotes: WesternNote[]      = ROOT_NOTES;
 
   readonly noteColors = [
     '#FF6B6B','#FF8E53','#FFC300','#A8FF78','#4CAF50',
@@ -262,6 +289,7 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   micError:      string | null = null;
   micPermDenied  = false;
 
+  selectedRoot:  WesternNote     = 'C';
   selectedScale: ScaleDefinition = SCALES[1]; // Major by default
   scaleNoteSet: Set<IndianNote> = buildIndianScaleSet(SCALES[1]);
 
@@ -358,7 +386,14 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
     }
   }
 
-  // ── Scale selector ───────────────────────────────────────
+  // ── Key + Scale selectors ───────────────────────────────
+  onRootChange(event: Event): void {
+    this.selectedRoot = (event.target as HTMLSelectElement).value as WesternNote;
+    this.pitchDetection.setSa(SA_FREQS[this.selectedRoot]);
+    this.detectedNotes.clear();
+    this.cdr.markForCheck();
+  }
+
   onScaleChange(event: Event): void {
     const id = (event.target as HTMLSelectElement).value;
     this.selectedScale = SCALES.find(s => s.id === id) ?? SCALES[1];
