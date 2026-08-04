@@ -45,6 +45,64 @@
   &__desc  { font-size: 14px; color: var(--swara-text-secondary); }
 }
 
+// ── Raga browser type segment ─────────────────────────────
+.browser-type-segment {
+  --background: var(--swara-bg-card);
+  border-radius: $radius-lg;
+  border: 1px solid var(--swara-border);
+  overflow: hidden;
+
+  ion-segment-button {
+    --color: var(--swara-text-secondary);
+    --color-checked: var(--swara-primary);
+    --indicator-color: rgba(var(--swara-primary-rgb), 0.15);
+    --indicator-height: 100%;
+    --indicator-border-radius: #{$radius-md};
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+    min-height: 36px;
+  }
+}
+
+// ── Janya / scale labels in list + detail ─────────────────
+.raga-card__scale,
+.raga-card__parent {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: $radius-full;
+  white-space: nowrap;
+}
+
+.raga-card__scale {
+  color: var(--swara-secondary);
+  background: rgba(var(--swara-secondary-rgb), 0.12);
+}
+
+.raga-card__parent {
+  color: var(--swara-primary);
+  background: rgba(var(--swara-primary-rgb), 0.12);
+}
+
+.scale-type-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--swara-secondary);
+  background: rgba(var(--swara-secondary-rgb), 0.12);
+  padding: 2px 8px;
+  border-radius: $radius-full;
+}
+
+.janya-parent-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--swara-primary);
+}
+
 .target-display {
   text-align: center;
   padding: $spacing-8 0;
