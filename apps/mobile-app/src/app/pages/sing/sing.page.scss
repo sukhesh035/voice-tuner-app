@@ -292,6 +292,7 @@
   border-radius: $radius-full;
   border: 2px solid var(--swara-border);
   background: var(--swara-bg-card);
+  background-clip: padding-box;
   color: var(--swara-text-secondary);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -304,6 +305,7 @@
 
   &.is-active {
     background: var(--swara-gradient-primary);
+    background-clip: padding-box;
     border-color: transparent;
     color: white;
     box-shadow: 0 8px 32px rgba(var(--swara-primary-rgb), 0.55);
