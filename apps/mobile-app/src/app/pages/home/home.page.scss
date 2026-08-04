@@ -188,6 +188,13 @@
     margin-top: 2px;
   }
 
+  &__note {
+    font-size: 11px;
+    color: var(--swara-secondary);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
   &__arrow {
     color: var(--swara-text-tertiary);
     font-size: 20px;

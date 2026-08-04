@@ -97,6 +97,7 @@ import { AnalyticsService } from '../../core/services/analytics.service';
           <div class="learn-card__body">
             <div class="learn-card__title">Piano & Keyboard Lessons</div>
             <div class="learn-card__sub">Learn in Telugu on YouTube</div>
+            <div class="learn-card__note">1 new class added every week</div>
           </div>
           <div class="learn-card__arrow">&#8250;</div>
         </a>
