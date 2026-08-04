@@ -2,7 +2,7 @@ import { Component, OnDestroy, signal, ChangeDetectionStrategy, inject } from '@
 import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar,
-  IonRange, IonToggle, IonSelect, IonSelectOption,
+  IonRange, IonSelect, IonSelectOption,
   IonSegment, IonSegmentButton, IonLabel,
   ViewWillLeave
 } from '@ionic/angular/standalone';
@@ -37,7 +37,7 @@ const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A
   imports: [
     CommonModule,
     IonContent, IonHeader, IonTitle, IonToolbar,
-    IonRange, IonToggle, IonSelect, IonSelectOption,
+    IonRange, IonSelect, IonSelectOption,
     IonSegment, IonSegmentButton, IonLabel,
   ],
   template: `
@@ -132,15 +132,40 @@ const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A
 
         <!-- Tanpura Drone -->
         <div class="drone-card">
-          <div class="drone-header">
-            <span class="drone-title">Tanpura Drone</span>
-            <ion-toggle
-              [checked]="droneOn()"
-              (ionChange)="toggleDrone($event)"
-            ></ion-toggle>
-          </div>
+          <div class="drone-title">Tanpura Drone</div>
+
+          <!-- Play / Stop Button -->
+          <button
+            class="play-btn drone-play-btn"
+            [class.is-playing]="droneOn()"
+            (click)="toggleDrone()"
+          >
+            <div class="play-btn__icon">
+              @if (droneOn()) {
+              <div class="stop-bars">
+                <span></span><span></span>
+              </div>
+              } @else {
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              }
+            </div>
+            <span class="play-btn__label">{{ droneOn() ? 'Stop' : 'Play' }}</span>
+          </button>
 
           <div class="drone-controls">
+            <div class="drone-control">
+              <label class="drone-control__label">Tempo</label>
+              <ion-range
+                [value]="droneTempo()"
+                [min]="0"
+                [max]="10"
+                [step]="1"
+                (ionChange)="onDroneTempo($event)"
+                class="drone-range"
+              ></ion-range>
+            </div>
             <div class="drone-control">
               <label class="drone-control__label">Key</label>
               <ion-select
@@ -161,7 +186,7 @@ const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A
                 [max]="1"
                 [step]="0.01"
                 (ionChange)="onDroneVolume($event)"
-                class="drone-volume"
+                class="drone-range"
               ></ion-range>
             </div>
           </div>
@@ -183,6 +208,7 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
   readonly droneOn = signal<boolean>(false);
   readonly droneKey = signal<MusicalKey>('C');
   readonly droneVolume = signal<number>(0.7);
+  readonly droneTempo = signal<number>(5);
   readonly droneKeys = DRONE_KEYS;
 
   private audioCtx: AudioContext | null = null;
@@ -222,17 +248,25 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
     this.activeTab.set((event as CustomEvent).detail.value as 'metronome' | 'tanpura');
   }
 
-  toggleDrone(event: Event): void {
-    const on = (event as CustomEvent).detail.checked as boolean;
+  toggleDrone(): void {
+    const on = !this.droneOn();
     this.droneOn.set(on);
     this.analytics.logEvent('drone_toggled', { on, source: 'metronome' });
     if (on) {
       this.tanpura.setKey(this.droneKey());
       this.tanpura.setVolume(this.droneVolume());
+      this.tanpura.setTempo(this.droneTempo());
       this.tanpura.play();
     } else {
       this.tanpura.stop();
     }
+  }
+
+  onDroneTempo(event: Event): void {
+    const tempo = (event as CustomEvent).detail.value as number;
+    this.droneTempo.set(tempo);
+    this.analytics.logEvent('drone_tempo_changed', { tempo });
+    this.tanpura.setTempo(tempo);
   }
 
   onDroneKey(event: Event): void {

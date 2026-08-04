@@ -260,15 +260,11 @@
   background: var(--swara-bg-card);
   border: 1px solid var(--swara-border);
   border-radius: 20px;
-  padding: 16px;
+  padding: 20px 16px;
   margin-top: 8px;
-}
-
-.drone-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .drone-title {
@@ -277,19 +273,24 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--ion-text-color);
+  text-align: center;
+}
+
+.drone-play-btn {
+  align-self: center;
+  padding: 12px 36px;
 }
 
 .drone-controls {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .drone-control {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .drone-control__label {
@@ -297,14 +298,13 @@
   color: var(--ion-color-medium);
   text-transform: uppercase;
   letter-spacing: 1px;
-  min-width: 44px;
 }
 
 .drone-select {
-  flex: 1;
+  width: 100%;
   --padding-start: 8px;
 }
 
-.drone-volume {
-  flex: 1;
+.drone-range {
+  width: 100%;
 }
