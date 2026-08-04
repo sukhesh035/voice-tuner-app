@@ -497,8 +497,9 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
       }
       this.api.createSession({
         duration:       durationSeconds,
-        mode:           'free',
+        mode:           this.singMode === 'guided' ? 'guided' : 'free',
         key:            tanpuraState.key,
+        targetNote:     this.singMode === 'guided' ? (this.targetNote ?? undefined) : undefined,
         score:          Math.round(stats.stabilityScore),
         avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
         stabilityScore: Math.round(stats.stabilityScore),

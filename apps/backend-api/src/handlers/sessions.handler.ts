@@ -27,6 +27,7 @@ export interface PracticeSession {
   mode: 'shruti' | 'raga' | 'free';
   raagaId?: string;
   key: string;          // e.g. "C", "D#"
+  targetNote?: string;  // Indian note the user was asked to sing (guided mode)
   score: number;        // 0–100
   avgAccuracy: number;
   stabilityScore: number;
@@ -106,6 +107,7 @@ export const handler = async (
         mode:           body.mode            ?? 'free',
         raagaId:        body.raagaId,
         key:            body.key             ?? 'C',
+        targetNote:     body.targetNote,
         score:          body.score           ?? 0,
         avgAccuracy:    body.avgAccuracy     ?? 0,
         stabilityScore: body.stabilityScore  ?? 0,
