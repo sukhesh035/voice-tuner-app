@@ -19,6 +19,37 @@ import { PermissionsService } from '../../core/services/permissions.service';
 // ── Types ─────────────────────────────────────────────────
 const INDIAN_NOTES: IndianNote[] = ['Sa','Re♭','Re','Ga♭','Ga','Ma','Ma#','Pa','Dha♭','Dha','Ni♭','Ni'];
 
+// ── Scale definitions ─────────────────────────────────────
+export interface ScaleDefinition {
+  id:        string;
+  label:     string;
+  intervals: number[]; // semitone offsets from root
+}
+
+export const SCALES: ScaleDefinition[] = [
+  { id: 'chromatic',  label: 'Chromatic',       intervals: [0,1,2,3,4,5,6,7,8,9,10,11] },
+  { id: 'major',      label: 'Major',            intervals: [0,2,4,5,7,9,11] },
+  { id: 'minor',      label: 'Natural Minor',    intervals: [0,2,3,5,7,8,10] },
+  { id: 'harm_min',   label: 'Harmonic Minor',   intervals: [0,2,3,5,7,8,11] },
+  { id: 'mel_min',    label: 'Melodic Minor',    intervals: [0,2,3,5,7,9,11] },
+  { id: 'pent_maj',   label: 'Pentatonic Major', intervals: [0,2,4,7,9] },
+  { id: 'pent_min',   label: 'Pentatonic Minor', intervals: [0,3,5,7,10] },
+  { id: 'blues',      label: 'Blues',            intervals: [0,3,5,6,7,10] },
+  { id: 'dorian',     label: 'Dorian',           intervals: [0,2,3,5,7,9,10] },
+  { id: 'phrygian',   label: 'Phrygian',         intervals: [0,1,3,5,7,8,10] },
+  { id: 'lydian',     label: 'Lydian',           intervals: [0,2,4,6,7,9,11] },
+  { id: 'mixolydian', label: 'Mixolydian',       intervals: [0,2,4,5,7,9,10] },
+];
+
+/**
+ * Given a scale, return the set of IndianNote names that belong to it.
+ * IndianNote is always relative to Sa (index 0), so scale intervals
+ * map directly onto INDIAN_NOTES indices.
+ */
+function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
+  return new Set(scale.intervals.map(i => INDIAN_NOTES[i % 12]));
+}
+
 @Component({
   selector: 'app-sing',
   standalone: true,
@@ -130,6 +161,25 @@ const INDIAN_NOTES: IndianNote[] = ['Sa','Re♭','Re','Ga♭','Ga','Ma','Ma#','P
           </div>
         </div>
 
+        <!-- Scale Selector -->
+        <div class="selectors-row">
+          <div class="selector-group">
+            <label class="selector-label" for="scale-select">Scale</label>
+            <div class="select-wrapper">
+              <select
+                id="scale-select"
+                class="selector-select"
+                [value]="selectedScale.id"
+                (change)="onScaleChange($event)"
+              >
+                @for (scale of scales; track scale.id) {
+                <option [value]="scale.id">{{ scale.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
         <!-- Note Grid (Carnatic / Sargam) -->
         <div class="note-grid-section">
           <div class="section-title">
@@ -197,6 +247,7 @@ const INDIAN_NOTES: IndianNote[] = ['Sa','Re♭','Re','Ga♭','Ga','Ma','Ma#','P
 })
 export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave {
   readonly allNotes:  IndianNote[]       = INDIAN_NOTES;
+  readonly scales:    ScaleDefinition[]  = SCALES;
 
   readonly noteColors = [
     '#FF6B6B','#FF8E53','#FFC300','#A8FF78','#4CAF50',
@@ -211,7 +262,8 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   micError:      string | null = null;
   micPermDenied  = false;
 
-  scaleNoteSet: Set<IndianNote> = new Set(INDIAN_NOTES); // all 12 notes
+  selectedScale: ScaleDefinition = SCALES[1]; // Major by default
+  scaleNoteSet: Set<IndianNote> = buildIndianScaleSet(SCALES[1]);
 
   private destroy$ = new Subject<void>();
 
@@ -304,6 +356,16 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
       }
       this.cdr.markForCheck();
     }
+  }
+
+  // ── Scale selector ───────────────────────────────────────
+  onScaleChange(event: Event): void {
+    const id = (event.target as HTMLSelectElement).value;
+    this.selectedScale = SCALES.find(s => s.id === id) ?? SCALES[1];
+    this.scaleNoteSet = buildIndianScaleSet(this.selectedScale);
+    this.detectedNotes.clear();
+    this.analytics.logEvent('scale_selected', { scale_id: this.selectedScale.id });
+    this.cdr.markForCheck();
   }
 
   // ── Mic toggle ───────────────────────────────────────────
