@@ -98,6 +98,7 @@
     "@capacitor-firebase/remote-config": "^7.5.0",
     "@capacitor/android": "^7.0.0",
     "@capacitor/app": "^7.0.0",
+    "@capacitor/browser": "^8.0.4",
     "@capacitor/camera": "7",
     "@capacitor/core": "^7.0.0",
     "@capacitor/haptics": "^7.0.0",
