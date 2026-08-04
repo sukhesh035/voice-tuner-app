@@ -180,6 +180,17 @@
     height: 40px;
     font-size: 12px;
     transition: opacity 0.2s ease, filter 0.2s ease;
+    cursor: pointer;
+
+    &.selected {
+      border: 2px solid var(--swara-primary);
+      box-shadow: 0 0 16px rgba(var(--swara-primary-rgb), 0.4);
+    }
+
+    &.hit {
+      border: 2px solid var(--swara-pitch-perfect);
+      box-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+    }
 
     &.current {
       animation: bounce-in 0.3s ease forwards;
@@ -189,8 +200,47 @@
     &.out-of-scale {
       opacity: 0.22;
       filter: grayscale(0.8);
+      cursor: default;
     }
   }
+}
+
+// ── Sing Mode Segment ─────────────────────────────────────
+.sing-mode-segment {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto $spacing-3;
+  --background: var(--swara-bg-card);
+  border-radius: $radius-lg;
+  border: 1px solid var(--swara-border);
+  overflow: hidden;
+
+  ion-segment-button {
+    --color: var(--swara-text-secondary);
+    --color-checked: var(--swara-primary);
+    --indicator-color: rgba(var(--swara-primary-rgb), 0.15);
+    --indicator-height: 100%;
+    --indicator-border-radius: #{$radius-md};
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+    min-height: 36px;
+  }
+}
+
+// ── Guidance Banner ───────────────────────────────────────
+.guidance-banner {
+  margin: $spacing-2 auto 0;
+  padding: $spacing-2 $spacing-4;
+  border-radius: $radius-md;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  max-width: 320px;
+
+  &.guidance-good { color: var(--swara-pitch-perfect); background: rgba(0, 230, 118, 0.12); }
+  &.guidance-up   { color: #FFD54F; background: rgba(255, 213, 79, 0.1); }
+  &.guidance-down { color: #5E81F4; background: rgba(94, 129, 244, 0.1); }
+  &.guidance-idle { color: var(--swara-text-secondary); background: var(--swara-bg-card); }
 }
 
 // ── Key + Scale Dropdowns ─────────────────────────────────

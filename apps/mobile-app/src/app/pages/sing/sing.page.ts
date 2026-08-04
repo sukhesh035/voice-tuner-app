@@ -3,10 +3,12 @@ import { Subject } from 'rxjs';
 import { takeUntil, throttleTime } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
+  IonSegment, IonSegmentButton, IonLabel,
   ViewWillEnter, ViewWillLeave
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { mic, micOff, statsChart } from 'ionicons/icons';
 import { PitchDetectionService, PitchResult, IndianNote } from '@voice-tuner/pitch-detection';
 import { ChangeDetectorRef } from '@angular/core';
@@ -64,7 +66,9 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
+    IonSegment, IonSegmentButton, IonLabel,
     DecimalPipe
   ],
   template: `
@@ -76,6 +80,20 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
 
     <ion-content fullscreen>
       <div class="sing-page">
+
+        <!-- Sing Mode -->
+        <ion-segment
+          [(ngModel)]="singMode"
+          (ngModelChange)="onSingModeChange($event)"
+          class="sing-mode-segment"
+        >
+          <ion-segment-button value="free">
+            <ion-label>Free Flow</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="guided">
+            <ion-label>Guided Note</ion-label>
+          </ion-segment-button>
+        </ion-segment>
 
         <!-- Pitch Meter -->
         <div class="pitch-meter-container">
@@ -136,6 +154,21 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
             }
           </div>
         </div>
+
+        <!-- Guidance Banner (Guided Note mode) -->
+        @if (singMode === 'guided') {
+        <div class="guidance-banner" [class]="'guidance-' + guidanceClass">
+          @if (!targetNote) {
+          <span>Tap a note below to sing it</span>
+          } @else if (!currentPitch) {
+          <span>Sing {{ targetNote }}...</span>
+          } @else if (isTargetInTune) {
+          <span>✓ Perfect {{ targetNote }}!</span>
+          } @else {
+          <span>{{ guidanceMessage }}</span>
+          }
+        </div>
+        }
 
         <!-- Tuner Needle -->
         <div class="tuner-section">
@@ -205,20 +238,22 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
           </div>
         </div>
 
-        <!-- Note Grid (Carnatic / Sargam) -->
+        <!-- Note Grid (selectable in guided mode) -->
         <div class="note-grid-section">
           <div class="section-title">
-            Notes Detected
+            {{ singMode === 'guided' ? 'Select a Note' : 'Notes Detected' }}
             <span class="scale-badge">{{ selectedRoot }} {{ selectedScale.label }}</span>
           </div>
           <div class="swara-note-grid">
             @for (note of allNotes; track note; let i = $index) {
             <div
               class="note-chip"
-              [class.active]="detectedNotes.has(note)"
+              [class.selected]="singMode === 'guided' && targetNote === note"
               [class.current]="currentPitch?.indianNote === note"
+              [class.hit]="singMode === 'guided' && targetNote === note && isTargetInTune"
               [class.out-of-scale]="!scaleNoteSet.has(note)"
               [style.--note-color]="noteColors[i]"
+              (click)="singMode === 'guided' && selectTarget(note)"
             >
               <span class="note-name">{{ note }}</span>
             </div>
@@ -293,6 +328,9 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   selectedScale: ScaleDefinition = SCALES[1]; // Major by default
   scaleNoteSet: Set<IndianNote> = buildIndianScaleSet(SCALES[1]);
 
+  singMode: 'free' | 'guided' = 'free';
+  targetNote: IndianNote | null = null;
+
   private destroy$ = new Subject<void>();
 
   // ── Getters ──────────────────────────────────────────────
@@ -314,6 +352,50 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   get needleAngle(): number {
     if (!this.currentPitch) return 0;
     return Math.max(-45, Math.min(45, this.currentPitch.centsOff * 0.9));
+  }
+
+  // ── Guided note guidance ─────────────────────────────────
+  get isTargetInTune(): boolean {
+    return !!this.targetNote
+      && this.currentPitch?.indianNote === this.targetNote
+      && !!this.currentPitch?.isInTune;
+  }
+
+  get guidanceClass(): 'good' | 'up' | 'down' | 'idle' {
+    if (this.isTargetInTune) return 'good';
+    if (!this.currentPitch || !this.targetNote) return 'idle';
+    const pitchIdx = INDIAN_NOTES.indexOf(this.currentPitch.indianNote);
+    const targetIdx = INDIAN_NOTES.indexOf(this.targetNote);
+    if (pitchIdx < targetIdx) return 'up';
+    if (pitchIdx > targetIdx) return 'down';
+    return (this.currentPitch.centsOff ?? 0) > 0 ? 'down' : 'up';
+  }
+
+  get guidanceMessage(): string {
+    if (!this.targetNote || !this.currentPitch) return '';
+    const cls = this.guidanceClass;
+    if (cls === 'up')   return `↑ Sing higher — you're at ${this.currentPitch.indianNote}`;
+    if (cls === 'down') return `↓ Sing lower — you're at ${this.currentPitch.indianNote}`;
+    const cents = Math.abs(this.currentPitch.centsOff ?? 0);
+    if (cents <= 10) return `You're on ${this.targetNote}, hold it steady`;
+    return (this.currentPitch.centsOff ?? 0) > 0
+      ? `Sing slightly lower — you're ${cents.toFixed(0)}¢ sharp`
+      : `Sing slightly higher — you're ${cents.toFixed(0)}¢ flat`;
+  }
+
+  selectTarget(note: IndianNote): void {
+    this.targetNote = note;
+    this.analytics.logEvent('sing_target_selected', { note });
+    this.cdr.markForCheck();
+  }
+
+  onSingModeChange(mode: 'free' | 'guided'): void {
+    this.singMode = mode;
+    this.analytics.logSelectContent({ content_type: 'sing_mode', content_id: mode });
+    if (mode === 'free') {
+      this.targetNote = null;
+    }
+    this.cdr.markForCheck();
   }
 
   // ── Injections ───────────────────────────────────────────
