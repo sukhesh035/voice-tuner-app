@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, throttleTime } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
+  IonToggle,
   ViewWillEnter, ViewWillLeave
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -64,7 +65,7 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    IonHeader, IonToolbar, IonTitle, IonContent,
+    IonHeader, IonToolbar, IonTitle, IonContent, IonToggle,
     DecimalPipe
   ],
   template: `
@@ -228,6 +229,15 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
 
         <!-- Start / Stop Button -->
         <div class="mic-section">
+          <!-- Drone Toggle -->
+          <div class="drone-toggle-row">
+            <span class="drone-toggle-label">Tanpura Drone</span>
+            <ion-toggle
+              [checked]="droneOn"
+              (ionChange)="toggleDrone($event)"
+            ></ion-toggle>
+          </div>
+
           <button
             class="sing-btn"
             [class.is-active]="isActive"
@@ -284,6 +294,7 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
 
   currentPitch:  PitchResult | null = null;
   isActive       = false;
+  droneOn        = false;
   detectedNotes  = new Set<IndianNote>();
   sessionStats   = { sampleCount: 0, stabilityScore: 0, averageCentsOff: 0 };
   micError:      string | null = null;
@@ -350,6 +361,9 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   // Stop mic/pitch detection when user navigates away from this tab.
   // ion-tabs caches pages in the DOM so ngOnDestroy does NOT fire on tab switch.
   ionViewWillLeave(): void {
+    // Always stop the drone on tab leave, regardless of mic state.
+    this.tanpura.stop();
+    this.droneOn = false;
     if (this.isActive) {
       this.pitchDetection.stop();
       const stats = this.pitchDetection.getSessionStats();
@@ -476,6 +490,20 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
     this.cdr.markForCheck();
   }
 
+  // ── Drone toggle ─────────────────────────────────────────
+  toggleDrone(event: Event): void {
+    const on = (event as CustomEvent).detail.checked as boolean;
+    this.droneOn = on;
+    this.analytics.logEvent('drone_toggled', { on, source: 'sing' });
+    if (on) {
+      this.tanpura.setVolume(0.7);
+      this.tanpura.play();
+    } else {
+      this.tanpura.stop();
+    }
+    this.cdr.markForCheck();
+  }
+
   cos(angle: number): number { return Math.cos(angle); }
   sin(angle: number): number { return Math.sin(angle); }
 
@@ -485,6 +513,7 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
 
   ngOnDestroy(): void {
     this.pitchDetection.stop();
+    this.tanpura.stop();
     this.destroy$.next();
     this.destroy$.complete();
   }

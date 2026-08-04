@@ -224,3 +224,59 @@
 .play-btn__label {
   letter-spacing: 1px;
 }
+
+// ── Drone Card ────────────────────────────────────────────
+.drone-card {
+  width: 100%;
+  max-width: 320px;
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-border);
+  border-radius: 20px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.drone-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.drone-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ion-text-color);
+}
+
+.drone-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.drone-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.drone-control__label {
+  font-size: 0.7rem;
+  color: var(--ion-color-medium);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  min-width: 44px;
+}
+
+.drone-select {
+  flex: 1;
+  --padding-start: 8px;
+}
+
+.drone-volume {
+  flex: 1;
+}

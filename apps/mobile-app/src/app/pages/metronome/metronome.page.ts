@@ -2,10 +2,11 @@ import { Component, OnDestroy, signal, ChangeDetectionStrategy, inject } from '@
 import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar,
-  IonRange,
+  IonRange, IonToggle, IonSelect, IonSelectOption,
   ViewWillLeave
 } from '@ionic/angular/standalone';
 import { AnalyticsService } from '../../core/services/analytics.service';
+import { TanpuraPlayerService, MusicalKey } from '@voice-tuner/tanpura-player';
 
 const BEAT_FLASH_MS = 100;
 
@@ -26,6 +27,8 @@ function tempoLabel(bpm: number): string {
   return 'Moderato';
 }
 
+const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
 @Component({
   selector: 'app-metronome',
   standalone: true,
@@ -33,7 +36,7 @@ function tempoLabel(bpm: number): string {
   imports: [
     CommonModule,
     IonContent, IonHeader, IonTitle, IonToolbar,
-    IonRange,
+    IonRange, IonToggle, IonSelect, IonSelectOption,
   ],
   template: `
     <ion-header class="ion-no-border">
@@ -105,6 +108,43 @@ function tempoLabel(bpm: number): string {
           <span class="play-btn__label">{{ isPlaying() ? 'Stop' : 'Start' }}</span>
         </button>
 
+        <!-- Drone Card -->
+        <div class="drone-card">
+          <div class="drone-header">
+            <span class="drone-title">Tanpura Drone</span>
+            <ion-toggle
+              [checked]="droneOn()"
+              (ionChange)="toggleDrone($event)"
+            ></ion-toggle>
+          </div>
+
+          <div class="drone-controls">
+            <div class="drone-control">
+              <label class="drone-control__label">Key</label>
+              <ion-select
+                [value]="droneKey()"
+                (ionChange)="onDroneKey($event)"
+                class="drone-select"
+              >
+                @for (key of droneKeys; track key) {
+                <ion-select-option [value]="key">{{ key }}</ion-select-option>
+                }
+              </ion-select>
+            </div>
+            <div class="drone-control">
+              <label class="drone-control__label">Volume</label>
+              <ion-range
+                [value]="droneVolume()"
+                [min]="0"
+                [max]="1"
+                [step]="0.01"
+                (ionChange)="onDroneVolume($event)"
+                class="drone-volume"
+              ></ion-range>
+            </div>
+          </div>
+        </div>
+
       </div>
     </ion-content>
   `,
@@ -115,11 +155,17 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
   readonly isPlaying = signal<boolean>(false);
   readonly beatActive = signal<boolean>(false);
 
+  readonly droneOn = signal<boolean>(false);
+  readonly droneKey = signal<MusicalKey>('C');
+  readonly droneVolume = signal<number>(0.7);
+  readonly droneKeys = DRONE_KEYS;
+
   private audioCtx: AudioContext | null = null;
   private timerId: ReturnType<typeof setInterval> | null = null;
   private flashTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private sessionStartAt: number | null = null;
   private readonly analytics = inject(AnalyticsService);
+  private readonly tanpura = inject(TanpuraPlayerService);
 
   tempoLabel = tempoLabel;
 
@@ -145,6 +191,35 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
     } else {
       this.start();
     }
+  }
+
+  toggleDrone(event: Event): void {
+    const on = (event as CustomEvent).detail.checked as boolean;
+    this.droneOn.set(on);
+    this.analytics.logEvent('drone_toggled', { on, source: 'metronome' });
+    if (on) {
+      this.tanpura.setKey(this.droneKey());
+      this.tanpura.setVolume(this.droneVolume());
+      this.tanpura.play();
+    } else {
+      this.tanpura.stop();
+    }
+  }
+
+  onDroneKey(event: Event): void {
+    const key = (event as CustomEvent).detail.value as MusicalKey;
+    this.droneKey.set(key);
+    this.analytics.logEvent('drone_key_changed', { key, source: 'metronome' });
+    if (this.droneOn()) {
+      this.tanpura.setKey(key);
+    }
+  }
+
+  onDroneVolume(event: Event): void {
+    const vol = (event as CustomEvent).detail.value as number;
+    this.droneVolume.set(vol);
+    this.analytics.logEvent('drone_volume_changed', { volume: vol });
+    this.tanpura.setVolume(vol);
   }
 
   private async start(): Promise<void> {
@@ -219,10 +294,13 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
 
   ionViewWillLeave(): void {
     this.stop();
+    this.tanpura.stop();
+    this.droneOn.set(false);
   }
 
   ngOnDestroy(): void {
     this.stop();
+    this.tanpura.stop();
     this.audioCtx?.close();
     this.audioCtx = null;
   }
