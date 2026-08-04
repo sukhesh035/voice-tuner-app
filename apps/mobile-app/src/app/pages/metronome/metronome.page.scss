@@ -11,6 +11,27 @@
   width: 100%;
   max-width: 320px;
   margin-bottom: 24px;
+  --background: var(--swara-bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--swara-border);
+  overflow: hidden;
+
+  ion-segment-button {
+    --color: var(--swara-text-secondary);
+    --color-checked: var(--swara-primary);
+    --background: transparent;
+    --background-checked: transparent;
+    --indicator-color: rgba(var(--swara-primary-rgb), 0.15);
+    --indicator-height: 100%;
+    --indicator-border-radius: 8px;
+    --indicator-box-shadow: none;
+    --border-radius: 8px;
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+    --font-size: 13px;
+    --font-weight: 600;
+    min-height: 40px;
+  }
 }
 
 // ── BPM Card ──────────────────────────────────────────────
