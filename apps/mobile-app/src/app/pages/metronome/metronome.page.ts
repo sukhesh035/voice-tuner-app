@@ -1,11 +1,14 @@
-import { Component, OnDestroy, signal, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar,
-  IonRange,
+  IonRange, IonSelect, IonSelectOption,
+  IonSegment, IonSegmentButton, IonLabel,
   ViewWillLeave
 } from '@ionic/angular/standalone';
 import { AnalyticsService } from '../../core/services/analytics.service';
+import { TanpuraPlayerService, MusicalKey } from '@voice-tuner/tanpura-player';
 
 const BEAT_FLASH_MS = 100;
 
@@ -26,6 +29,11 @@ function tempoLabel(bpm: number): string {
   return 'Moderato';
 }
 
+const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+// String names for the default 'Sa-Pa-Sa' string config (indices 0–2)
+const DRONE_STRING_LABELS = ['Sa', 'Pa', 'Sa'];
+
 @Component({
   selector: 'app-metronome',
   standalone: true,
@@ -33,7 +41,8 @@ function tempoLabel(bpm: number): string {
   imports: [
     CommonModule,
     IonContent, IonHeader, IonTitle, IonToolbar,
-    IonRange,
+    IonRange, IonSelect, IonSelectOption,
+    IonSegment, IonSegmentButton, IonLabel,
   ],
   template: `
     <ion-header class="ion-no-border">
@@ -44,6 +53,22 @@ function tempoLabel(bpm: number): string {
 
     <ion-content>
       <div class="metronome-page">
+
+        <!-- Mode Tabs -->
+        <ion-segment
+          [value]="activeTab()"
+          (ionChange)="setTab($event)"
+          class="mode-segment"
+        >
+          <ion-segment-button value="metronome">
+            <ion-label>Metronome</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="tanpura">
+            <ion-label>Tanpura</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+
+        @if (activeTab() === 'metronome') {
 
         <!-- BPM Display Card -->
         <div class="bpm-card">
@@ -105,23 +130,121 @@ function tempoLabel(bpm: number): string {
           <span class="play-btn__label">{{ isPlaying() ? 'Stop' : 'Start' }}</span>
         </button>
 
+        }
+
+        @if (activeTab() === 'tanpura') {
+
+        <!-- Tanpura Drone -->
+        <div class="drone-card">
+          <div class="drone-title">Tanpura Drone</div>
+
+          <!-- Play / Stop Button -->
+          <button
+            class="play-btn drone-play-btn"
+            [class.is-playing]="droneOn()"
+            (click)="toggleDrone()"
+          >
+            <div class="play-btn__icon">
+              @if (droneOn()) {
+              <div class="stop-bars">
+                <span></span><span></span>
+              </div>
+              } @else {
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+              }
+            </div>
+            <span class="play-btn__label">{{ droneOn() ? 'Stop' : 'Play' }}</span>
+          </button>
+
+          <!-- Active String Indicator -->
+          <div class="string-indicators">
+            @for (name of stringLabels; track name; let i = $index) {
+            <div
+              class="string-indicator"
+              [class.active]="droneOn() && currentString() === i"
+            >
+              <span class="string-indicator__name">{{ name }}</span>
+            </div>
+            }
+          </div>
+
+          <div class="drone-controls">
+            <div class="drone-control">
+              <label class="drone-control__label">Tempo</label>
+              <ion-range
+                [value]="droneTempo()"
+                [min]="0"
+                [max]="10"
+                [step]="1"
+                (ionChange)="onDroneTempo($event)"
+                class="drone-range"
+              ></ion-range>
+            </div>
+            <div class="drone-control">
+              <label class="drone-control__label">Key</label>
+              <ion-select
+                [value]="droneKey()"
+                (ionChange)="onDroneKey($event)"
+                class="drone-select"
+              >
+                @for (key of droneKeys; track key) {
+                <ion-select-option [value]="key">{{ key }}</ion-select-option>
+                }
+              </ion-select>
+            </div>
+            <div class="drone-control">
+              <label class="drone-control__label">Volume</label>
+              <ion-range
+                [value]="droneVolume()"
+                [min]="0"
+                [max]="1"
+                [step]="0.01"
+                (ionChange)="onDroneVolume($event)"
+                class="drone-range"
+              ></ion-range>
+            </div>
+          </div>
+        </div>
+
+        }
+
       </div>
     </ion-content>
   `,
   styleUrls: ['./metronome.page.scss']
 })
-export class MetronomePage implements OnDestroy, ViewWillLeave {
+export class MetronomePage implements OnInit, OnDestroy, ViewWillLeave {
   readonly bpm = signal<number>(120);
   readonly isPlaying = signal<boolean>(false);
   readonly beatActive = signal<boolean>(false);
+  readonly activeTab = signal<'metronome' | 'tanpura'>('metronome');
+
+  readonly droneOn = signal<boolean>(false);
+  readonly droneKey = signal<MusicalKey>('C');
+  readonly droneVolume = signal<number>(0.7);
+  readonly droneTempo = signal<number>(5);
+  readonly droneKeys = DRONE_KEYS;
+  readonly stringLabels = DRONE_STRING_LABELS;
+  readonly currentString = signal<number>(0);
 
   private audioCtx: AudioContext | null = null;
   private timerId: ReturnType<typeof setInterval> | null = null;
   private flashTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private sessionStartAt: number | null = null;
   private readonly analytics = inject(AnalyticsService);
+  private readonly tanpura = inject(TanpuraPlayerService);
+  private tanpuraSub: Subscription | null = null;
 
   tempoLabel = tempoLabel;
+
+  ngOnInit(): void {
+    // Track which tanpura string is currently plucking so the UI can highlight it.
+    this.tanpuraSub = this.tanpura.state$.subscribe(state => {
+      this.currentString.set(state.currentString);
+    });
+  }
 
   onBpmSlider(event: Event): void {
     const value = (event as CustomEvent).detail.value;
@@ -145,6 +268,47 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
     } else {
       this.start();
     }
+  }
+
+  setTab(event: Event): void {
+    this.activeTab.set((event as CustomEvent).detail.value as 'metronome' | 'tanpura');
+  }
+
+  toggleDrone(): void {
+    const on = !this.droneOn();
+    this.droneOn.set(on);
+    this.analytics.logEvent('drone_toggled', { on, source: 'metronome' });
+    if (on) {
+      this.tanpura.setKey(this.droneKey());
+      this.tanpura.setVolume(this.droneVolume());
+      this.tanpura.setTempo(this.droneTempo());
+      this.tanpura.play();
+    } else {
+      this.tanpura.stop();
+    }
+  }
+
+  onDroneTempo(event: Event): void {
+    const tempo = (event as CustomEvent).detail.value as number;
+    this.droneTempo.set(tempo);
+    this.analytics.logEvent('drone_tempo_changed', { tempo });
+    this.tanpura.setTempo(tempo);
+  }
+
+  onDroneKey(event: Event): void {
+    const key = (event as CustomEvent).detail.value as MusicalKey;
+    this.droneKey.set(key);
+    this.analytics.logEvent('drone_key_changed', { key, source: 'metronome' });
+    if (this.droneOn()) {
+      this.tanpura.setKey(key);
+    }
+  }
+
+  onDroneVolume(event: Event): void {
+    const vol = (event as CustomEvent).detail.value as number;
+    this.droneVolume.set(vol);
+    this.analytics.logEvent('drone_volume_changed', { volume: vol });
+    this.tanpura.setVolume(vol);
   }
 
   private async start(): Promise<void> {
@@ -219,10 +383,15 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
 
   ionViewWillLeave(): void {
     this.stop();
+    this.tanpura.stop();
+    this.droneOn.set(false);
   }
 
   ngOnDestroy(): void {
+    this.tanpuraSub?.unsubscribe();
+    this.tanpuraSub = null;
     this.stop();
+    this.tanpura.stop();
     this.audioCtx?.close();
     this.audioCtx = null;
   }

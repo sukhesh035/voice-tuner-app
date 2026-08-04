@@ -6,6 +6,34 @@
   min-height: 100%;
 }
 
+// ── Mode Tabs ─────────────────────────────────────────────
+.mode-segment {
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 24px;
+  --background: var(--swara-bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--swara-border);
+  overflow: hidden;
+
+  ion-segment-button {
+    --color: var(--swara-text-secondary);
+    --color-checked: var(--swara-primary);
+    --background: transparent;
+    --background-checked: transparent;
+    --indicator-color: rgba(var(--swara-primary-rgb), 0.15);
+    --indicator-height: 100%;
+    --indicator-border-radius: 8px;
+    --indicator-box-shadow: none;
+    --border-radius: 8px;
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+    --font-size: 13px;
+    --font-weight: 600;
+    min-height: 40px;
+  }
+}
+
 // ── BPM Card ──────────────────────────────────────────────
 .bpm-card {
   position: relative;
@@ -223,4 +251,95 @@
 
 .play-btn__label {
   letter-spacing: 1px;
+}
+
+// ── Drone Card ────────────────────────────────────────────
+.drone-card {
+  width: 100%;
+  max-width: 320px;
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-border);
+  border-radius: 20px;
+  padding: 20px 16px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.drone-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ion-text-color);
+  text-align: center;
+}
+
+.drone-play-btn {
+  align-self: center;
+  padding: 12px 36px;
+}
+
+// ── String Indicators ─────────────────────────────────────
+.string-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.string-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--swara-border);
+  background: var(--swara-bg-card);
+  transition: all 0.15s ease;
+
+  &__name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ion-color-medium);
+  }
+
+  &.active {
+    border-color: var(--swara-primary);
+    background: var(--swara-gradient-primary);
+    box-shadow: 0 0 20px rgba(var(--swara-primary-rgb), 0.5);
+
+    .string-indicator__name {
+      color: #FFFFFF;
+    }
+  }
+}
+
+.drone-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drone-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drone-control__label {
+  font-size: 0.7rem;
+  color: var(--ion-color-medium);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.drone-select {
+  width: 100%;
+  --padding-start: 8px;
+}
+
+.drone-range {
+  width: 100%;
 }

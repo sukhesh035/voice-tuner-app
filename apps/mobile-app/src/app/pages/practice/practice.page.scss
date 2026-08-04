@@ -1400,3 +1400,44 @@
 
   &:active { opacity: 0.7; transform: scale(0.96); }
 }
+
+// ── Ear Level Selector ────────────────────────────────────
+.ear-level-selector {
+  margin-top: $spacing-3;
+}
+
+.ear-level-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--swara-text-secondary);
+  margin-bottom: $spacing-2;
+}
+
+.ear-level-options {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2;
+}
+
+.ear-level-btn {
+  width: 100%;
+  padding: $spacing-3;
+  border-radius: $radius-md;
+  border: 1.5px solid var(--swara-border);
+  background: var(--swara-bg-card);
+  color: var(--swara-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &.selected {
+    border-color: var(--swara-primary);
+    background: rgba(var(--swara-primary-rgb), 0.1);
+    color: var(--swara-primary);
+  }
+}

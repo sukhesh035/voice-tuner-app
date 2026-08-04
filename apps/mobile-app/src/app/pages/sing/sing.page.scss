@@ -326,3 +326,19 @@
     pointer-events: none;
   }
 }
+
+// ── Drone Toggle ──────────────────────────────────────────
+.drone-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 280px;
+  padding: 4px 8px;
+}
+
+.drone-toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--swara-text-secondary);
+}

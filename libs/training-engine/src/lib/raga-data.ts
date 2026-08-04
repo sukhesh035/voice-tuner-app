@@ -16,6 +16,8 @@ export type MelakartaChakra =
   | 'Rudra'   // 61–66
   | 'Aditya'; // 67–72
 
+export type RagaScaleType = 'sampurna' | 'shadava' | 'audava' | 'vakra';
+
 export interface RagaDefinition {
   id:          string;
   name:        string;
@@ -32,6 +34,10 @@ export interface RagaDefinition {
   description: string;
   melaNumber?: number;       // 1–72 for Melakarta ragas
   chakra?:     MelakartaChakra;
+  /** Melakarta number this raga is derived from (janya ragas only) */
+  janyaOf?:    number;
+  /** Audava (5 notes), shadava (6), sampurna (7), or vakra (zig-zag) */
+  scaleType?:  RagaScaleType;
 }
 
 // ── Chakra Lookup ─────────────────────────────────────────

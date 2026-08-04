@@ -72,6 +72,19 @@ const ALL_SHRUTI_NOTES: IndianNote[] = [
   'Sa', 'Re♭', 'Re', 'Ga♭', 'Ga', 'Ma', 'Ma#', 'Pa', 'Dha♭', 'Dha', 'Ni♭', 'Ni'
 ];
 
+// Ear Training difficulty levels — each restricts the note pool
+export type EarLevel = 1 | 2 | 3;
+const EAR_LEVEL_NOTES: Record<EarLevel, IndianNote[]> = {
+  1: ['Sa','Re','Ga'],
+  2: ['Sa','Re','Ga','Ma','Pa'],
+  3: ALL_SHRUTI_NOTES,
+};
+const EAR_LEVEL_LABELS: Record<EarLevel, string> = {
+  1: 'Beginner — Sa, Re, Ga',
+  2: 'Intermediate — Sa to Pa',
+  3: 'Advanced — All 12 notes',
+};
+
 // Western key names in semitone order from C — used to tune the tanpura to the
 // target note so the drone rings on exactly that pitch.
 const SEMITONE_TO_KEY: MusicalKey[] = [
@@ -513,6 +526,20 @@ function buildFeedback(
             <div class="ear-intro__desc">
               Test your note recognition. The app plays a random note &mdash; can you identify it?
             </div>
+            <div class="ear-level-selector">
+              <div class="ear-level-title">Difficulty</div>
+              <div class="ear-level-options">
+                @for (lvl of earLevels; track lvl) {
+                <button
+                  class="ear-level-btn"
+                  [class.selected]="earLevel === lvl"
+                  (click)="setEarLevel(lvl)"
+                >
+                  {{ EAR_LEVEL_LABELS[lvl] }}
+                </button>
+                }
+              </div>
+            </div>
             <div class="ear-intro__steps">
               <div class="ear-step">
                 <div class="ear-step__num">1</div>
@@ -739,6 +766,9 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
 
   // ── Ear Training state ──
   earPhase: EarPhase = 'idle';
+  earLevel: EarLevel = 1;
+  readonly earLevels: EarLevel[] = [1, 2, 3];
+  readonly EAR_LEVEL_LABELS = EAR_LEVEL_LABELS;
   earTargetNote: IndianNote = 'Sa';
   earGuessedNote: IndianNote | null = null;
   earIsCorrect = false;
@@ -921,6 +951,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
       this.earIsCorrect   = false;
       this.notePool       = [];
       this.earNotePool    = [];
+      this.analytics.logEvent('ear_training_started', { level: this.earLevel });
       await this.startEarRound();
     }
   }
@@ -1378,9 +1409,16 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
 
   private drawEarNote(): IndianNote {
     if (this.earNotePool.length === 0) {
-      this.earNotePool = this.shuffle(ALL_SHRUTI_NOTES);
+      this.earNotePool = this.shuffle(EAR_LEVEL_NOTES[this.earLevel]);
     }
     return this.earNotePool.pop()!;
+  }
+
+  setEarLevel(level: EarLevel): void {
+    this.earLevel = level;
+    this.earNotePool = [];
+    this.analytics.logEvent('ear_level_selected', { level });
+    this.cdr.markForCheck();
   }
 
   private shuffle<T>(arr: T[]): T[] {
