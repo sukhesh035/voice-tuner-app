@@ -182,7 +182,7 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
                 (change)="onRootChange($event)"
               >
                 @for (root of rootNotes; track root) {
-                <option [value]="root">{{ root }}</option>
+                <option [value]="root" [selected]="root === selectedRoot">{{ root }}</option>
                 }
               </select>
             </div>
@@ -198,7 +198,7 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
                 (change)="onScaleChange($event)"
               >
                 @for (scale of scales; track scale.id) {
-                <option [value]="scale.id">{{ scale.label }}</option>
+                <option [value]="scale.id" [selected]="scale.id === selectedScale.id">{{ scale.label }}</option>
                 }
               </select>
             </div>
