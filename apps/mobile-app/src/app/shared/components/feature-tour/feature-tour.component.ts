@@ -6,7 +6,7 @@ import {
   ModalController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { closeOutline, arrowForwardOutline, checkmarkCircleOutline, speedometerOutline, trendingUpOutline, libraryOutline } from 'ionicons/icons';
+import { closeOutline, arrowForwardOutline, checkmarkCircleOutline, speedometerOutline, trendingUpOutline, libraryOutline, musicalNotesOutline } from 'ionicons/icons';
 import { AnalyticsService } from '../../../core/services/analytics.service';
 import { FeatureSlide } from '../../../core/services/feature-tour.service';
 
@@ -74,7 +74,7 @@ export class FeatureTourComponent {
   private readonly router = inject(Router);
   private readonly modalCtrl = inject(ModalController);
   private readonly analytics = inject(AnalyticsService);
-  private readonly _icons = (() => addIcons({ closeOutline, arrowForwardOutline, checkmarkCircleOutline, speedometerOutline, trendingUpOutline, libraryOutline }))();
+  private readonly _icons = (() => addIcons({ closeOutline, arrowForwardOutline, checkmarkCircleOutline, speedometerOutline, trendingUpOutline, libraryOutline, musicalNotesOutline }))();
 
   next(): void {
     const s = this.step() + 1;

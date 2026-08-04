@@ -19,6 +19,7 @@ const INITIAL_SLIDES: FeatureSlide[] = [
   { icon: 'speedometer-outline', title: 'Metronome & Tanpura', description: 'Two tabs in one screen — keep time with the metronome while a tanpura drone plays underneath.', target: '/metronome' },
   { icon: 'trending-up-outline', title: 'Ear Training Levels', description: 'Choose your difficulty — from a simple Sa–Re–Ga up to the full 12-note octave.', target: '/practice' },
   { icon: 'library-outline', title: 'Janya Ragas', description: 'Browse Melakarta parent ragas and the janya ragas derived from them.', target: '/practice' },
+  { icon: 'musical-notes-outline', title: 'Guided Note Singing', description: 'Pick a note on the Sing page and the app guides you up or down until you sing it perfectly.', target: '/sing' },
 ];
 
 const TOUR_CONTENT: Record<string, FeatureSlide[]> = {
