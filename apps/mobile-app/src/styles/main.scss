@@ -89,6 +89,38 @@ ion-modal {
   --color: #FFFFFF;
 }
 
+// ── Ionic select popover / picker overlays ───────────────
+// IonSelect renders its option list in an overlay outside the main DOM,
+// so it must be themed explicitly to stay dark in dark mode.
+ion-select-popover,
+ion-picker,
+ion-picker-column,
+ion-alert.select-alert {
+  --background: #1C1C2E;
+  --color: #FFFFFF;
+  --border-color: rgba(255, 255, 255, 0.1);
+
+  ion-item,
+  .picker-opt,
+  .select-interface-option {
+    color: #FFFFFF;
+  }
+}
+
+ion-picker {
+  .picker-wrapper {
+    background: #1C1C2E;
+  }
+
+  .picker-opt {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .picker-opt-selected {
+    color: #FFFFFF;
+  }
+}
+
 [data-theme="light"] {
   ion-alert {
     --background: #FFFFFF;
@@ -121,5 +153,34 @@ ion-modal {
   ion-modal {
     --background: #F5F5FF;
     --color: #0D0D2B;
+  }
+
+  ion-select-popover,
+  ion-picker,
+  ion-picker-column,
+  ion-alert.select-alert {
+    --background: #FFFFFF;
+    --color: #0D0D2B;
+    --border-color: rgba(0, 0, 0, 0.1);
+
+    ion-item,
+    .picker-opt,
+    .select-interface-option {
+      color: #0D0D2B;
+    }
+  }
+
+  ion-picker {
+    .picker-wrapper {
+      background: #FFFFFF;
+    }
+
+    .picker-opt {
+      color: rgba(13, 13, 43, 0.6);
+    }
+
+    .picker-opt-selected {
+      color: #0D0D2B;
+    }
   }
 }
