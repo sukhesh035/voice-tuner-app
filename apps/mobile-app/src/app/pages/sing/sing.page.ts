@@ -3,11 +3,12 @@ import { Subject } from 'rxjs';
 import { takeUntil, throttleTime } from 'rxjs/operators';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonToggle,
+  IonSegment, IonSegmentButton, IonLabel,
   ViewWillEnter, ViewWillLeave
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { mic, micOff, statsChart } from 'ionicons/icons';
 import { PitchDetectionService, PitchResult, IndianNote } from '@voice-tuner/pitch-detection';
 import { ChangeDetectorRef } from '@angular/core';
@@ -65,7 +66,9 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    IonHeader, IonToolbar, IonTitle, IonContent, IonToggle,
+    FormsModule,
+    IonHeader, IonToolbar, IonTitle, IonContent,
+    IonSegment, IonSegmentButton, IonLabel,
     DecimalPipe
   ],
   template: `
@@ -77,6 +80,20 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
 
     <ion-content fullscreen>
       <div class="sing-page">
+
+        <!-- Sing Mode -->
+        <ion-segment
+          [(ngModel)]="singMode"
+          (ngModelChange)="onSingModeChange($event)"
+          class="sing-mode-segment"
+        >
+          <ion-segment-button value="free">
+            <ion-label>Free Flow</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="guided">
+            <ion-label>Guided Note</ion-label>
+          </ion-segment-button>
+        </ion-segment>
 
         <!-- Pitch Meter -->
         <div class="pitch-meter-container">
@@ -137,6 +154,21 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
             }
           </div>
         </div>
+
+        <!-- Guidance Banner (Guided Note mode) -->
+        @if (singMode === 'guided') {
+        <div class="guidance-banner" [class]="'guidance-' + guidanceClass">
+          @if (!targetNote) {
+          <span>Tap a note below to sing it</span>
+          } @else if (!currentPitch) {
+          <span>Sing {{ targetNote }}...</span>
+          } @else if (isTargetInTune) {
+          <span>✓ Perfect {{ targetNote }}!</span>
+          } @else {
+          <span>{{ guidanceMessage }}</span>
+          }
+        </div>
+        }
 
         <!-- Tuner Needle -->
         <div class="tuner-section">
@@ -206,20 +238,22 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
           </div>
         </div>
 
-        <!-- Note Grid (Carnatic / Sargam) -->
+        <!-- Note Grid (selectable in guided mode) -->
         <div class="note-grid-section">
           <div class="section-title">
-            Notes Detected
+            {{ singMode === 'guided' ? 'Select a Note' : 'Notes Detected' }}
             <span class="scale-badge">{{ selectedRoot }} {{ selectedScale.label }}</span>
           </div>
           <div class="swara-note-grid">
             @for (note of allNotes; track note; let i = $index) {
             <div
               class="note-chip"
-              [class.active]="detectedNotes.has(note)"
+              [class.selected]="singMode === 'guided' && targetNote === note"
               [class.current]="currentPitch?.indianNote === note"
+              [class.hit]="singMode === 'guided' && targetNote === note && isTargetInTune"
               [class.out-of-scale]="!scaleNoteSet.has(note)"
               [style.--note-color]="noteColors[i]"
+              (click)="singMode === 'guided' && selectTarget(note)"
             >
               <span class="note-name">{{ note }}</span>
             </div>
@@ -229,15 +263,7 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
 
         <!-- Start / Stop Button -->
         <div class="mic-section">
-          <!-- Drone Toggle -->
-          <div class="drone-toggle-row">
-            <span class="drone-toggle-label">Tanpura Drone</span>
-            <ion-toggle
-              [checked]="droneOn"
-              (ionChange)="toggleDrone($event)"
-            ></ion-toggle>
-          </div>
-
+          @if (singMode === 'free') {
           <button
             class="sing-btn"
             [class.is-active]="isActive"
@@ -245,6 +271,11 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
           >
             {{ isActive ? 'Stop Singing' : 'Start Singing' }}
           </button>
+          } @else {
+          <div class="guided-hint">
+            {{ isActive ? 'Listening...' : 'Select a note to start listening' }}
+          </div>
+          }
 
           @if (micError) {
           <div class="mic-error">{{ micError }}</div>
@@ -294,7 +325,6 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
 
   currentPitch:  PitchResult | null = null;
   isActive       = false;
-  droneOn        = false;
   detectedNotes  = new Set<IndianNote>();
   sessionStats   = { sampleCount: 0, stabilityScore: 0, averageCentsOff: 0 };
   micError:      string | null = null;
@@ -303,6 +333,9 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   selectedRoot:  WesternNote     = 'C';
   selectedScale: ScaleDefinition = SCALES[1]; // Major by default
   scaleNoteSet: Set<IndianNote> = buildIndianScaleSet(SCALES[1]);
+
+  singMode: 'free' | 'guided' = 'free';
+  targetNote: IndianNote | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -325,6 +358,55 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   get needleAngle(): number {
     if (!this.currentPitch) return 0;
     return Math.max(-45, Math.min(45, this.currentPitch.centsOff * 0.9));
+  }
+
+  // ── Guided note guidance ─────────────────────────────────
+  get isTargetInTune(): boolean {
+    return !!this.targetNote
+      && this.currentPitch?.indianNote === this.targetNote
+      && !!this.currentPitch?.isInTune;
+  }
+
+  get guidanceClass(): 'good' | 'up' | 'down' | 'idle' {
+    if (this.isTargetInTune) return 'good';
+    if (!this.currentPitch || !this.targetNote) return 'idle';
+    const pitchIdx = INDIAN_NOTES.indexOf(this.currentPitch.indianNote);
+    const targetIdx = INDIAN_NOTES.indexOf(this.targetNote);
+    if (pitchIdx < targetIdx) return 'up';
+    if (pitchIdx > targetIdx) return 'down';
+    return (this.currentPitch.centsOff ?? 0) > 0 ? 'down' : 'up';
+  }
+
+  get guidanceMessage(): string {
+    if (!this.targetNote || !this.currentPitch) return '';
+    const cls = this.guidanceClass;
+    if (cls === 'up')   return `↑ Sing higher — you're at ${this.currentPitch.indianNote}`;
+    if (cls === 'down') return `↓ Sing lower — you're at ${this.currentPitch.indianNote}`;
+    const cents = Math.abs(this.currentPitch.centsOff ?? 0);
+    if (cents <= 10) return `You're on ${this.targetNote}, hold it steady`;
+    return (this.currentPitch.centsOff ?? 0) > 0
+      ? `Sing slightly lower — you're ${cents.toFixed(0)}¢ sharp`
+      : `Sing slightly higher — you're ${cents.toFixed(0)}¢ flat`;
+  }
+
+  selectTarget(note: IndianNote): void {
+    this.targetNote = note;
+    this.analytics.logEvent('sing_target_selected', { note });
+    if (!this.isActive) {
+      // Auto-start listening in guided mode when a note is selected.
+      this.startListening();
+    }
+    this.cdr.markForCheck();
+  }
+
+  onSingModeChange(mode: 'free' | 'guided'): void {
+    this.singMode = mode;
+    this.analytics.logSelectContent({ content_type: 'sing_mode', content_id: mode });
+    // Stop any active listening when switching modes so the mic never leaks
+    // from one mode into the other.
+    this.stopListening();
+    this.targetNote = null;
+    this.cdr.markForCheck();
   }
 
   // ── Injections ───────────────────────────────────────────
@@ -361,45 +443,8 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   // Stop mic/pitch detection when user navigates away from this tab.
   // ion-tabs caches pages in the DOM so ngOnDestroy does NOT fire on tab switch.
   ionViewWillLeave(): void {
-    // Always stop the drone on tab leave, regardless of mic state.
-    this.tanpura.stop();
-    this.droneOn = false;
-    if (this.isActive) {
-      this.pitchDetection.stop();
-      const stats = this.pitchDetection.getSessionStats();
-      this.sessionStats = stats as any;
-      this.isActive = false;
-      this.micError = null;
-      this.micPermDenied = false;
-      this.analytics.logEvent('mic_stopped', {
-        duration_seconds: Math.round(stats.sessionDuration),
-        stability_score:  Math.round(stats.stabilityScore),
-      });
-
-      const tanpuraState    = this.tanpura.state;
-      const durationSeconds = Math.round(stats.sessionDuration);
-      if (durationSeconds > 0 && this.authService.currentUser?.emailVerified) {
-        const noteAccuracies: Record<string, number> = {};
-        for (const [note, acc] of Object.entries(stats.noteAccuracies)) {
-          noteAccuracies[note] = acc as number;
-        }
-        this.api.createSession({
-          duration:       durationSeconds,
-          mode:           'free',
-          key:            tanpuraState.key,
-          score:          Math.round(stats.stabilityScore),
-          avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
-          stabilityScore: Math.round(stats.stabilityScore),
-          noteAccuracies,
-        }).then((res) => {
-          this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
-          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).then((r) => {
-            this.analytics.setUserProperty('practice_streak', String(r.currentStreak));
-          }).catch(() => {});
-        }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
-      }
-      this.cdr.markForCheck();
-    }
+    this.stopListening();
+    this.cdr.markForCheck();
   }
 
   // ── Key + Scale selectors ───────────────────────────────
@@ -422,86 +467,83 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   // ── Mic toggle ───────────────────────────────────────────
   async toggleMic(): Promise<void> {
     if (this.isActive) {
-      this.pitchDetection.stop();
-      const stats = this.pitchDetection.getSessionStats();
-      this.sessionStats = stats as any;
-      this.isActive = false;
-      this.micError = null;
-      this.micPermDenied = false;
-      this.analytics.logEvent('mic_stopped', {
-        duration_seconds: Math.round(stats.sessionDuration),
-        stability_score:  Math.round(stats.stabilityScore),
-      });
-
-      const tanpuraState    = this.tanpura.state;
-      const durationSeconds = Math.round(stats.sessionDuration);
-      if (durationSeconds > 0 && this.authService.currentUser?.emailVerified) {
-        const noteAccuracies: Record<string, number> = {};
-        for (const [note, acc] of Object.entries(stats.noteAccuracies)) {
-          noteAccuracies[note] = acc as number;
-        }
-        this.api.createSession({
-          duration:       durationSeconds,
-          mode:           'free',
-          key:            tanpuraState.key,
-          score:          Math.round(stats.stabilityScore),
-          avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
-          stabilityScore: Math.round(stats.stabilityScore),
-          noteAccuracies,
-        }).then(() => {
-          this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
-          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).then((r) => {
-            this.analytics.setUserProperty('practice_streak', String(r.currentStreak));
-          }).catch(() => {});
-        }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
-      }
+      this.stopListening();
     } else {
-      try {
-        // On Android, proactively request mic permission so the native
-        // RECORD_AUDIO dialog appears before getUserMedia is called.
-        // This is a no-op if permission is already granted.
-        if (this.permissions.micPermission !== 'granted') {
-          const state = await this.permissions.requestMicPermission();
-          if (state !== 'granted') {
-            this.micError = 'Microphone permission denied. Please allow access and try again.';
-            this.micPermDenied = true;
-            this.analytics.logEvent('mic_permission_denied');
-            this.cdr.markForCheck();
-            return;
-          }
-        }
-
-        await this.pitchDetection.start();
-        this.detectedNotes.clear();
-        this.isActive = true;
-        this.micError = null;
-        this.micPermDenied = false;
-        this.analytics.logEvent('mic_started');
-        this.analytics.logCtaTap('sing_start');
-      } catch (err: any) {
-        const isDenied = (err as { name?: string })?.name === 'NotAllowedError';
-        this.micError = isDenied
-          ? 'Microphone permission denied. Please allow access and try again.'
-          : 'Could not start microphone. Please try again.';
-        this.micPermDenied = isDenied;
-        if (isDenied) this.analytics.logEvent('mic_permission_denied');
-      }
+      await this.startListening();
     }
     this.cdr.markForCheck();
   }
 
-  // ── Drone toggle ─────────────────────────────────────────
-  toggleDrone(event: Event): void {
-    const on = (event as CustomEvent).detail.checked as boolean;
-    this.droneOn = on;
-    this.analytics.logEvent('drone_toggled', { on, source: 'sing' });
-    if (on) {
-      this.tanpura.setVolume(0.7);
-      this.tanpura.play();
-    } else {
-      this.tanpura.stop();
+  /** Stop the mic, capture session stats, and persist the session if logged in. */
+  private stopListening(): void {
+    if (!this.isActive) return;
+    this.pitchDetection.stop();
+    const stats = this.pitchDetection.getSessionStats();
+    this.sessionStats = stats as any;
+    this.isActive = false;
+    this.micError = null;
+    this.micPermDenied = false;
+    this.analytics.logEvent('mic_stopped', {
+      duration_seconds: Math.round(stats.sessionDuration),
+      stability_score:  Math.round(stats.stabilityScore),
+    });
+
+    const tanpuraState    = this.tanpura.state;
+    const durationSeconds = Math.round(stats.sessionDuration);
+    if (durationSeconds > 0 && this.authService.currentUser?.emailVerified) {
+      const noteAccuracies: Record<string, number> = {};
+      for (const [note, acc] of Object.entries(stats.noteAccuracies)) {
+        noteAccuracies[note] = acc as number;
+      }
+      this.api.createSession({
+        duration:       durationSeconds,
+        mode:           'free',
+        key:            tanpuraState.key,
+        score:          Math.round(stats.stabilityScore),
+        avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
+        stabilityScore: Math.round(stats.stabilityScore),
+        noteAccuracies,
+      }).then(() => {
+        this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
+        this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).then((r) => {
+          this.analytics.setUserProperty('practice_streak', String(r.currentStreak));
+        }).catch(() => {});
+      }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
     }
-    this.cdr.markForCheck();
+  }
+
+  /** Start the mic + pitch detection (shared by free-flow start and guided note selection). */
+  private async startListening(): Promise<void> {
+    try {
+      // On Android, proactively request mic permission so the native
+      // RECORD_AUDIO dialog appears before getUserMedia is called.
+      // This is a no-op if permission is already granted.
+      if (this.permissions.micPermission !== 'granted') {
+        const state = await this.permissions.requestMicPermission();
+        if (state !== 'granted') {
+          this.micError = 'Microphone permission denied. Please allow access and try again.';
+          this.micPermDenied = true;
+          this.analytics.logEvent('mic_permission_denied');
+          this.cdr.markForCheck();
+          return;
+        }
+      }
+
+      await this.pitchDetection.start();
+      this.detectedNotes.clear();
+      this.isActive = true;
+      this.micError = null;
+      this.micPermDenied = false;
+      this.analytics.logEvent('mic_started');
+      this.analytics.logCtaTap('sing_start');
+    } catch (err: any) {
+      const isDenied = (err as { name?: string })?.name === 'NotAllowedError';
+      this.micError = isDenied
+        ? 'Microphone permission denied. Please allow access and try again.'
+        : 'Could not start microphone. Please try again.';
+      this.micPermDenied = isDenied;
+      if (isDenied) this.analytics.logEvent('mic_permission_denied');
+    }
   }
 
   cos(angle: number): number { return Math.cos(angle); }
@@ -513,7 +555,6 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
 
   ngOnDestroy(): void {
     this.pitchDetection.stop();
-    this.tanpura.stop();
     this.destroy$.next();
     this.destroy$.complete();
   }

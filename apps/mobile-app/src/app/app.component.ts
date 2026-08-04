@@ -6,6 +6,8 @@ import { ApiService } from './core/services/api.service';
 import { LiveUpdateService } from './core/services/live-update.service';
 import { PushNotificationService } from './core/services/push-notification.service';
 import { PermissionsService } from './core/services/permissions.service';
+import { ModalController } from '@ionic/angular/standalone';
+import { FeatureTourService } from './core/services/feature-tour.service';
 
 // On a real device over cellular/WiFi, Cognito's fetchAuthSession can take
 // 300–800ms. Cap the wait so a slow or offline network never freezes the app.
@@ -28,6 +30,8 @@ export class AppComponent implements OnInit {
   private readonly liveUpdate      = inject(LiveUpdateService);
   private readonly pushNotification = inject(PushNotificationService);
   private readonly permissions     = inject(PermissionsService);
+  private readonly featureTour     = inject(FeatureTourService);
+  private readonly modalCtrl       = inject(ModalController);
 
   ngOnInit(): void {
     this.themeService.initialize();
@@ -61,6 +65,8 @@ export class AppComponent implements OnInit {
           console.error('[App] Profile/permissions init failed', err);
         }
       }
+
+      this.featureTour.maybeShowTour(this.modalCtrl).catch(() => {});
     });
   }
 }
