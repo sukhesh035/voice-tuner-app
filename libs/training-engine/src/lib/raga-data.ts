@@ -94,7 +94,9 @@ export const RAGAS: Record<string, RagaDefinition> = {
     samvadi:     'Ni',
     color:       '#7C4DFF',
     mood:        'Serene, Romantic, Devotional',
-    description: 'The most popular evening raga. Uses all sharp (teevra) Ma. Foundation raga of Kalyan thaat.'
+    description: 'The most popular evening raga. Uses all sharp (teevra) Ma. Foundation raga of Kalyan thaat.',
+    janyaOf:     65,
+    scaleType:   'sampurna',
   },
   bhairav: {
     id:          'bhairav',
@@ -109,7 +111,9 @@ export const RAGAS: Record<string, RagaDefinition> = {
     samvadi:     'Re♭',
     color:       '#FF6D00',
     mood:        'Solemn, Majestic, Devotional',
-    description: 'A profound morning raga associated with Lord Shiva. Uses both komal Re and komal Dha.'
+    description: 'A profound morning raga associated with Lord Shiva. Uses both komal Re and komal Dha.',
+    janyaOf:     20,
+    scaleType:   'sampurna',
   },
   hamsadhwani: {
     id:          'hamsadhwani',
@@ -124,7 +128,9 @@ export const RAGAS: Record<string, RagaDefinition> = {
     samvadi:     'Ni',
     color:       '#E91E63',
     mood:        'Joy, Devotion, Playfulness',
-    description: 'A pentatonic raga that omits Ma and Dha. Popular for invoking Lord Ganesha.'
+    description: 'A pentatonic raga that omits Ma and Dha. Popular for invoking Lord Ganesha.',
+    janyaOf:     65,
+    scaleType:   'audava',
   },
   bihag: {
     id:          'bihag',
@@ -139,7 +145,9 @@ export const RAGAS: Record<string, RagaDefinition> = {
     samvadi:     'Ni',
     color:       '#3F51B5',
     mood:        'Romantic, Intimate',
-    description: 'A late-night raga with both shuddha and teevra Ma. Known for its romantic character.'
+    description: 'A late-night raga with both shuddha and teevra Ma. Known for its romantic character.',
+    janyaOf:     29,
+    scaleType:   'vakra',
   },
   bhimpalasi: {
     id:          'bhimpalasi',
@@ -154,8 +162,129 @@ export const RAGAS: Record<string, RagaDefinition> = {
     samvadi:     'Ni♭',
     color:       '#FF9800',
     mood:        'Yearning, Melancholy, Beauty',
-    description: 'An afternoon raga of Kafi thaat. Known for its deeply expressive character.'
-  }
+    description: 'An afternoon raga of Kafi thaat. Known for its deeply expressive character.',
+    janyaOf:     22,
+    scaleType:   'vakra',
+  },
+  mohanam: {
+    id:          'mohanam',
+    name:        'मोहनम्',
+    englishName: 'Mohanam',
+    thaat:       'Harikambhoji',
+    time:        'Evening',
+    notes:       ['Sa', 'Re', 'Ga', 'Pa', 'Dha'],
+    aroh:        ['Sa', 'Re', 'Ga', 'Pa', 'Dha', 'Sa'],
+    avaroh:      ['Sa', 'Dha', 'Pa', 'Ga', 'Re', 'Sa'],
+    vadi:        'Ga',
+    samvadi:     'Dha',
+    color:       '#FFC300',
+    mood:        'Blissful, Peaceful',
+    description: 'A popular pentatonic raga (audava) that omits Ma and Ni. Simple, melodic, and widely loved.',
+    janyaOf:     28,
+    scaleType:   'audava',
+  },
+  hindolam: {
+    id:          'hindolam',
+    name:        'हिंदोलम्',
+    englishName: 'Hindolam',
+    thaat:       'Natabhairavi',
+    time:        'Morning',
+    notes:       ['Sa', 'Ga♭', 'Ma', 'Dha', 'Ni♭'],
+    aroh:        ['Sa', 'Ga♭', 'Ma', 'Dha', 'Ni♭', 'Sa'],
+    avaroh:      ['Sa', 'Ni♭', 'Dha', 'Ma', 'Ga♭', 'Sa'],
+    vadi:        'Dha',
+    samvadi:     'Ga♭',
+    color:       '#00BCD4',
+    mood:        'Longing, Melancholy',
+    description: 'A haunting pentatonic raga omitting Re and Pa. Deeply expressive and contemplative.',
+    janyaOf:     20,
+    scaleType:   'audava',
+  },
+  abhogi: {
+    id:          'abhogi',
+    name:        'अभोगि',
+    englishName: 'Abhogi',
+    thaat:       'Kharaharapriya',
+    time:        'Late Night',
+    notes:       ['Sa', 'Re', 'Ga♭', 'Ma', 'Dha'],
+    aroh:        ['Sa', 'Re', 'Ga♭', 'Ma', 'Dha', 'Sa'],
+    avaroh:      ['Sa', 'Dha', 'Ma', 'Ga♭', 'Re', 'Sa'],
+    vadi:        'Ma',
+    samvadi:     'Sa',
+    color:       '#4CAF50',
+    mood:        'Serene, Elegant',
+    description: 'A pentatonic raga omitting Pa and Ni. Known for its graceful, delicate character.',
+    janyaOf:     22,
+    scaleType:   'audava',
+  },
+  kambhoji: {
+    id:          'kambhoji',
+    name:        'काम्भोजि',
+    englishName: 'Kambhoji',
+    thaat:       'Harikambhoji',
+    time:        'Night',
+    notes:       ['Sa', 'Re', 'Ga', 'Ma', 'Pa', 'Dha', 'Ni♭'],
+    aroh:        ['Sa', 'Ga', 'Ma', 'Pa', 'Dha', 'Sa'],
+    avaroh:      ['Sa', 'Ni♭', 'Dha', 'Pa', 'Ma', 'Ga', 'Pa', 'Ga', 'Re', 'Sa'],
+    vadi:        'Ga',
+    samvadi:     'Ni♭',
+    color:       '#2196F3',
+    mood:        'Majestic, Expansive',
+    description: 'An ancient raga with a distinctive vakra avaroh (Ni Dha Pa Ma Ga Pa Ga). Majestic and grand.',
+    janyaOf:     28,
+    scaleType:   'vakra',
+  },
+  madhyamavati: {
+    id:          'madhyamavati',
+    name:        'मध्यमावती',
+    englishName: 'Madhyamavati',
+    thaat:       'Harikambhoji',
+    time:        'Evening',
+    notes:       ['Sa', 'Re', 'Ga', 'Ma', 'Pa', 'Dha'],
+    aroh:        ['Sa', 'Re', 'Ga', 'Ma', 'Pa', 'Dha', 'Sa'],
+    avaroh:      ['Sa', 'Dha', 'Pa', 'Ma', 'Ga', 'Re', 'Sa'],
+    vadi:        'Pa',
+    samvadi:     'Re',
+    color:       '#9C27B0',
+    mood:        'Uplifting, Devotional',
+    description: 'A six-note raga (shadava) omitting Ni. Lively, uplifting, and often used in devotional music.',
+    janyaOf:     28,
+    scaleType:   'shadava',
+  },
+  sriranjani: {
+    id:          'sriranjani',
+    name:        'श्रीरंजनी',
+    englishName: 'Sriranjani',
+    thaat:       'Natabhairavi',
+    time:        'Evening',
+    notes:       ['Sa', 'Re', 'Ga♭', 'Ma', 'Dha', 'Ni♭'],
+    aroh:        ['Sa', 'Re', 'Ga♭', 'Ma', 'Dha', 'Ni♭', 'Sa'],
+    avaroh:      ['Sa', 'Ni♭', 'Dha', 'Ma', 'Ga♭', 'Re', 'Sa'],
+    vadi:        'Re',
+    samvadi:     'Dha',
+    color:       '#E91E63',
+    mood:        'Sweet, Plaintive',
+    description: 'A six-note raga (shadava) omitting Pa. Sweet and plaintive, ideal for devotional compositions.',
+    janyaOf:     20,
+    scaleType:   'shadava',
+  },
+  darbarikanada: {
+    id:          'darbarikanada',
+    name:        'दरबारी कानडा',
+    englishName: 'Darbari Kanada',
+    thaat:       'Kharaharapriya',
+    time:        'Night',
+    notes:       ['Sa', 'Re♭', 'Ga♭', 'Ma', 'Pa', 'Dha♭', 'Ni♭'],
+    aroh:        ['Sa', 'Re♭', 'Ga♭', 'Ma', 'Pa', 'Dha♭', 'Ni♭', 'Sa'],
+    avaroh:      ['Sa', 'Ni♭', 'Dha♭', 'Pa', 'Ma', 'Ga♭', 'Re♭', 'Sa'],
+    vadi:        'Re♭',
+    samvadi:     'Pa',
+    color:       '#795548',
+    mood:        'Solemn, Deep, Royal',
+    description: 'A grand, grave raga with a deeply expressive character. Favoured for its majestic depth.',
+    janyaOf:     22,
+    scaleType:   'sampurna',
+  },
 };
 
 // ── 72 Melakarta Ragas ────────────────────────────────────
@@ -374,6 +503,7 @@ for (const [mela, eng, hindi, notes, vadi] of MELAKARTA_DATA) {
     description,
     melaNumber:  mela,
     chakra:      ch,
+    scaleType:   'sampurna',
   };
 }
 
@@ -383,6 +513,15 @@ export const RAGA_LIST = Object.values(RAGAS);
 export const MELAKARTA_LIST = RAGA_LIST
   .filter((r): r is RagaDefinition & { melaNumber: number } => r.melaNumber != null)
   .sort((a, b) => a.melaNumber - b.melaNumber);
+
+/** Janya ragas — those with a parent melakarta (janyaOf set) and no melaNumber */
+export const JANYA_LIST = RAGA_LIST.filter(r => r.janyaOf != null && r.melaNumber == null);
+
+/** Resolve a melakarta number to its English name (for "Janya of X" labels) */
+export function melaName(melaNumber: number): string {
+  const mela = MELAKARTA_LIST.find(m => m.melaNumber === melaNumber);
+  return mela?.englishName ?? `Mela #${melaNumber}`;
+}
 
 // Semitone offsets of each Indian note from Sa
 export const NOTE_SEMITONES: Record<IndianNote, number> = {

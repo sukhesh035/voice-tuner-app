@@ -15,7 +15,7 @@ import { TrainingEngineService, TrainingMode, TrainingSessionResult } from '@voi
 import { TanpuraPlayerService, MusicalKey } from '@voice-tuner/tanpura-player';
 import { PitchDetectionService, IndianNote, PitchResult } from '@voice-tuner/pitch-detection';
 import {
-  RAGA_LIST, MELAKARTA_LIST, MELAKARTA_CHAKRAS,
+  RAGA_LIST, MELAKARTA_LIST, JANYA_LIST, MELAKARTA_CHAKRAS, melaName,
   RagaDefinition, MelakartaChakra
 } from '@voice-tuner/training-engine';
 import { ApiService } from '../../core/services/api.service';
@@ -207,7 +207,7 @@ function buildFeedback(
 
             <!-- Popular Ragas -->
             <div class="raga-browser-section">
-              <div class="raga-section-header">Popular Ragas</div>
+              <div class="raga-section-header">Popular Janya Ragas</div>
               <div class="popular-ragas-row">
                 @for (raga of popularRagas; track raga.englishName) {
                 <button
@@ -222,23 +222,35 @@ function buildFeedback(
               </div>
             </div>
 
-            <!-- 72 Melakartas -->
+            <!-- Melakarta vs Janya browser -->
             <div class="raga-browser-section">
-              <div class="raga-section-header">72 Melakarta Ragas</div>
+              <ion-segment
+                [value]="ragaBrowserType"
+                (ionChange)="onBrowserTypeChange($event)"
+                class="browser-type-segment"
+              >
+                <ion-segment-button value="melakarta">
+                  <ion-label>Melakarta</ion-label>
+                </ion-segment-button>
+                <ion-segment-button value="janya">
+                  <ion-label>Janya</ion-label>
+                </ion-segment-button>
+              </ion-segment>
 
               <!-- Search bar -->
               <div class="raga-search">
                 <input
                   type="text"
                   class="raga-search__input"
-                  placeholder="Search by name, number, or chakra..."
+                  placeholder="Search by name, number, or parent..."
                   [(ngModel)]="ragaSearchQuery"
                   (ngModelChange)="filterRagas()"
                 />
                 <span class="raga-search__icon">&#128269;</span>
               </div>
 
-              <!-- Chakra filter chips -->
+              <!-- Chakra filter chips (Melakarta only) -->
+              @if (ragaBrowserType === 'melakarta') {
               <div class="chakra-filter">
                 <button
                   class="chakra-chip"
@@ -258,25 +270,29 @@ function buildFeedback(
                 </button>
                 }
               </div>
+              }
 
-              <!-- Melakarta raga list -->
+              <!-- Raga list -->
               <div class="raga-list">
-                @for (raga of filteredRagas; track raga.melaNumber) {
+                @for (raga of filteredRagas; track raga.id) {
                 <button
                   class="raga-card"
                   (click)="selectRaga(raga)"
                 >
                   <div class="raga-card__mela"
                     [style.background]="raga.color"
-                  >{{ raga.melaNumber }}</div>
+                  >{{ ragaBrowserType === 'melakarta' ? raga.melaNumber : (raga.janyaOf ?? '') }}</div>
                   <div class="raga-card__content">
                     <div class="raga-card__name">{{ raga.englishName }}</div>
                     <div class="raga-card__hindi">{{ raga.name }}</div>
                     <div class="raga-card__meta">
-                      <span class="raga-card__time">{{ raga.time }}</span>
-                      @if (raga.mood) {
-                      <span class="raga-card__mood">{{ raga.mood }}</span>
+                      @if (ragaBrowserType === 'janya' && raga.scaleType) {
+                      <span class="raga-card__scale">{{ raga.scaleType }}</span>
                       }
+                      @if (ragaBrowserType === 'janya' && raga.janyaOf) {
+                      <span class="raga-card__parent">Janya of {{ melaName(raga.janyaOf) }}</span>
+                      }
+                      <span class="raga-card__time">{{ raga.time }}</span>
                     </div>
                   </div>
                   <div class="raga-card__arrow">&#8250;</div>
@@ -311,6 +327,12 @@ function buildFeedback(
                   <div class="raga-info-name">{{ selectedRaga.englishName }}</div>
                   <div class="raga-info-hindi">{{ selectedRaga.name }}</div>
                   <div class="raga-info-meta">
+                    @if (selectedRaga.scaleType) {
+                    <span class="scale-type-badge">{{ selectedRaga.scaleType }}</span>
+                    }
+                    @if (selectedRaga.janyaOf) {
+                    <span class="janya-parent-label">Janya of {{ melaName(selectedRaga.janyaOf) }}</span>
+                    }
                     {{ selectedRaga.thaat }}
                     @if (selectedRaga.chakra) {
                     <span> &middot; {{ selectedRaga.chakra }} Chakra</span>
@@ -709,7 +731,9 @@ function buildFeedback(
 export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
   readonly ragaList  = RAGA_LIST;
   readonly melakartaRagas = MELAKARTA_LIST;
-  readonly popularRagas = RAGA_LIST.filter(r => r.melaNumber == null);
+  readonly janyaRagas = JANYA_LIST;
+  readonly popularRagas = JANYA_LIST;
+  readonly melaName = melaName;
   readonly allNotes: IndianNote[] = [
     'Sa','Re♭','Re','Ga♭','Ga','Ma','Ma#','Pa','Dha♭','Dha','Ni♭','Ni'
   ];
@@ -722,6 +746,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
   lastDisallowedNote: IndianNote | null = null;
 
   // ── Raga browser state ──
+  ragaBrowserType: 'melakarta' | 'janya' = 'melakarta';
   ragaSearchQuery = '';
   selectedChakra: MelakartaChakra | null = null;
   filteredRagas: RagaDefinition[] = MELAKARTA_LIST;
@@ -857,9 +882,9 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
 
   filterRagas(): void {
     const q = this.ragaSearchQuery.toLowerCase().trim();
-    let list: RagaDefinition[] = this.melakartaRagas;
+    let list: RagaDefinition[] = this.ragaBrowserType === 'janya' ? this.janyaRagas : this.melakartaRagas;
 
-    if (this.selectedChakra) {
+    if (this.ragaBrowserType === 'melakarta' && this.selectedChakra) {
       list = list.filter(r => r.chakra === this.selectedChakra);
     }
 
@@ -868,12 +893,25 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
         r.englishName.toLowerCase().includes(q) ||
         r.name.includes(q) ||
         r.thaat.toLowerCase().includes(q) ||
-        (r.melaNumber != null && String(r.melaNumber) === q)
+        (r.melaNumber != null && String(r.melaNumber) === q) ||
+        (r.janyaOf != null && String(r.janyaOf) === q)
       );
     }
 
     this.filteredRagas = list;
     this.cdr.markForCheck();
+  }
+
+  setRagaBrowserType(type: 'melakarta' | 'janya'): void {
+    this.ragaBrowserType = type;
+    this.selectedChakra = null;
+    this.ragaSearchQuery = '';
+    this.filterRagas();
+  }
+
+  onBrowserTypeChange(event: Event): void {
+    this.setRagaBrowserType((event as CustomEvent).detail.value as 'melakarta' | 'janya');
+    this.analytics.logSelectContent({ content_type: 'raga_browser', content_id: this.ragaBrowserType });
   }
 
   isAllowed(note: IndianNote): boolean {
