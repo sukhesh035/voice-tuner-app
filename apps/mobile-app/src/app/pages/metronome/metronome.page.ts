@@ -1,5 +1,6 @@
-import { Component, OnDestroy, signal, ChangeDetectionStrategy, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar,
   IonRange, IonSelect, IonSelectOption,
@@ -29,6 +30,9 @@ function tempoLabel(bpm: number): string {
 }
 
 const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+// String names for the default 'Sa-Pa-Sa' string config (indices 0–2)
+const DRONE_STRING_LABELS = ['Sa', 'Pa', 'Sa'];
 
 @Component({
   selector: 'app-metronome',
@@ -154,6 +158,18 @@ const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A
             <span class="play-btn__label">{{ droneOn() ? 'Stop' : 'Play' }}</span>
           </button>
 
+          <!-- Active String Indicator -->
+          <div class="string-indicators">
+            @for (name of stringLabels; track name; let i = $index) {
+            <div
+              class="string-indicator"
+              [class.active]="droneOn() && currentString() === i"
+            >
+              <span class="string-indicator__name">{{ name }}</span>
+            </div>
+            }
+          </div>
+
           <div class="drone-controls">
             <div class="drone-control">
               <label class="drone-control__label">Tempo</label>
@@ -199,7 +215,7 @@ const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A
   `,
   styleUrls: ['./metronome.page.scss']
 })
-export class MetronomePage implements OnDestroy, ViewWillLeave {
+export class MetronomePage implements OnInit, OnDestroy, ViewWillLeave {
   readonly bpm = signal<number>(120);
   readonly isPlaying = signal<boolean>(false);
   readonly beatActive = signal<boolean>(false);
@@ -210,6 +226,8 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
   readonly droneVolume = signal<number>(0.7);
   readonly droneTempo = signal<number>(5);
   readonly droneKeys = DRONE_KEYS;
+  readonly stringLabels = DRONE_STRING_LABELS;
+  readonly currentString = signal<number>(0);
 
   private audioCtx: AudioContext | null = null;
   private timerId: ReturnType<typeof setInterval> | null = null;
@@ -217,8 +235,16 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
   private sessionStartAt: number | null = null;
   private readonly analytics = inject(AnalyticsService);
   private readonly tanpura = inject(TanpuraPlayerService);
+  private tanpuraSub: Subscription | null = null;
 
   tempoLabel = tempoLabel;
+
+  ngOnInit(): void {
+    // Track which tanpura string is currently plucking so the UI can highlight it.
+    this.tanpuraSub = this.tanpura.state$.subscribe(state => {
+      this.currentString.set(state.currentString);
+    });
+  }
 
   onBpmSlider(event: Event): void {
     const value = (event as CustomEvent).detail.value;
@@ -362,6 +388,8 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
   }
 
   ngOnDestroy(): void {
+    this.tanpuraSub?.unsubscribe();
+    this.tanpuraSub = null;
     this.stop();
     this.tanpura.stop();
     this.audioCtx?.close();

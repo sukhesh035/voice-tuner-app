@@ -281,6 +281,41 @@
   padding: 12px 36px;
 }
 
+// ── String Indicators ─────────────────────────────────────
+.string-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.string-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--swara-border);
+  background: var(--swara-bg-card);
+  transition: all 0.15s ease;
+
+  &__name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ion-color-medium);
+  }
+
+  &.active {
+    border-color: var(--swara-primary);
+    background: var(--swara-gradient-primary);
+    box-shadow: 0 0 20px rgba(var(--swara-primary-rgb), 0.5);
+
+    .string-indicator__name {
+      color: #FFFFFF;
+    }
+  }
+}
+
 .drone-controls {
   display: flex;
   flex-direction: column;
