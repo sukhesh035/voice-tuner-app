@@ -402,9 +402,10 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   onSingModeChange(mode: 'free' | 'guided'): void {
     this.singMode = mode;
     this.analytics.logSelectContent({ content_type: 'sing_mode', content_id: mode });
-    if (mode === 'free') {
-      this.targetNote = null;
-    }
+    // Stop any active listening when switching modes so the mic never leaks
+    // from one mode into the other.
+    this.stopListening();
+    this.targetNote = null;
     this.cdr.markForCheck();
   }
 
@@ -442,42 +443,8 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   // Stop mic/pitch detection when user navigates away from this tab.
   // ion-tabs caches pages in the DOM so ngOnDestroy does NOT fire on tab switch.
   ionViewWillLeave(): void {
-    if (this.isActive) {
-      this.pitchDetection.stop();
-      const stats = this.pitchDetection.getSessionStats();
-      this.sessionStats = stats as any;
-      this.isActive = false;
-      this.micError = null;
-      this.micPermDenied = false;
-      this.analytics.logEvent('mic_stopped', {
-        duration_seconds: Math.round(stats.sessionDuration),
-        stability_score:  Math.round(stats.stabilityScore),
-      });
-
-      const tanpuraState    = this.tanpura.state;
-      const durationSeconds = Math.round(stats.sessionDuration);
-      if (durationSeconds > 0 && this.authService.currentUser?.emailVerified) {
-        const noteAccuracies: Record<string, number> = {};
-        for (const [note, acc] of Object.entries(stats.noteAccuracies)) {
-          noteAccuracies[note] = acc as number;
-        }
-        this.api.createSession({
-          duration:       durationSeconds,
-          mode:           'free',
-          key:            tanpuraState.key,
-          score:          Math.round(stats.stabilityScore),
-          avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
-          stabilityScore: Math.round(stats.stabilityScore),
-          noteAccuracies,
-        }).then((res) => {
-          this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
-          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).then((r) => {
-            this.analytics.setUserProperty('practice_streak', String(r.currentStreak));
-          }).catch(() => {});
-        }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
-      }
-      this.cdr.markForCheck();
-    }
+    this.stopListening();
+    this.cdr.markForCheck();
   }
 
   // ── Key + Scale selectors ───────────────────────────────
@@ -500,43 +467,49 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   // ── Mic toggle ───────────────────────────────────────────
   async toggleMic(): Promise<void> {
     if (this.isActive) {
-      this.pitchDetection.stop();
-      const stats = this.pitchDetection.getSessionStats();
-      this.sessionStats = stats as any;
-      this.isActive = false;
-      this.micError = null;
-      this.micPermDenied = false;
-      this.analytics.logEvent('mic_stopped', {
-        duration_seconds: Math.round(stats.sessionDuration),
-        stability_score:  Math.round(stats.stabilityScore),
-      });
-
-      const tanpuraState    = this.tanpura.state;
-      const durationSeconds = Math.round(stats.sessionDuration);
-      if (durationSeconds > 0 && this.authService.currentUser?.emailVerified) {
-        const noteAccuracies: Record<string, number> = {};
-        for (const [note, acc] of Object.entries(stats.noteAccuracies)) {
-          noteAccuracies[note] = acc as number;
-        }
-        this.api.createSession({
-          duration:       durationSeconds,
-          mode:           'free',
-          key:            tanpuraState.key,
-          score:          Math.round(stats.stabilityScore),
-          avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
-          stabilityScore: Math.round(stats.stabilityScore),
-          noteAccuracies,
-        }).then(() => {
-          this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
-          this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).then((r) => {
-            this.analytics.setUserProperty('practice_streak', String(r.currentStreak));
-          }).catch(() => {});
-        }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
-      }
+      this.stopListening();
     } else {
       await this.startListening();
     }
     this.cdr.markForCheck();
+  }
+
+  /** Stop the mic, capture session stats, and persist the session if logged in. */
+  private stopListening(): void {
+    if (!this.isActive) return;
+    this.pitchDetection.stop();
+    const stats = this.pitchDetection.getSessionStats();
+    this.sessionStats = stats as any;
+    this.isActive = false;
+    this.micError = null;
+    this.micPermDenied = false;
+    this.analytics.logEvent('mic_stopped', {
+      duration_seconds: Math.round(stats.sessionDuration),
+      stability_score:  Math.round(stats.stabilityScore),
+    });
+
+    const tanpuraState    = this.tanpura.state;
+    const durationSeconds = Math.round(stats.sessionDuration);
+    if (durationSeconds > 0 && this.authService.currentUser?.emailVerified) {
+      const noteAccuracies: Record<string, number> = {};
+      for (const [note, acc] of Object.entries(stats.noteAccuracies)) {
+        noteAccuracies[note] = acc as number;
+      }
+      this.api.createSession({
+        duration:       durationSeconds,
+        mode:           'free',
+        key:            tanpuraState.key,
+        score:          Math.round(stats.stabilityScore),
+        avgAccuracy:    Math.round(100 - Math.abs(stats.averageCentsOff) * 2),
+        stabilityScore: Math.round(stats.stabilityScore),
+        noteAccuracies,
+      }).then(() => {
+        this.analytics.logEvent('sing_session_saved', { duration_seconds: durationSeconds });
+        this.api.checkin(Math.ceil(durationSeconds / 60), Math.round(stats.stabilityScore)).then((r) => {
+          this.analytics.setUserProperty('practice_streak', String(r.currentStreak));
+        }).catch(() => {});
+      }).catch((err: any) => console.warn('[SingPage] Failed to save session:', err));
+    }
   }
 
   /** Start the mic + pitch detection (shared by free-flow start and guided note selection). */
