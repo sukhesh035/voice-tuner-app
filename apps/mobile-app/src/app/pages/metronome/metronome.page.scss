@@ -6,6 +6,13 @@
   min-height: 100%;
 }
 
+// ── Mode Tabs ─────────────────────────────────────────────
+.mode-segment {
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 24px;
+}
+
 // ── BPM Card ──────────────────────────────────────────────
 .bpm-card {
   position: relative;

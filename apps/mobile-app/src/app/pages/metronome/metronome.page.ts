@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar,
   IonRange, IonToggle, IonSelect, IonSelectOption,
+  IonSegment, IonSegmentButton, IonLabel,
   ViewWillLeave
 } from '@ionic/angular/standalone';
 import { AnalyticsService } from '../../core/services/analytics.service';
@@ -37,6 +38,7 @@ const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A
     CommonModule,
     IonContent, IonHeader, IonTitle, IonToolbar,
     IonRange, IonToggle, IonSelect, IonSelectOption,
+    IonSegment, IonSegmentButton, IonLabel,
   ],
   template: `
     <ion-header class="ion-no-border">
@@ -47,6 +49,22 @@ const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A
 
     <ion-content>
       <div class="metronome-page">
+
+        <!-- Mode Tabs -->
+        <ion-segment
+          [value]="activeTab()"
+          (ionChange)="setTab($event)"
+          class="mode-segment"
+        >
+          <ion-segment-button value="metronome">
+            <ion-label>Metronome</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="tanpura">
+            <ion-label>Tanpura</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+
+        @if (activeTab() === 'metronome') {
 
         <!-- BPM Display Card -->
         <div class="bpm-card">
@@ -108,7 +126,11 @@ const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A
           <span class="play-btn__label">{{ isPlaying() ? 'Stop' : 'Start' }}</span>
         </button>
 
-        <!-- Drone Card -->
+        }
+
+        @if (activeTab() === 'tanpura') {
+
+        <!-- Tanpura Drone -->
         <div class="drone-card">
           <div class="drone-header">
             <span class="drone-title">Tanpura Drone</span>
@@ -145,6 +167,8 @@ const DRONE_KEYS: MusicalKey[] = ['C','C#','D','D#','E','F','F#','G','G#','A','A
           </div>
         </div>
 
+        }
+
       </div>
     </ion-content>
   `,
@@ -154,6 +178,7 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
   readonly bpm = signal<number>(120);
   readonly isPlaying = signal<boolean>(false);
   readonly beatActive = signal<boolean>(false);
+  readonly activeTab = signal<'metronome' | 'tanpura'>('metronome');
 
   readonly droneOn = signal<boolean>(false);
   readonly droneKey = signal<MusicalKey>('C');
@@ -191,6 +216,10 @@ export class MetronomePage implements OnDestroy, ViewWillLeave {
     } else {
       this.start();
     }
+  }
+
+  setTab(event: Event): void {
+    this.activeTab.set((event as CustomEvent).detail.value as 'metronome' | 'tanpura');
   }
 
   toggleDrone(event: Event): void {
