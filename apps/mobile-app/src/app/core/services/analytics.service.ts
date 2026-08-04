@@ -55,7 +55,16 @@ export class AnalyticsService {
   async setScreen(screenName: string): Promise<void> {
     if (!environment.enableAnalytics) return;
     try {
-      await FirebaseAnalytics.setCurrentScreen({ screenName });
+      // Log a screen_view event with the firebase_screen param. This populates the
+      // "Views" report by page title/screen class on both native and web, unlike
+      // setCurrentScreen which is deprecated and unreliable on Capacitor native.
+      await FirebaseAnalytics.logEvent({
+        name: 'screen_view',
+        params: {
+          firebase_screen: screenName,
+          firebase_screen_class: screenName,
+        },
+      });
     } catch (err) {
       console.warn('[Analytics] setScreen failed:', err);
     }

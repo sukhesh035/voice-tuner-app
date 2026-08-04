@@ -13,18 +13,22 @@ import { RemoteConfigService } from './core/services/remote-config.service';
 
 /** Screen name map: route path segment → human-readable name */
 const SCREEN_NAMES: Record<string, string> = {
-  home:     'Home',
-  tanpura:  'Tanpura',
-  sing:     'Sing',
-  practice: 'Practice',
-  progress: 'Progress',
-  settings: 'Settings',
-  profile:  'Profile',
+  home:      'Home',
+  metronome: 'Metronome',
+  sing:      'Sing',
+  practice:  'Practice',
+  progress:  'Progress',
+  settings:  'Settings',
+  profile:   'Profile',
   login:            'Login',
   signup:           'Sign Up',
   'forgot-password': 'Forgot Password',
   'verify-email':   'Verify Email',
   'reset-password': 'Reset Password',
+  classroom:        'Classroom',
+  'session-report': 'Session Report',
+  'privacy-policy': 'Privacy Policy',
+  'terms-of-service': 'Terms of Service',
 };
 
 function routerAnalyticsInitializer(
@@ -32,6 +36,16 @@ function routerAnalyticsInitializer(
   analytics: AnalyticsService,
   perf: PerformanceService,
 ): () => void {
+  const screenNameFromUrl = (url: string): string => {
+    const segments = url.split('/').filter(Boolean);
+    // Dynamic routes: match on the first segment (classroom/:code, session-report/:id)
+    if (segments[0] === 'classroom' || segments[0] === 'session-report') {
+      return SCREEN_NAMES[segments[0]] ?? segments[0];
+    }
+    const segment = segments.pop() ?? 'home';
+    return SCREEN_NAMES[segment] ?? segment;
+  };
+
   return () => {
     // Start app_startup trace as early as possible; stop on first NavigationEnd
     perf.startAppStartupTrace();
@@ -39,15 +53,13 @@ function routerAnalyticsInitializer(
 
     router.events.pipe(filter(e => e instanceof NavigationStart)).subscribe((e) => {
       const nav = e as NavigationStart;
-      const segment = nav.url.split('/').filter(Boolean).pop() ?? 'home';
-      const screenName = SCREEN_NAMES[segment] ?? segment;
+      const screenName = screenNameFromUrl(nav.url);
       perf.startScreenTrace(screenName);
     });
 
     router.events.pipe(filter(e => e instanceof NavigationEnd)).subscribe((e) => {
       const nav = e as NavigationEnd;
-      const segment = nav.urlAfterRedirects.split('/').filter(Boolean).pop() ?? 'home';
-      const screenName = SCREEN_NAMES[segment] ?? segment;
+      const screenName = screenNameFromUrl(nav.urlAfterRedirects);
 
       analytics.setScreen(screenName);
       perf.stopScreenTrace(screenName);
