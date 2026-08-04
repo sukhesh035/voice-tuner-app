@@ -141,3 +141,56 @@
   line-height: 1.5;
   margin-top: $spacing-2;
 }
+
+// ── Learn Card (YouTube) ──────────────────────────────────
+.learn-card {
+  display: flex;
+  align-items: center;
+  gap: $spacing-3;
+  padding: $spacing-3;
+  background: var(--swara-bg-card);
+  border: 1px solid var(--swara-border);
+  border-radius: $radius-lg;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-md;
+    background: rgba(255, 0, 0, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--swara-text-primary);
+  }
+
+  &__sub {
+    font-size: 12px;
+    color: var(--swara-text-secondary);
+    margin-top: 2px;
+  }
+
+  &__arrow {
+    color: var(--swara-text-tertiary);
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+}
