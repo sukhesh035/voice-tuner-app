@@ -272,17 +272,9 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
             {{ isActive ? 'Stop Singing' : 'Start Singing' }}
           </button>
           } @else {
-          @if (isActive) {
-          <button
-            class="sing-btn"
-            [class.is-active]="isActive"
-            (click)="toggleMic()"
-          >
-            Stop Singing
-          </button>
-          } @else {
-          <div class="guided-hint">Select a note to start listening</div>
-          }
+          <div class="guided-hint">
+            {{ isActive ? 'Listening...' : 'Select a note to start listening' }}
+          </div>
           }
 
           @if (micError) {
