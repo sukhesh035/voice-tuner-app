@@ -63,3 +63,4 @@ coverage/
 *.pem
 *.p12
 *.key
+.worktrees/
