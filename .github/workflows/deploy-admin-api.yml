@@ -1,0 +1,67 @@
+name: Deploy Admin-API
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'apps/admin-api/**'
+      - 'apps/infra/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-admin-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy Admin-API
+    runs-on: ubuntu-latest
+    environment: dev
+
+    permissions:
+      contents: read
+
+    env:
+      AWS_REGION: us-east-1
+      STAGE:      dev
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      # ── 2. Node + pnpm ───────────────────────────────────────────────────────
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4.3.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # ── 3. Install dependencies ───────────────────────────────────────────────
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ── 4. AWS credentials ───────────────────────────────────────────────────
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.3
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      # ── 5. Build admin-api Lambda bundle ─────────────────────────────────────
+      #   `cdk deploy` uploads the bundled handler itself, so no separate
+      #   aws lambda update-function-code step is needed (unlike the legacy
+      #   backend-api workflow which deploys to pre-existing functions).
+      - name: Build admin-api bundle
+        run: pnpm build:admin-api
+
+      # ── 6. Deploy AdminApiStack (new CDK stack, deployed fresh each time) ───
+      - name: Deploy AdminApiStack
+        working-directory: apps/infra
+        run: npx cdk deploy AdminApiStackDev --require-approval never --ci
