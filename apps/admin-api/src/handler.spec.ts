@@ -89,7 +89,7 @@ describe('admin-api handler', () => {
     expect(res.statusCode).toBe(400);
   });
 
-  it('PUT updates allowed fields (displayName, preferences, favoriteRagas, photoUrl)', async () => {
+  it('PUT updates allowed fields (displayName, favoriteRagas)', async () => {
     send.mockResolvedValue({ Attributes: { userId: 'u1', displayName: 'B' } });
     const res = await handler(event('PUT', '/users/u1', { displayName: 'B', favoriteRagas: ['Kalyani'] }));
     expect(res.statusCode).toBe(200);
@@ -107,9 +107,52 @@ describe('admin-api handler', () => {
     expect(res.statusCode).toBe(405);
   });
 
-  it('returns 500 when DynamoDB fails', async () => {
+  it('PUT rejects a JSON null body', async () => {
+    const res = await handler({
+      requestContext: { http: { method: 'PUT', path: '/users/u1' } },
+      headers: { authorization: 'Bearer tok' },
+      body: 'null',
+      isBase64Encoded: false,
+    } as never);
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body ?? '{}')).toEqual({ error: 'Invalid JSON' });
+  });
+
+  it('PUT rejects an empty object body (no allowed fields)', async () => {
+    const res = await handler(event('PUT', '/users/u1', {}));
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('PUT rejects a request with no body at all', async () => {
+    const res = await handler(event('PUT', '/users/u1'));
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('OPTIONS returns 200 with an empty body', async () => {
+    const res = await handler(event('OPTIONS', '/users/u1'));
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body ?? '{}')).toEqual({});
+  });
+
+  it('PUT rejects an invalid theme preference', async () => {
+    const res = await handler(event('PUT', '/users/u1', { preferences: { theme: 'neon' } }));
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('PUT rejects an invalid instrument preference', async () => {
+    const res = await handler(event('PUT', '/users/u1', { preferences: { instrument: 'flute' } }));
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('returns 400 for a malformed percent-encoded userId', async () => {
+    const res = await handler(event('GET', '/users/%E0%A4%A'));
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('returns 500 with a generic message when DynamoDB fails', async () => {
     send.mockRejectedValue(new Error('dynamo down'));
     const res = await handler(event('GET', '/users/u1'));
     expect(res.statusCode).toBe(500);
+    expect(JSON.parse(res.body ?? '{}')).toEqual({ error: 'Internal server error' });
   });
 });

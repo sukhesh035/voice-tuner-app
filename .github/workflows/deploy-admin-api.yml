@@ -61,16 +61,31 @@ jobs:
       - name: Build admin-api bundle
         run: pnpm build:admin-api
 
-      # ── 6. Deploy SwaraStack first so its SSM params exist ──────────────────
+      # ── 6. Write Cognito pool/client IDs to SSM (idempotent prereq) ─────────
       #   AdminApiStack resolves the Cognito pool/client IDs from SSM params
-      #   written by the main stack, so a clean-env first deploy would fail.
-      #   SwaraStack is idempotent (it only additionally writes those 2 params),
-      #   so re-deploying it here is safe.
-      - name: Deploy SwaraStack (SSM prereq)
-        working-directory: apps/infra
-        run: npx cdk deploy SwaraStackDev --require-approval never --ci
+      #   that SwaraStack normally publishes. SwaraStack can't be deployed here —
+      #   its Lambdas bind to dist/apps/backend-api, which this workflow never
+      #   builds — so write the two params directly instead.
+      - name: Write Cognito IDs to SSM
+        run: |
+          aws ssm put-parameter \
+            --name "/swara-dev/cognito/user-pool-id" \
+            --value "${{ secrets.SWARA_USER_POOL_ID }}" \
+            --type String \
+            --overwrite
+          aws ssm put-parameter \
+            --name "/swara-dev/cognito/user-pool-client-id" \
+            --value "${{ secrets.SWARA_CLIENT_ID }}" \
+            --type String \
+            --overwrite
 
       # ── 7. Deploy AdminApiStack (new CDK stack, deployed fresh each time) ───
+      #   DEPLOY_ADMIN_API_DEV skips SwaraStackDev so `cdk deploy` only
+      #   synthesizes AdminApiStackDev — otherwise whole-app synth would try to
+      #   resolve SwaraStackDev's dist/apps/backend-api asset, which this
+      #   workflow never builds.
       - name: Deploy AdminApiStack
         working-directory: apps/infra
         run: npx cdk deploy AdminApiStackDev --require-approval never --ci
+        env:
+          DEPLOY_ADMIN_API_DEV: "1"

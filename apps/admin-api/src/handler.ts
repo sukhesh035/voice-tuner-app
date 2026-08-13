@@ -54,24 +54,31 @@ const PREF_VALIDATORS: Record<string, (v: unknown) => boolean> = {
   defaultKey:           (v) => typeof v === 'string',
   defaultTempo:         (v) => typeof v === 'number',
   pitchSensitivity:     (v) => typeof v === 'number',
-  theme:                (v) => typeof v === 'string',
+  theme:                (v) => v === 'dark' || v === 'light',
   notificationsEnabled: (v) => typeof v === 'boolean',
   micPermissionGranted: (v) => typeof v === 'boolean',
   dailyGoalMinutes:     (v) => typeof v === 'number',
-  instrument:           (v) => typeof v === 'string',
+  instrument:           (v) => v === 'tanpura' || v === 'keyboard' || v === 'guitar',
 };
 
 export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResult> {
   setCorsOrigin(event);
   const method = event.requestContext.http.method;
-  if (method === 'OPTIONS') return json(204, {});
+  // API Gateway answers true CORS preflights itself; this mirrors backend-api
+  // (ok({})) for OPTIONS requests that still reach the Lambda.
+  if (method === 'OPTIONS') return json(200, {});
 
   const ok = await verifyServiceToken(event.headers?.['authorization']);
   if (!ok) return json(401, { error: 'Unauthorized' });
 
   const m = event.requestContext.http.path.match(/^\/users\/([^/]+)\/?$/);
   if (!m) return json(404, { error: 'not found' });
-  const userId = decodeURIComponent(m[1]);
+  let userId: string;
+  try {
+    userId = decodeURIComponent(m[1]);
+  } catch {
+    return json(400, { error: 'Invalid path' });
+  }
 
   try {
     if (method === 'GET') {
@@ -82,6 +89,12 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
     if (method === 'PUT') {
       let body: Record<string, unknown>;
       try { body = event.body ? JSON.parse(event.body) : {}; } catch { return json(400, { error: 'Invalid JSON' }); }
+
+      // JSON.parse('null') yields null and scalars/arrays are meaningless as an
+      // update body — treat any non-object as invalid (was a 500 before).
+      if (!body || typeof body !== 'object' || Array.isArray(body)) {
+        return json(400, { error: 'Invalid JSON' });
+      }
 
       const updates: string[] = [];
       const values: Record<string, unknown> = {};
@@ -141,6 +154,7 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
 
     return json(405, { error: 'method not allowed' });
   } catch (err) {
-    return json(500, { error: err instanceof Error ? err.message : 'Internal server error' });
+    console.error('[Lambda error]', err);
+    return json(500, { error: 'Internal server error' });
   }
 }
