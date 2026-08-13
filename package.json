@@ -13,6 +13,7 @@
     "start:api": "nx serve backend-api",
     "build:mobile": "nx build mobile-app --configuration=production",
     "build:api": "nx build backend-api",
+    "build:admin-api": "nx build admin-api",
     "test": "nx run-many --target=test --all",
     "lint": "nx run-many --target=lint --all",
     "cap:sync": "nx run mobile-app:cap-sync",

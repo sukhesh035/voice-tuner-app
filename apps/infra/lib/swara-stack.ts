@@ -109,6 +109,18 @@ export class SwaraStack extends cdk.Stack {
       preventUserExistenceErrors: true,
     });
 
+    // Publish the Cognito pool/client IDs to SSM so the standalone AdminApiStack
+    // (swara-{stage}-admin-api) can reference them for its service-token verifier
+    // without hardcoding account-specific values.
+    new ssm.StringParameter(this, 'CognitoUserPoolIdParam', {
+      parameterName: `/${prefix}/cognito/user-pool-id`,
+      stringValue:   userPool.userPoolId,
+    });
+    new ssm.StringParameter(this, 'CognitoUserPoolClientIdParam', {
+      parameterName: `/${prefix}/cognito/user-pool-client-id`,
+      stringValue:   userPoolClient.userPoolClientId,
+    });
+
     const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
       identityPoolName:         `${prefix}_identity`,
       allowUnauthenticatedIdentities: true,

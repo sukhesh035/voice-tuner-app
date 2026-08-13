@@ -78,15 +78,47 @@ jobs:
             --type SecureString \
             --overwrite
 
+      # ── 5b. Write Cognito pool/client IDs to SSM (idempotent) ───────────────
+      #   AdminApiStackProd resolves these from SSM; SwaraStackProd publishes
+      #   them itself on deploy, this direct write covers the standalone
+      #   AdminApiStackProd deploy below.
+      - name: Write Cognito IDs to SSM
+        run: |
+          aws ssm put-parameter \
+            --name "/swara-prod/cognito/user-pool-id" \
+            --value "${{ secrets.SWARA_USER_POOL_ID }}" \
+            --type String \
+            --overwrite
+          aws ssm put-parameter \
+            --name "/swara-prod/cognito/user-pool-client-id" \
+            --value "${{ secrets.SWARA_CLIENT_ID }}" \
+            --type String \
+            --overwrite
+
       # ── 6. Build Lambda bundle ────────────────────────────────────────────────
       - name: Build Lambda bundle
         run: pnpm build:api
+
+      # ── 6a. Build admin-api Lambda bundle ────────────────────────────────────
+      #   Required so `cdk synth` (which always synthesizes the whole app,
+      #   including AdminApiStackDev) can resolve its dist/apps/admin-api asset.
+      - name: Build admin-api bundle
+        run: pnpm build:admin-api
 
       # ── 7. Deploy infra (CloudFormation create-or-update — idempotent) ────────
       - name: Deploy AWS infrastructure
         run: pnpm nx run infra:deploy-prod
         env:
           DEPLOY_PROD: "1"
+
+      # ── 7a. Deploy AdminApiStackProd (new CDK stack, deployed fresh each time) ──
+      #   Gated by DEPLOY_ADMIN_API_PROD so the regular SwaraStackProd deploy
+      #   (step 7) never synthesizes a stack whose asset isn't built.
+      - name: Deploy AdminApiStack
+        working-directory: apps/infra
+        run: npx cdk deploy AdminApiStackProd --require-approval never --ci
+        env:
+          DEPLOY_ADMIN_API_PROD: "1"
 
       # ── 8. Generate environment.prod.ts from live stack outputs ───────────────
       - name: Generate environment.prod.ts
