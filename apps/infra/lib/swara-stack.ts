@@ -13,7 +13,6 @@ import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as iam     from 'aws-cdk-lib/aws-iam';
 import * as events  from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
-import * as ssm     from 'aws-cdk-lib/aws-ssm';
 import * as kms     from 'aws-cdk-lib/aws-kms';
 
 export interface SwaraStackProps extends cdk.StackProps {
@@ -107,18 +106,6 @@ export class SwaraStack extends cdk.Stack {
         userSrp:           true,
       },
       preventUserExistenceErrors: true,
-    });
-
-    // Publish the Cognito pool/client IDs to SSM so the standalone AdminApiStack
-    // (swara-{stage}-admin-api) can reference them for its service-token verifier
-    // without hardcoding account-specific values.
-    new ssm.StringParameter(this, 'CognitoUserPoolIdParam', {
-      parameterName: `/${prefix}/cognito/user-pool-id`,
-      stringValue:   userPool.userPoolId,
-    });
-    new ssm.StringParameter(this, 'CognitoUserPoolClientIdParam', {
-      parameterName: `/${prefix}/cognito/user-pool-client-id`,
-      stringValue:   userPoolClient.userPoolClientId,
     });
 
     const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
