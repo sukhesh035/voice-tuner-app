@@ -58,6 +58,22 @@ describe('admin-api handler', () => {
     expect(res.statusCode).toBe(400);
   });
 
+  it('PUT rejects a valid field mixed with an unknown field', async () => {
+    const res = await handler(event('PUT', '/users/u1', { displayName: 'B', hacker: true }));
+    expect(res.statusCode).toBe(400);
+    expect(JSON.parse(res.body ?? '{}')).toEqual({ error: 'unknown field hacker' });
+  });
+
+  it('PUT rejects invalid JSON body', async () => {
+    const res = await handler({
+      requestContext: { http: { method: 'PUT', path: '/users/u1' } },
+      headers: { authorization: 'Bearer tok' },
+      body: '{not-json',
+      isBase64Encoded: false,
+    } as never);
+    expect(res.statusCode).toBe(400);
+  });
+
   it('PUT rejects a type mismatch (displayName must be string)', async () => {
     const res = await handler(event('PUT', '/users/u1', { displayName: 123 }));
     expect(res.statusCode).toBe(400);

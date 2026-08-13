@@ -88,13 +88,15 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       const names: Record<string, string> = {};
       let has = false;
 
-      for (const [key, validate] of Object.entries(TOP_VALIDATORS)) {
-        if (body[key] !== undefined) {
-          if (!validate(body[key])) return json(400, { error: `invalid field ${key}` });
+      for (const key of Object.keys(body)) {
+        if (key in TOP_VALIDATORS) {
+          if (!TOP_VALIDATORS[key](body[key])) return json(400, { error: `invalid field ${key}` });
           updates.push(`#${key} = :${key}`);
           names[`#${key}`] = key;
           values[`:${key}`] = body[key];
           has = true;
+        } else if (key !== 'preferences') {
+          return json(400, { error: `unknown field ${key}` });
         }
       }
 

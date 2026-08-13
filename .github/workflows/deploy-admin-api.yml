@@ -61,7 +61,16 @@ jobs:
       - name: Build admin-api bundle
         run: pnpm build:admin-api
 
-      # ── 6. Deploy AdminApiStack (new CDK stack, deployed fresh each time) ───
+      # ── 6. Deploy SwaraStack first so its SSM params exist ──────────────────
+      #   AdminApiStack resolves the Cognito pool/client IDs from SSM params
+      #   written by the main stack, so a clean-env first deploy would fail.
+      #   SwaraStack is idempotent (it only additionally writes those 2 params),
+      #   so re-deploying it here is safe.
+      - name: Deploy SwaraStack (SSM prereq)
+        working-directory: apps/infra
+        run: npx cdk deploy SwaraStackDev --require-approval never --ci
+
+      # ── 7. Deploy AdminApiStack (new CDK stack, deployed fresh each time) ───
       - name: Deploy AdminApiStack
         working-directory: apps/infra
         run: npx cdk deploy AdminApiStackDev --require-approval never --ci
