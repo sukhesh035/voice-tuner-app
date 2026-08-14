@@ -19,6 +19,7 @@ jobs:
 
     permissions:
       contents: read
+      id-token: write
 
     env:
       AWS_REGION: us-east-1
@@ -119,6 +120,64 @@ jobs:
         run: npx cdk deploy AdminApiStackProd --require-approval never --ci
         env:
           DEPLOY_ADMIN_API_PROD: "1"
+
+      # ── 7b. Refresh admin-service token + publish URL/token to admin console SSM ──
+      #   The admin console (my-projects-admin) proxies /v1/apps/:appId/users/:userId
+      #   to this admin-api using a short-lived ID token for the `admin-service`
+      #   service user. ID tokens expire hourly, so re-mint + publish on every
+      #   prod deploy so the console keeps working.
+      - name: Mint admin-service ID token
+        id: token
+        run: |
+          set -euo pipefail
+          POOL_ID="${{ secrets.SWARA_USER_POOL_ID }}"
+          CLIENT_ID="${{ secrets.SWARA_CLIENT_ID }}"
+          EMAIL="admin-service@swara.invalid"
+          SERVICE_PW="${{ secrets.ADMIN_SERVICE_PASSWORD }}"
+          if [ -z "$SERVICE_PW" ]; then
+            echo "::error::ADMIN_SERVICE_PASSWORD secret is not set"
+            exit 1
+          fi
+
+          if ! aws cognito-idp admin-get-user --user-pool-id "$POOL_ID" --username "$EMAIL" >/dev/null 2>&1; then
+            aws cognito-idp admin-create-user \
+              --user-pool-id "$POOL_ID" \
+              --username "$EMAIL" \
+              --user-attributes Name=email,Value="$EMAIL" Name=email_verified,Value=true Name=name,Value="Admin Service" \
+              --message-action SUPPRESS >/dev/null
+          fi
+
+          aws cognito-idp admin-set-user-password \
+            --user-pool-id "$POOL_ID" \
+            --username "$EMAIL" \
+            --password "$SERVICE_PW" \
+            --permanent >/dev/null
+
+          ID_TOKEN=$(aws cognito-idp initiate-auth \
+            --auth-flow USER_PASSWORD_AUTH \
+            --client-id "$CLIENT_ID" \
+            --auth-parameters "USERNAME=$EMAIL,PASSWORD=$SERVICE_PW" \
+            --query "AuthenticationResult.IdToken" \
+            --output text)
+          echo "id_token=$ID_TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Assume admin console OIDC role
+        uses: aws-actions/configure-aws-credentials@v4.0.3
+        with:
+          role-to-assume: arn:aws:iam::512539654130:role/github_oidc
+          role-session-name: admin-api-provision
+          aws-region: us-east-1
+
+      - name: Write swara admin-api URL + token to admin console SSM
+        run: |
+          cat > /tmp/swara-url.json <<'JSON'
+          {"Name":"/admin/prod/swara-admin-api-url","Value":"https://dmbca9boa3.execute-api.us-east-1.amazonaws.com","Type":"String","Overwrite":true}
+          JSON
+          aws ssm put-parameter --cli-input-json file:///tmp/swara-url.json
+          cat > /tmp/swara-token.json <<JSON
+          {"Name":"/admin/prod/swara-admin-service-token","Value":"${{ steps.token.outputs.id_token }}","Type":"SecureString","Overwrite":true}
+          JSON
+          aws ssm put-parameter --cli-input-json file:///tmp/swara-token.json
 
       # ── 8. Generate environment.prod.ts from live stack outputs ───────────────
       - name: Generate environment.prod.ts
