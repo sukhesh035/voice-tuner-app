@@ -35,6 +35,22 @@ describe('admin-api handler', () => {
     expect(res.statusCode).toBe(401);
   });
 
+  it('GET /swagger.json serves the OpenAPI spec without auth', async () => {
+    mockVerify.mockResolvedValue(false);
+    const res = await handler(event('GET', '/swagger.json'));
+    expect(res.statusCode).toBe(200);
+    const spec = JSON.parse(res.body ?? '{}');
+    expect(spec.openapi).toBe('3.0.1');
+    expect(spec.paths['/users/{userId}']).toBeDefined();
+  });
+
+  it('GET /swagger serves the Swagger UI page without auth', async () => {
+    mockVerify.mockResolvedValue(false);
+    const res = await handler(event('GET', '/swagger'));
+    expect(res.statusCode).toBe(200);
+    expect(String(res.body)).toContain('swagger-ui');
+  });
+
   it('GET returns the full user profile', async () => {
     send.mockResolvedValue({ Item: { userId: 'u1', email: 'a@b.com', displayName: 'A' } });
     const res = await handler(event('GET', '/users/u1'));

@@ -61,12 +61,97 @@ const PREF_VALIDATORS: Record<string, (v: unknown) => boolean> = {
   instrument:           (v) => v === 'tanpura' || v === 'keyboard' || v === 'guitar',
 };
 
+const SWAGGER_SPEC = {
+  openapi: '3.0.1',
+  info: {
+    title: 'Swara Admin API',
+    description: 'Standalone admin Lambda for user detail/update/delete. Authenticate with the `admin-service` service account (Bearer token).',
+    version: '1.0.0',
+  },
+  servers: [{ url: '/' }],
+  paths: {
+    '/users/{userId}': {
+      get: {
+        summary: 'Get a user profile by id',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': { description: 'The full user profile' },
+          '404': { description: 'User not found' },
+          '401': { description: 'Invalid or missing service token' },
+        },
+      },
+      put: {
+        summary: 'Update a user profile',
+        description: 'Whitelisted fields only: displayName, favoriteRagas, photoUrl, preferences (all 8 keys).',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: { type: 'object' } } },
+        },
+        responses: {
+          '200': { description: 'Updated record' },
+          '400': { description: 'Unknown or malformed field' },
+          '404': { description: 'User not found' },
+          '401': { description: 'Invalid or missing service token' },
+        },
+      },
+      delete: {
+        summary: 'Delete a user profile',
+        description: 'Removes the user row from the users table.',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': { description: 'Deleted', content: { 'application/json': { schema: { type: 'object', properties: { deleted: { type: 'boolean' } } } } } },
+          '401': { description: 'Invalid or missing service token' },
+        },
+      },
+    },
+  },
+  components: {
+    securitySchemes: {
+      bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+    },
+  },
+};
+
+const SWAGGER_UI_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Swara Admin API — Swagger UI</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.onload = function () {
+      window.ui = SwaggerUIBundle({ url: '/swagger.json', dom_id: '#swagger-ui' });
+    };
+  </script>
+</body>
+</html>`;
+
 export async function handler(event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResult> {
   setCorsOrigin(event);
   const method = event.requestContext.http.method;
   // API Gateway answers true CORS preflights itself; this mirrors backend-api
   // (ok({})) for OPTIONS requests that still reach the Lambda.
   if (method === 'OPTIONS') return json(200, {});
+
+  if (method === 'GET' && /^\/swagger\.json\/?$/.test(event.requestContext.http.path)) {
+    return json(200, SWAGGER_SPEC);
+  }
+  if (method === 'GET' && /^\/swagger\/?$/.test(event.requestContext.http.path)) {
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'text/html', 'Access-Control-Allow-Origin': '*' },
+      body: SWAGGER_UI_HTML,
+    };
+  }
 
   const ok = await verifyServiceToken(event.headers?.['authorization']);
   if (!ok) return json(401, { error: 'Unauthorized' });
