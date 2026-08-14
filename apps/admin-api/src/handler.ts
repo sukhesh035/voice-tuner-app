@@ -49,8 +49,7 @@ const TOP_VALIDATORS: Record<string, (v: unknown) => boolean> = {
   photoUrl:      (v) => typeof v === 'string' || v === null,
 };
 
-// Whitelisted editable preference keys (all 8 keys from UserProfile.preferences).
-const SORT_COLUMNS: Record<string, (u: Record<string, unknown>) => string | number | null> = {
+const SORT_COLUMNS: Record<string, (u: Record<string, unknown>) => string> = {
   displayName: (u) => String(u.displayName ?? ''),
   email: (u) => String(u.email ?? ''),
   createdAt: (u) => String(u.createdAt ?? ''),
@@ -61,9 +60,9 @@ function sortAndPage<T>(items: T[], sortBy: string, sortDir: string, page: numbe
   const sorted = [...items];
   const key = SORT_COLUMNS[sortBy];
   if (key) {
-    sorted.sort((a: any, b: any) => {
-      const va = key(a) ?? '';
-      const vb = key(b) ?? '';
+    sorted.sort((a: T, b: T) => {
+      const va = key(a as Record<string, unknown>);
+      const vb = key(b as Record<string, unknown>);
       const cmp = va < vb ? -1 : va > vb ? 1 : 0;
       return sortDir === 'desc' ? -cmp : cmp;
     });
@@ -72,6 +71,7 @@ function sortAndPage<T>(items: T[], sortBy: string, sortDir: string, page: numbe
   return { users: sorted.slice(start, start + pageSize), total: sorted.length, page, pageSize };
 }
 
+// Whitelisted editable preference keys (all 8 keys from UserProfile.preferences).
 const PREF_VALIDATORS: Record<string, (v: unknown) => boolean> = {
   defaultKey:           (v) => typeof v === 'string',
   defaultTempo:         (v) => typeof v === 'number',
@@ -121,7 +121,8 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       }));
       return json(200, sortAndPage(mapped, sortBy, sortDir, page, pageSize));
     } catch (err) {
-      return json(500, { error: err instanceof Error ? err.message : 'Internal server error' });
+      console.error('[Lambda error]', err);
+      return json(500, { error: 'Internal server error' });
     }
   }
 

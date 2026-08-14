@@ -158,6 +158,13 @@ describe('admin-api handler', () => {
     expect(JSON.parse(res.body ?? '{}')).toEqual({ error: 'Internal server error' });
   });
 
+  it('GET /users returns 500 with a generic message when DynamoDB fails', async () => {
+    send.mockRejectedValue(new Error('dynamo down'));
+    const res = await handler(event('GET', '/users'));
+    expect(res.statusCode).toBe(500);
+    expect(JSON.parse(res.body ?? '{}')).toEqual({ error: 'Internal server error' });
+  });
+
   it('GET /users returns a paged, sorted slice with total', async () => {
     send.mockResolvedValue({
       Items: [
