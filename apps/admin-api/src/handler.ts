@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResult } from 'aws-lambda';
 import {
-  DynamoDBDocumentClient, GetCommand, UpdateCommand, DeleteCommand,
+  DynamoDBDocumentClient, GetCommand, UpdateCommand, DeleteCommand, ScanCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { verifyServiceToken } from './auth';
@@ -50,6 +50,28 @@ const TOP_VALIDATORS: Record<string, (v: unknown) => boolean> = {
 };
 
 // Whitelisted editable preference keys (all 8 keys from UserProfile.preferences).
+const SORT_COLUMNS: Record<string, (u: Record<string, unknown>) => string | number | null> = {
+  displayName: (u) => String(u.displayName ?? ''),
+  email: (u) => String(u.email ?? ''),
+  createdAt: (u) => String(u.createdAt ?? ''),
+  updatedAt: (u) => String(u.updatedAt ?? ''),
+};
+
+function sortAndPage<T>(items: T[], sortBy: string, sortDir: string, page: number, pageSize: number): { users: T[]; total: number; page: number; pageSize: number } {
+  const sorted = [...items];
+  const key = SORT_COLUMNS[sortBy];
+  if (key) {
+    sorted.sort((a: any, b: any) => {
+      const va = key(a) ?? '';
+      const vb = key(b) ?? '';
+      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+      return sortDir === 'desc' ? -cmp : cmp;
+    });
+  }
+  const start = (page - 1) * pageSize;
+  return { users: sorted.slice(start, start + pageSize), total: sorted.length, page, pageSize };
+}
+
 const PREF_VALIDATORS: Record<string, (v: unknown) => boolean> = {
   defaultKey:           (v) => typeof v === 'string',
   defaultTempo:         (v) => typeof v === 'number',
@@ -70,6 +92,38 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
 
   const ok = await verifyServiceToken(event.headers?.['authorization']);
   if (!ok) return json(401, { error: 'Unauthorized' });
+
+  // GET /users — paged, sorted list (swara users table).
+  if (method === 'GET' && /^\/users\/?$/.test(event.requestContext.http.path)) {
+    const q = event.queryStringParameters ?? {};
+    const sortBy = q['sortBy'] ?? 'displayName';
+    if (!SORT_COLUMNS[sortBy]) return json(400, { error: 'invalid sortBy' });
+    const sortDir = q['sortDir'] === 'desc' ? 'desc' : 'asc';
+    const page = Math.max(1, parseInt(q['page'] ?? '1', 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(q['pageSize'] ?? '25', 10) || 25));
+    const search = (q['search'] ?? '').toLowerCase();
+
+    try {
+      const res = await ddb.send(new ScanCommand({ TableName: TABLE }));
+      const rows = (res.Items ?? []) as Record<string, unknown>[];
+      const filtered = search
+        ? rows.filter((u) =>
+            String(u.email ?? '').toLowerCase().includes(search) ||
+            String(u.displayName ?? '').toLowerCase().includes(search))
+        : rows;
+      const mapped = filtered.map((u) => ({
+        userId: String(u.userId ?? ''),
+        displayName: String(u.displayName ?? ''),
+        email: String(u.email ?? ''),
+        createdAt: String(u.createdAt ?? ''),
+        updatedAt: u.updatedAt != null ? String(u.updatedAt) : null,
+        thumbnail: u.photoUrl != null ? String(u.photoUrl) : null,
+      }));
+      return json(200, sortAndPage(mapped, sortBy, sortDir, page, pageSize));
+    } catch (err) {
+      return json(500, { error: err instanceof Error ? err.message : 'Internal server error' });
+    }
+  }
 
   const m = event.requestContext.http.path.match(/^\/users\/([^/]+)\/?$/);
   if (!m) return json(404, { error: 'not found' });
