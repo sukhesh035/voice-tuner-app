@@ -26,6 +26,7 @@ if (!DEPLOY_ADMIN_API_DEV && !DEPLOY_ADMIN_API_PROD) {
     env,
     stage: 'dev',
     domainPrefix: 'swara-dev',
+    emailFrom: process.env['SES_FROM_EMAIL'] ?? 'swara.ai.support@gmail.com',
   });
 }
 
@@ -37,6 +38,7 @@ if (process.env['DEPLOY_PROD'] === '1') {
     env,
     stage: 'prod',
     domainPrefix: 'swara',
+    emailFrom: process.env['SES_FROM_EMAIL'] ?? 'swara.ai.support@gmail.com',
   });
 }
 if (DEPLOY_ADMIN_API_PROD) {
