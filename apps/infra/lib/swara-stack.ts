@@ -43,12 +43,14 @@ export class SwaraStack extends cdk.Stack {
 
     const distDir = path.join(__dirname, '../../../dist/apps/backend-api');
 
-    // SES verified email identity to send auth emails from (email-address
-    // identity — no domain purchase required; verification link is sent to
-    // the inbox on first deploy).
-    const emailIdentity = new ses.EmailIdentity(this, 'EmailIdentity', {
-      identity: ses.Identity.email(emailFrom),
-    });
+    // SES verified email identity to send auth emails from. The identity is
+    // account-wide (created + verified manually once); import it rather than
+    // creating it, since both dev and prod stacks share the same email.
+    const emailIdentity = ses.EmailIdentity.fromEmailIdentityName(
+      this,
+      'EmailIdentity',
+      emailFrom,
+    );
 
     // Custom Email Sender Lambda — receives Cognito email events and sends
     // them via Amazon SES so we can use branded, styled emails.
