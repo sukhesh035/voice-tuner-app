@@ -42,6 +42,22 @@ if (environment.firebase.projectId) {
   }
 }
 
+// Microsoft Clarity: session replay & heatmaps, prod web only (same gates as Firebase Analytics).
+if (environment.enableAnalytics && !Capacitor.isNativePlatform()) {
+  type ClarityFn = { (...args: unknown[]): void; q?: unknown[][] };
+  const existing = (window as unknown as { clarity?: ClarityFn }).clarity;
+  if (!existing) {
+    const fn: ClarityFn = (...args: unknown[]) => {
+      (fn.q ??= []).push(args);
+    };
+    (window as unknown as { clarity: ClarityFn }).clarity = fn;
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://www.clarity.ms/tag/yb4x9gyes7';
+    document.head.appendChild(script);
+  }
+}
+
 // Register Ionic PWA Elements (provides web fallback UI for Camera, Toast, etc.)
 defineCustomElements(window);
 

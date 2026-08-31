@@ -54,25 +54,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ env.AWS_REGION }}
 
-      # ── 5. Write Gmail credentials to SSM (idempotent) ──────────────────────
-      - name: Write Gmail credentials to SSM
-        run: |
-          aws ssm put-parameter \
-            --name "/sruti-dev/gmail-user" \
-            --value "${{ secrets.GMAIL_USER }}" \
-            --type SecureString \
-            --overwrite
-          aws ssm put-parameter \
-            --name "/sruti-dev/gmail-app-password" \
-            --value "${{ secrets.GMAIL_APP_PASSWORD }}" \
-            --type SecureString \
-            --overwrite
-
-      # ── 6. Build Lambda bundle ────────────────────────────────────────────────
+      # ── 5. Build Lambda bundle ────────────────────────────────────────────────
       - name: Build Lambda bundle
         run: pnpm build:api
 
-      # ── 7. Update Lambda function code (sruti-dev stack already exists) ───────
+      # ── 6. Update Lambda function code (sruti-dev stack already exists) ───────
       #   We skip CDK deploy to avoid recreating resources. Each Lambda handler
       #   is a separate JS file — zip and upload each one individually.
       #   Infrastructure changes must be applied manually via CDK.
@@ -89,15 +75,15 @@ jobs:
               --no-cli-pager
           done
 
-      # ── 8. Generate environment.ts from live stack outputs ────────────────────
+      # ── 7. Generate environment.ts from live stack outputs ────────────────────
       - name: Generate environment.ts
         run: pnpm generate-env:dev
 
-      # ── 9. Build PWA ──────────────────────────────────────────────────────────
+      # ── 8. Build PWA ──────────────────────────────────────────────────────────
       - name: Build mobile PWA
         run: pnpm build:mobile
 
-      # ── 10. Read stack outputs ────────────────────────────────────────────────
+      # ── 9. Read stack outputs ────────────────────────────────────────────────
       - name: Read stack outputs
         id: stack
         run: |
@@ -117,7 +103,7 @@ jobs:
           echo "distribution_id=${DIST_ID}" >> $GITHUB_OUTPUT
           echo "web_url=${WEB_URL}"      >> $GITHUB_OUTPUT
 
-      # ── 11. Sync PWA to S3 ────────────────────────────────────────────────────
+      # ── 10. Sync PWA to S3 ────────────────────────────────────────────────────
       # Long-lived immutable cache for hashed assets; no-cache for HTML + SW
       - name: Sync to S3
         run: |
@@ -143,14 +129,14 @@ jobs:
             --include "manifest.webmanifest" \
             --cache-control "no-cache,no-store,must-revalidate"
 
-      # ── 12. Invalidate CloudFront ─────────────────────────────────────────────
+      # ── 11. Invalidate CloudFront ─────────────────────────────────────────────
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ steps.stack.outputs.distribution_id }} \
             --paths "/*"
 
-      # ── 13. Summary ───────────────────────────────────────────────────────────
+      # ── 12. Summary ───────────────────────────────────────────────────────────
       - name: Deployment summary
         run: |
           echo "## ✅ Dev Deployment Complete" >> $GITHUB_STEP_SUMMARY
@@ -158,7 +144,7 @@ jobs:
           echo "🌐 **URL**: ${{ steps.stack.outputs.web_url }}" >> $GITHUB_STEP_SUMMARY
           echo "🔀 **Commit**: \`${{ github.sha }}\`"           >> $GITHUB_STEP_SUMMARY
 
-      # ── 14. Slack — success ────────────────────────────────────────────────────
+      # ── 13. Slack — success ────────────────────────────────────────────────────
       - name: Notify Slack — success
         if: success()
         uses: slackapi/slack-github-action@v2.1.0
@@ -184,7 +170,7 @@ jobs:
               ]
             }
 
-      # ── 15. Slack — failure ────────────────────────────────────────────────────
+      # ── 14. Slack — failure ────────────────────────────────────────────────────
       - name: Notify Slack — failure
         if: failure()
         uses: slackapi/slack-github-action@v2.1.0
