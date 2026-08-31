@@ -15,17 +15,19 @@ import * as events  from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as ssm     from 'aws-cdk-lib/aws-ssm';
 import * as kms     from 'aws-cdk-lib/aws-kms';
+import * as ses     from 'aws-cdk-lib/aws-ses';
 
 export interface SwaraStackProps extends cdk.StackProps {
   stage:        'dev' | 'prod';
   domainPrefix: string;
+  emailFrom:    string;
 }
 
 export class SwaraStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: SwaraStackProps) {
     super(scope, id, { ...props, stackName: `swara-${props.stage}` });
 
-    const { stage } = props;
+    const { stage, emailFrom } = props;
     const prefix     = `swara-${stage}`;
 
     // ─── Cognito User Pool ────────────────────────────────────────────────────
@@ -40,13 +42,17 @@ export class SwaraStack extends cdk.Stack {
         : cdk.RemovalPolicy.RETAIN,
     });
 
-    const gmailUserParam = `/${prefix}/gmail-user`;
-    const gmailPassParam = `/${prefix}/gmail-app-password`;
-
     const distDir = path.join(__dirname, '../../../dist/apps/backend-api');
 
+    // SES verified email identity to send auth emails from (email-address
+    // identity — no domain purchase required; verification link is sent to
+    // the inbox on first deploy).
+    const emailIdentity = new ses.EmailIdentity(this, 'EmailIdentity', {
+      identity: ses.Identity.email(emailFrom),
+    });
+
     // Custom Email Sender Lambda — receives Cognito email events and sends
-    // them via Gmail SMTP so we can use branded, styled emails.
+    // them via Amazon SES so we can use branded, styled emails.
     const customEmailSenderFn = new lambda.Function(this, 'CustomEmailSenderFn', {
       functionName: `${prefix}-custom-email-sender`,
       runtime:      lambda.Runtime.NODEJS_22_X,
@@ -55,20 +61,12 @@ export class SwaraStack extends cdk.Stack {
       code:         lambda.Code.fromAsset(distDir),
       timeout:      cdk.Duration.seconds(15),
       environment: {
-        GMAIL_USER_PARAM: gmailUserParam,
-        GMAIL_PASS_PARAM: gmailPassParam,
-        KMS_KEY_ID:       emailCmk.keyArn,
+        SES_FROM_EMAIL: emailFrom,
+        KMS_KEY_ID:     emailCmk.keyArn,
       },
     });
 
-    // Allow the Lambda to read Gmail credentials from SSM
-    customEmailSenderFn.addToRolePolicy(new iam.PolicyStatement({
-      actions:   ['ssm:GetParameter'],
-      resources: [
-        `arn:aws:ssm:${this.region}:${this.account}:parameter${gmailUserParam}`,
-        `arn:aws:ssm:${this.region}:${this.account}:parameter${gmailPassParam}`,
-      ],
-    }));
+    emailIdentity.grantSendEmail(customEmailSenderFn);
 
     // Allow the Lambda to decrypt codes that Cognito encrypted with the CMK
     emailCmk.grantDecrypt(customEmailSenderFn);

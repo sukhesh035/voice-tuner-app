@@ -6,20 +6,18 @@
  *  - event.request.userAttributes.email
  *  - event.request.code   — the one-time code, KMS-encrypted with the CMK
  *
- * We decrypt the code, pick a template, then send via Gmail SMTP (Nodemailer).
+ * We decrypt the code, pick a template, then send via Amazon SES (free tier).
  *
  * Required env vars:
- *  GMAIL_USER_PARAM  — SSM SecureString path for the Gmail address
- *  GMAIL_PASS_PARAM  — SSM SecureString path for the Gmail app password
- *  KMS_KEY_ID        — ARN/ID of the CMK used by Cognito to encrypt the code
+ *  SES_FROM_EMAIL — verified SES identity (email address) to send from
+ *  KMS_KEY_ID     — ARN/ID of the CMK used by Cognito to encrypt the code
  */
 
-import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { buildClient, CommitmentPolicy, KmsKeyringNode } from '@aws-crypto/client-node';
-import * as nodemailer from 'nodemailer';
 import { createHash } from 'crypto';
 
-const ssm = new SSMClient({});
+const ses = new SESClient({});
 const { decrypt } = buildClient(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT);
 
 interface CognitoCustomEmailSenderEvent {
@@ -30,23 +28,6 @@ interface CognitoCustomEmailSenderEvent {
     code: string; // base64-encoded KMS ciphertext
   };
   response: Record<string, unknown>;
-}
-
-// Cache Gmail credentials within the Lambda execution environment
-let cachedGmailUser: string | null = null;
-let cachedGmailPass: string | null = null;
-
-async function getGmailCredentials(): Promise<{ user: string; pass: string }> {
-  if (cachedGmailUser && cachedGmailPass) {
-    return { user: cachedGmailUser, pass: cachedGmailPass };
-  }
-  const [userResp, passResp] = await Promise.all([
-    ssm.send(new GetParameterCommand({ Name: process.env['GMAIL_USER_PARAM']!, WithDecryption: true })),
-    ssm.send(new GetParameterCommand({ Name: process.env['GMAIL_PASS_PARAM']!, WithDecryption: true })),
-  ]);
-  cachedGmailUser = userResp.Parameter!.Value!;
-  cachedGmailPass = passResp.Parameter!.Value!;
-  return { user: cachedGmailUser, pass: cachedGmailPass };
 }
 
 async function decryptCode(encryptedCode: string): Promise<string> {
@@ -63,17 +44,14 @@ interface EmailPayload {
 }
 
 async function sendEmail(payload: EmailPayload): Promise<void> {
-  const { user, pass } = await getGmailCredentials();
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user, pass },
-  });
-  await transporter.sendMail({
-    from: `"Swara" <${user}>`,
-    to:      payload.to,
-    subject: payload.subject,
-    html:    payload.html,
-  });
+  await ses.send(new SendEmailCommand({
+    Source: `"Swara" <${process.env['SES_FROM_EMAIL']!}>`,
+    Destination: { ToAddresses: [payload.to] },
+    Message: {
+      Subject: { Data: payload.subject },
+      Body:    { Html: { Data: payload.html } },
+    },
+  }));
 }
 
 function buildVerificationEmail(email: string, code: string): EmailPayload {

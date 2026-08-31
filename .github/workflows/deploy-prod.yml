@@ -64,20 +64,6 @@ jobs:
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
           pnpm exec cdk bootstrap aws://${ACCOUNT_ID}/${{ env.AWS_REGION }} --ci
 
-      # ── 5a. Write Gmail credentials to SSM (idempotent) ─────────────────────
-      - name: Write Gmail credentials to SSM
-        run: |
-          aws ssm put-parameter \
-            --name "/swara-prod/gmail-user" \
-            --value "${{ secrets.GMAIL_USER }}" \
-            --type SecureString \
-            --overwrite
-          aws ssm put-parameter \
-            --name "/swara-prod/gmail-app-password" \
-            --value "${{ secrets.GMAIL_APP_PASSWORD }}" \
-            --type SecureString \
-            --overwrite
-
       # ── 6. Build Lambda bundle ────────────────────────────────────────────────
       - name: Build Lambda bundle
         run: pnpm build:api

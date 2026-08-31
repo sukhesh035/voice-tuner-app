@@ -15,6 +15,7 @@ new SwaraStack(app, 'SwaraStackDev', {
   env,
   stage: 'dev',
   domainPrefix: 'swara-dev',
+  emailFrom: process.env['SES_FROM_EMAIL'] ?? 'swara.ai.support@gmail.com',
 });
 
 // Production stack (deployed from CI only)
@@ -23,5 +24,6 @@ if (process.env['DEPLOY_PROD'] === '1') {
     env,
     stage: 'prod',
     domainPrefix: 'swara',
+    emailFrom: process.env['SES_FROM_EMAIL'] ?? 'swara.ai.support@gmail.com',
   });
 }
