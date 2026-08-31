@@ -42,8 +42,11 @@ if (environment.firebase.projectId) {
   }
 }
 
-// Microsoft Clarity: session replay & heatmaps, prod web only (same gates as Firebase Analytics).
-if (environment.enableAnalytics && !Capacitor.isNativePlatform()) {
+// Microsoft Clarity: session replay & heatmaps, prod only. Loads in the web
+// app and in the iOS/Android WKWebView (a browser context), so native apps
+// are captured too. Unofficial on native — Clarity's native SDKs don't support
+// WebView apps, but the web snippet runs inside the WebView.
+if (environment.enableAnalytics) {
   type ClarityFn = { (...args: unknown[]): void; q?: unknown[][] };
   const existing = (window as unknown as { clarity?: ClarityFn }).clarity;
   if (!existing) {
