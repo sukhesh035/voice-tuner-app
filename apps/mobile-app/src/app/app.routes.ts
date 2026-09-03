@@ -78,5 +78,9 @@ export const routes: Routes = [
     path: 'terms-of-service',
     loadComponent: () => import('./pages/terms-of-service/terms-of-service.page').then(m => m.TermsOfServicePage)
   },
+  {
+    path: 'feedback',
+    loadComponent: () => import('./pages/feedback/feedback.page').then(m => m.FeedbackPage)
+  },
   { path: '**', redirectTo: '' }
 ];

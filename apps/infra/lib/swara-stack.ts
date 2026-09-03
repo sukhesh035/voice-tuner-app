@@ -162,6 +162,13 @@ export class SwaraStack extends cdk.Stack {
       sortKey:       { name: 'createdAt', type: dynamodb.AttributeType.STRING },
     });
 
+    const feedbackTable = new dynamodb.Table(this, 'FeedbackTable', {
+      tableName:     `${prefix}-feedback`,
+      billingMode,
+      partitionKey:  { name: 'feedbackId', type: dynamodb.AttributeType.STRING },
+      removalPolicy: stage === 'dev' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
+    });
+
     const studentsTable = new dynamodb.Table(this, 'StudentsTable', {
       tableName:    `${prefix}-students`,
       billingMode,
@@ -289,6 +296,7 @@ export class SwaraStack extends cdk.Stack {
       STREAKS_TABLE:        streaksTable.tableName,
       CLASSROOM_TABLE:      classroomTable.tableName,
       STUDENTS_TABLE:       studentsTable.tableName,
+      FEEDBACK_TABLE:       feedbackTable.tableName,
       UPLOADS_BUCKET:       uploadsBucket.bucketName,
       UPLOADS_CDN_URL:      `https://${uploadsCdn.distributionDomainName}`,
       // Allow requests from the PWA and native Capacitor apps; dev stays open
@@ -317,6 +325,7 @@ export class SwaraStack extends cdk.Stack {
     const usersLambda     = makeFn('UsersFn',     'users');
     const streaksLambda   = makeFn('StreaksFn',   'streaks');
     const classroomLambda = makeFn('ClassroomFn', 'classroom');
+    const feedbackLambda   = makeFn('FeedbackFn',   'feedback');
 
     // Grant DynamoDB permissions
     usersTable.grantReadWriteData(sessionsLambda);
@@ -326,6 +335,7 @@ export class SwaraStack extends cdk.Stack {
     streaksTable.grantReadWriteData(streaksLambda);
     classroomTable.grantReadWriteData(classroomLambda);
     studentsTable.grantReadWriteData(classroomLambda);
+    feedbackTable.grantReadWriteData(feedbackLambda);
 
     // Grant S3 upload permission for profile photos
     uploadsBucket.grantPut(usersLambda);
@@ -397,12 +407,13 @@ export class SwaraStack extends cdk.Stack {
       methods: apigwv2.HttpMethod[],
       path:    string,
       fn:      lambda.Function,
+      protectedRoute = true,
     ) => {
       api.addRoutes({
         methods,
         path,
         integration:  new integ.HttpLambdaIntegration(`${fn.node.id}-integ`, fn),
-        authorizer:   jwtAuthorizer,
+        authorizer:   protectedRoute ? jwtAuthorizer : undefined,
       });
     };
 
@@ -418,6 +429,7 @@ export class SwaraStack extends cdk.Stack {
     addRoute([apigwv2.HttpMethod.GET, apigwv2.HttpMethod.DELETE], '/v1/api/classroom/sessions/{code}', classroomLambda);
     addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/classroom/join',    classroomLambda);
     addRoute([apigwv2.HttpMethod.PUT],                          '/v1/api/classroom/sessions/{code}/result', classroomLambda);
+    addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/feedback', feedbackLambda, false);
 
     // ─── Outputs (read by CI to generate environment.ts) ─────────────────────
     new cdk.CfnOutput(this, 'ApiUrl',              { value: api.apiEndpoint });

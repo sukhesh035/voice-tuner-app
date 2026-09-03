@@ -7,6 +7,7 @@ import { verifyServiceToken } from './auth';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE = process.env['USERS_TABLE']!;
+const FEEDBACK_TABLE = process.env['FEEDBACK_TABLE']!;
 
 // Mirrors apps/backend-api/src/middleware/auth.middleware.ts CORS helpers:
 // the response echoes the request origin when CORS_ORIGIN is '*' (or unset).
@@ -49,11 +50,12 @@ const TOP_VALIDATORS: Record<string, (v: unknown) => boolean> = {
   photoUrl:      (v) => typeof v === 'string' || v === null,
 };
 
-const SORT_COLUMNS: Record<string, (u: Record<string, unknown>) => string> = {
+const SORT_COLUMNS: Record<string, (u: Record<string, unknown>) => string | number> = {
   displayName: (u) => String(u.displayName ?? ''),
   email: (u) => String(u.email ?? ''),
   createdAt: (u) => String(u.createdAt ?? ''),
   updatedAt: (u) => String(u.updatedAt ?? ''),
+  totalMinutes: (u) => Number(u.totalMinutes ?? 0),
 };
 
 function sortAndPage<T>(items: T[], sortBy: string, sortDir: string, page: number, pageSize: number): { users: T[]; total: number; page: number; pageSize: number } {
@@ -63,7 +65,11 @@ function sortAndPage<T>(items: T[], sortBy: string, sortDir: string, page: numbe
     sorted.sort((a: T, b: T) => {
       const va = key(a as Record<string, unknown>);
       const vb = key(b as Record<string, unknown>);
-      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+      // Numeric columns (e.g. totalMinutes) must compare numerically, not
+      // lexicographically (100 < 20 as strings).
+      const cmp = typeof va === 'number' && typeof vb === 'number'
+        ? va - vb
+        : va < vb ? -1 : va > vb ? 1 : 0;
       return sortDir === 'desc' ? -cmp : cmp;
     });
   }
@@ -203,8 +209,31 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
         createdAt: String(u.createdAt ?? ''),
         updatedAt: u.updatedAt != null ? String(u.updatedAt) : null,
         thumbnail: u.photoUrl != null ? String(u.photoUrl) : null,
+        totalMinutes: Number((u.stats as { totalMinutes?: number } | undefined)?.totalMinutes ?? 0),
       }));
       return json(200, sortAndPage(mapped, sortBy, sortDir, page, pageSize));
+    } catch (err) {
+      console.error('[Lambda error]', err);
+      return json(500, { error: 'Internal server error' });
+    }
+  }
+
+  // GET /feedback — full list of user-submitted feedback, newest first.
+  if (method === 'GET' && /^\/feedback\/?$/.test(event.requestContext.http.path)) {
+    try {
+      const res = await ddb.send(new ScanCommand({ TableName: FEEDBACK_TABLE }));
+      const rows = (res.Items ?? []) as Record<string, unknown>[];
+      const feedback = rows
+        .map((f) => ({
+          feedbackId: String(f.feedbackId ?? ''),
+          name: f.name != null ? String(f.name) : '',
+          category: String(f.category ?? ''),
+          rating: Number(f.rating ?? 0),
+          message: String(f.message ?? ''),
+          createdAt: String(f.createdAt ?? ''),
+        }))
+        .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+      return json(200, { feedback, total: feedback.length });
     } catch (err) {
       console.error('[Lambda error]', err);
       return json(500, { error: 'Internal server error' });

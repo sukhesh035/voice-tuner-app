@@ -19,6 +19,7 @@ import { handler as sessionsHandler }  from './handlers/sessions.handler';
 import { handler as usersHandler }     from './handlers/users.handler';
 import { handler as streaksHandler }   from './handlers/streaks.handler';
 import { handler as classroomHandler } from './handlers/classroom.handler';
+import { handler as feedbackHandler }  from './handlers/feedback.handler';
 
 const app  = express();
 const PORT = process.env['PORT'] ?? 3000;
@@ -133,6 +134,9 @@ app.post(  '/v1/api/classroom/join',                  (req, res) => invoke(class
 app.put(   '/v1/api/classroom/sessions/:code/result', (req, res) => invoke(classroomHandler, req, res));
 app.delete('/v1/api/classroom/sessions/:code',        (req, res) => invoke(classroomHandler, req, res));
 
+// Feedback (public — no auth)
+app.post(  '/v1/api/feedback',          (req, res) => invoke(feedbackHandler,  req, res));
+
 // ─── Start ────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`\n[Swara local API] listening on http://localhost:${PORT}/v1`);
@@ -140,5 +144,6 @@ app.listen(PORT, () => {
   console.log(`  USERS_TABLE          : ${process.env['USERS_TABLE']}`);
   console.log(`  SESSIONS_TABLE       : ${process.env['SESSIONS_TABLE']}`);
   console.log(`  STREAKS_TABLE        : ${process.env['STREAKS_TABLE']}`);
-  console.log(`  CLASSROOM_TABLE      : ${process.env['CLASSROOM_TABLE']}\n`);
+  console.log(`  CLASSROOM_TABLE      : ${process.env['CLASSROOM_TABLE']}`);
+  console.log(`  FEEDBACK_TABLE       : ${process.env['FEEDBACK_TABLE']}\n`);
 });
