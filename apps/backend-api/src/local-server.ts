@@ -20,6 +20,7 @@ import { handler as usersHandler }     from './handlers/users.handler';
 import { handler as streaksHandler }   from './handlers/streaks.handler';
 import { handler as classroomHandler } from './handlers/classroom.handler';
 import { handler as feedbackHandler }  from './handlers/feedback.handler';
+import { handler as analyticsHandler } from './handlers/analytics.handler';
 
 const app  = express();
 const PORT = process.env['PORT'] ?? 3000;
@@ -136,6 +137,9 @@ app.delete('/v1/api/classroom/sessions/:code',        (req, res) => invoke(class
 
 // Feedback (public — no auth)
 app.post(  '/v1/api/feedback',          (req, res) => invoke(feedbackHandler,  req, res));
+
+// Analytics open (public — no auth)
+app.post(  '/v1/api/analytics/open',    (req, res) => invoke(analyticsHandler, req, res));
 
 // ─── Start ────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {

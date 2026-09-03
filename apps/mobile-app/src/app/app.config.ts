@@ -9,6 +9,7 @@ import { Capacitor } from '@capacitor/core';
 import { routes } from './app.routes';
 import { authInterceptor } from '@voice-tuner/auth';
 import { AnalyticsService } from './core/services/analytics.service';
+import { UsageService } from './core/services/usage.service';
 import { PerformanceService } from './core/services/performance.service';
 import { RemoteConfigService } from './core/services/remote-config.service';
 
@@ -78,24 +79,30 @@ function remoteConfigInitializer(remoteConfig: RemoteConfigService): () => Promi
 }
 
 /**
- * Tracks app lifecycle events for analytics.
- * - Logs `app_open` on launch.
- * - Listens to appStateChange to log `app_background` / `app_foreground`.
+ * Tracks app lifecycle events for analytics + anonymous usage.
+ * - Logs `app_open` on launch and fires the usage ping.
+ * - Listens to appStateChange to log `app_background` / `app_foreground` and
+ *   fire one usage ping per foreground session.
  * Uses @capacitor/app (works on native + PWA via the web implementation).
  */
 function appLifecycleAnalyticsInitializer(
   analytics: AnalyticsService,
+  usage: UsageService,
 ): () => void {
   return () => {
     // Native + PWA both support the App plugin; guard anyway.
     analytics.logAppOpen();
+    usage.reportOpenIfNeeded();
 
     import('@capacitor/app').then(({ App }) => {
       App.addListener('appStateChange', ({ isActive }) => {
         if (isActive) {
           analytics.logAppForeground();
+          usage.reportOpenIfNeeded();
         } else {
           analytics.logAppBackground();
+          // Reset so the next foreground entry reports once more.
+          usage.resetSession();
         }
       });
     }).catch(() => { /* not available on this platform */ });
@@ -139,11 +146,13 @@ export const appConfig: ApplicationConfig = {
       multi: true,
     },
     // Analytics: app lifecycle events (app_open / background / foreground)
+    // + anonymous usage pings (install-id → /api/analytics/open)
     {
       provide: APP_INITIALIZER,
       useFactory: () => {
         const analytics = inject(AnalyticsService);
-        return appLifecycleAnalyticsInitializer(analytics);
+        const usage     = inject(UsageService);
+        return appLifecycleAnalyticsInitializer(analytics, usage);
       },
       multi: true,
     }

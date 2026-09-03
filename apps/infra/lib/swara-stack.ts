@@ -15,6 +15,7 @@ import * as events  from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as kms     from 'aws-cdk-lib/aws-kms';
 import * as ses     from 'aws-cdk-lib/aws-ses';
+import * as ssm     from 'aws-cdk-lib/aws-ssm';
 
 export interface SwaraStackProps extends cdk.StackProps {
   stage:        'dev' | 'prod';
@@ -169,6 +170,15 @@ export class SwaraStack extends cdk.Stack {
       removalPolicy: stage === 'dev' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
     });
 
+    const analyticsTable = new dynamodb.Table(this, 'AnalyticsTable', {
+      tableName:     `${prefix}-analytics`,
+      billingMode,
+      partitionKey:  { name: 'pk', type: dynamodb.AttributeType.STRING },
+      sortKey:       { name: 'sk', type: dynamodb.AttributeType.STRING },
+      timeToLiveAttribute: 'ttl',
+      removalPolicy: stage === 'dev' ? cdk.RemovalPolicy.DESTROY : cdk.RemovalPolicy.RETAIN,
+    });
+
     const studentsTable = new dynamodb.Table(this, 'StudentsTable', {
       tableName:    `${prefix}-students`,
       billingMode,
@@ -297,6 +307,7 @@ export class SwaraStack extends cdk.Stack {
       CLASSROOM_TABLE:      classroomTable.tableName,
       STUDENTS_TABLE:       studentsTable.tableName,
       FEEDBACK_TABLE:       feedbackTable.tableName,
+      ANALYTICS_TABLE:      analyticsTable.tableName,
       UPLOADS_BUCKET:       uploadsBucket.bucketName,
       UPLOADS_CDN_URL:      `https://${uploadsCdn.distributionDomainName}`,
       // Allow requests from the PWA and native Capacitor apps; dev stays open
@@ -326,6 +337,7 @@ export class SwaraStack extends cdk.Stack {
     const streaksLambda   = makeFn('StreaksFn',   'streaks');
     const classroomLambda = makeFn('ClassroomFn', 'classroom');
     const feedbackLambda   = makeFn('FeedbackFn',   'feedback');
+    const analyticsLambda  = makeFn('AnalyticsFn',  'analytics');
 
     // Grant DynamoDB permissions
     usersTable.grantReadWriteData(sessionsLambda);
@@ -336,6 +348,7 @@ export class SwaraStack extends cdk.Stack {
     classroomTable.grantReadWriteData(classroomLambda);
     studentsTable.grantReadWriteData(classroomLambda);
     feedbackTable.grantReadWriteData(feedbackLambda);
+    analyticsTable.grantReadWriteData(analyticsLambda);
 
     // Grant S3 upload permission for profile photos
     uploadsBucket.grantPut(usersLambda);
@@ -366,6 +379,13 @@ export class SwaraStack extends cdk.Stack {
         `arn:aws:ssm:${this.region}:${this.account}:parameter${firebaseSaKeyParam}`,
       ],
     }));
+
+    // GA4 property id for the swara admin dashboard (set per stage after the
+    // service account has Viewer access — see analytics design doc).
+    new ssm.StringParameter(this, 'Ga4PropertyId', {
+      parameterName: `/swara-${stage}/ga4-property-id`,
+      stringValue:   'PLACEHOLDER',
+    });
 
     // EventBridge cron: 3:00 AM UTC ≈ 8:30 AM IST — daily practice reminder
     const dailyReminderRule = new events.Rule(this, 'DailyReminderRule', {
@@ -430,6 +450,7 @@ export class SwaraStack extends cdk.Stack {
     addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/classroom/join',    classroomLambda);
     addRoute([apigwv2.HttpMethod.PUT],                          '/v1/api/classroom/sessions/{code}/result', classroomLambda);
     addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/feedback', feedbackLambda, false);
+    addRoute([apigwv2.HttpMethod.POST],                         '/v1/api/analytics/open', analyticsLambda, false);
 
     // ─── Outputs (read by CI to generate environment.ts) ─────────────────────
     new cdk.CfnOutput(this, 'ApiUrl',              { value: api.apiEndpoint });

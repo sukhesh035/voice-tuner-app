@@ -1,7 +1,12 @@
 import { handler } from './handler';
 import { verifyServiceToken } from './auth';
+import { computeOurAnalytics, fetchGa4 } from './analytics';
 
 jest.mock('./auth', () => ({ verifyServiceToken: jest.fn() }));
+jest.mock('./analytics', () => ({
+  computeOurAnalytics: jest.fn(),
+  fetchGa4: jest.fn(),
+}));
 jest.mock('@aws-sdk/lib-dynamodb', () => {
   const send = jest.fn();
   return {
@@ -15,6 +20,8 @@ jest.mock('@aws-sdk/lib-dynamodb', () => {
 });
 
 const mockVerify = verifyServiceToken as jest.Mock;
+const mockComputeOurAnalytics = computeOurAnalytics as jest.Mock;
+const mockFetchGa4 = fetchGa4 as jest.Mock;
 const { send } = require('@aws-sdk/lib-dynamodb') as { send: jest.Mock };
 
 function event(method: string, rawPath: string, body?: unknown, query?: Record<string, string>) {
@@ -298,5 +305,32 @@ describe('admin-api handler', () => {
     const res = await handler(event('GET', '/feedback'));
     expect(res.statusCode).toBe(500);
     expect(JSON.parse(res.body ?? '{}')).toEqual({ error: 'Internal server error' });
+  });
+
+  it('GET /analytics/our returns the computeOurAnalytics result', async () => {
+    const payload = {
+      totals: { registeredUsers: 3, sessions: 5, practiceMinutes: 42, dau: 1, wau: 2, mau: 3 },
+      series: [{ date: '2026-09-03', signups: 1, activeDevices: 1, sessions: 5, minutes: 42 }],
+    };
+    mockComputeOurAnalytics.mockResolvedValue(payload);
+    const res = await handler(event('GET', '/analytics/our'));
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body ?? '{}')).toEqual(payload);
+    expect(mockComputeOurAnalytics).toHaveBeenCalledTimes(1);
+  });
+
+  it('GET /analytics/our returns 500 when computeOurAnalytics throws', async () => {
+    mockComputeOurAnalytics.mockRejectedValue(new Error('dynamo down'));
+    const res = await handler(event('GET', '/analytics/our'));
+    expect(res.statusCode).toBe(500);
+    expect(JSON.parse(res.body ?? '{}')).toEqual({ error: 'Internal server error' });
+  });
+
+  it('GET /analytics/ga4 returns { configured:false } when the property id is PLACEHOLDER', async () => {
+    mockFetchGa4.mockResolvedValue({ configured: false });
+    const res = await handler(event('GET', '/analytics/ga4'));
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body ?? '{}')).toEqual({ configured: false });
+    expect(mockFetchGa4).toHaveBeenCalledTimes(1);
   });
 });
