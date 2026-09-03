@@ -64,7 +64,7 @@ jobs:
       #   Infrastructure changes must be applied manually via CDK.
       - name: Update Lambda function code
         run: |
-          for FN in users sessions streaks classroom notifications custom-email-sender feedback; do
+          for FN in users sessions streaks classroom notifications custom-email-sender feedback analytics; do
             JS="dist/apps/backend-api/${FN}.js"
             ZIP="/tmp/${FN}.zip"
             zip -j "${ZIP}" "${JS}"

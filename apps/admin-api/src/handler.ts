@@ -4,6 +4,7 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { verifyServiceToken } from './auth';
+import { computeOurAnalytics, fetchGa4 } from './analytics';
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TABLE = process.env['USERS_TABLE']!;
@@ -234,6 +235,26 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
         }))
         .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
       return json(200, { feedback, total: feedback.length });
+    } catch (err) {
+      console.error('[Lambda error]', err);
+      return json(500, { error: 'Internal server error' });
+    }
+  }
+
+  // GET /analytics/our — our-owned usage analytics (signups, sessions, active devices).
+  if (method === 'GET' && /^\/analytics\/our\/?$/.test(event.requestContext.http.path)) {
+    try {
+      return json(200, await computeOurAnalytics());
+    } catch (err) {
+      console.error('[Lambda error]', err);
+      return json(500, { error: 'Internal server error' });
+    }
+  }
+
+  // GET /analytics/ga4 — read-only Google analytics (configured:false when unset).
+  if (method === 'GET' && /^\/analytics\/ga4\/?$/.test(event.requestContext.http.path)) {
+    try {
+      return json(200, await fetchGa4());
     } catch (err) {
       console.error('[Lambda error]', err);
       return json(500, { error: 'Internal server error' });

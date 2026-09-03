@@ -156,6 +156,13 @@ export class ApiService {
     );
   }
 
+  /** Anonymous usage ping (install-id + platform only). Public — no auth required. */
+  reportAppOpen(payload: { installId: string; platform: string }): Promise<{ ok: boolean }> {
+    return firstValueFrom(
+      this.http.post<{ ok: boolean }>(`${this.base}/api/analytics/open`, payload)
+    );
+  }
+
   /** Submit in-app feedback. Public — no auth required. */
   addFeedback(payload: FeedbackPayload): Promise<{ feedbackId: string; createdAt: string }> {
     return firstValueFrom(
