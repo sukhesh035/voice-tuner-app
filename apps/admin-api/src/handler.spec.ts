@@ -243,7 +243,60 @@ describe('admin-api handler', () => {
     const body = JSON.parse(res.body ?? '{}');
     expect(body.users[0]).toEqual({
       userId: 'u1', displayName: 'Alice', email: 'a@a.com',
-      createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-02T00:00:00.000Z', thumbnail: 'https://cdn/a.jpg',
+      createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-02T00:00:00.000Z', thumbnail: 'https://cdn/a.jpg', totalMinutes: 0,
     });
+  });
+
+  it('GET /users maps stats.totalMinutes into totalMinutes (0 default)', async () => {
+    send.mockResolvedValue({
+      Items: [
+        { userId: 'u1', email: 'a@a.com', displayName: 'A', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: null, photoUrl: null, stats: { totalMinutes: 120 } },
+        { userId: 'u2', email: 'b@b.com', displayName: 'B', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: null, photoUrl: null },
+      ],
+    });
+    const res = await handler(event('GET', '/users'));
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body ?? '{}');
+    expect(body.users.find((u: any) => u.userId === 'u1').totalMinutes).toBe(120);
+    expect(body.users.find((u: any) => u.userId === 'u2').totalMinutes).toBe(0);
+  });
+
+  it('GET /users sorts by totalMinutes numerically (asc)', async () => {
+    send.mockResolvedValue({
+      Items: [
+        { userId: 'u1', email: 'a@a.com', displayName: 'A', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: null, photoUrl: null, stats: { totalMinutes: 100 } },
+        { userId: 'u2', email: 'b@b.com', displayName: 'B', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: null, photoUrl: null, stats: { totalMinutes: 20 } },
+        { userId: 'u3', email: 'c@c.com', displayName: 'C', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: null, photoUrl: null },
+      ],
+    });
+    const res = await handler(event('GET', '/users', undefined, { sortBy: 'totalMinutes', sortDir: 'asc' }));
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body ?? '{}');
+    expect(body.users.map((u: any) => u.totalMinutes)).toEqual([0, 20, 100]);
+  });
+
+  it('GET /feedback returns mapped rows newest first', async () => {
+    send.mockResolvedValue({
+      Items: [
+        { feedbackId: 'f1', name: 'A', category: 'suggestion', rating: 4, message: 'old', createdAt: '2026-01-01T00:00:00.000Z' },
+        { feedbackId: 'f2', name: '', category: 'comment', rating: 5, message: 'new', createdAt: '2026-01-03T00:00:00.000Z' },
+        { feedbackId: 'f3', name: 'C', category: 'problem', rating: 1, message: 'mid', createdAt: '2026-01-02T00:00:00.000Z' },
+      ],
+    });
+    const res = await handler(event('GET', '/feedback'));
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body ?? '{}');
+    expect(body.total).toBe(3);
+    expect(body.feedback.map((f: any) => f.feedbackId)).toEqual(['f2', 'f3', 'f1']);
+    expect(body.feedback[0]).toEqual({
+      feedbackId: 'f2', name: '', category: 'comment', rating: 5, message: 'new', createdAt: '2026-01-03T00:00:00.000Z',
+    });
+  });
+
+  it('GET /feedback returns 500 when DynamoDB fails', async () => {
+    send.mockRejectedValue(new Error('dynamo down'));
+    const res = await handler(event('GET', '/feedback'));
+    expect(res.statusCode).toBe(500);
+    expect(JSON.parse(res.body ?? '{}')).toEqual({ error: 'Internal server error' });
   });
 });

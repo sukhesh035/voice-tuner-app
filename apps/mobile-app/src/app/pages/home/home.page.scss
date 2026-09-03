@@ -142,7 +142,7 @@
   margin-top: $spacing-2;
 }
 
-// ── Learn Card (YouTube) ──────────────────────────────────
+// ── Feature Card (Give Feedback) ─────────────────────────
 .learn-card {
   display: flex;
   align-items: center;
@@ -199,5 +199,14 @@
     color: var(--swara-text-tertiary);
     font-size: 20px;
     flex-shrink: 0;
+  }
+}
+
+.learn-card__icon--feedback {
+  background: rgba(var(--swara-secondary-rgb), 0.14);
+  color: var(--swara-secondary);
+
+  ion-icon {
+    font-size: 22px;
   }
 }

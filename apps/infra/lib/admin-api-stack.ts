@@ -25,6 +25,12 @@ export class AdminApiStack extends cdk.Stack {
       `swara-${stage}-users`,
     );
 
+    const feedbackTable = dynamodb.Table.fromTableName(
+      this,
+      'FeedbackTable',
+      `swara-${stage}-feedback`,
+    );
+
     // The token verifier validates against the same Cognito pool/client the
     // main stack provisions. The main stack publishes their IDs to SSM so we
     // can reference them without a hardcoded value.
@@ -51,6 +57,7 @@ export class AdminApiStack extends cdk.Stack {
       timeout:      cdk.Duration.seconds(10),
       environment: {
         USERS_TABLE:          usersTable.tableName,
+        FEEDBACK_TABLE:       feedbackTable.tableName,
         COGNITO_USER_POOL_ID: poolId,
         COGNITO_CLIENT_ID:    clientId,
         CORS_ORIGIN:          '*',
@@ -58,6 +65,7 @@ export class AdminApiStack extends cdk.Stack {
     });
 
     usersTable.grantReadWriteData(handler);
+    feedbackTable.grantReadData(handler);
 
     // The API Gateway routes are intentionally unauthenticated — the Lambda
     // enforces the service token itself (no JWT authorizer needed).

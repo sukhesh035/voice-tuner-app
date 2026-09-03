@@ -1,13 +1,12 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AsyncPipe } from '@angular/common';
-import { Capacitor } from '@capacitor/core';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonIcon
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-  mic, sparkles, musicalNotes
+  chatbubbleEllipses, mic, sparkles
 } from 'ionicons/icons';
 import { AuthService } from '@voice-tuner/auth';
 import { MELAKARTA_LIST } from '@voice-tuner/training-engine';
@@ -81,22 +80,18 @@ import { AnalyticsService } from '../../core/services/analytics.service';
           </div>
         </a>
 
-        <!-- Learn Piano / Keyboard (Telugu) -->
-        <div class="section-label">Learn</div>
+        <!-- Give Feedback -->
         <a
           class="learn-card"
-          href="#"
-          (click)="openLearnChannel($event)"
+          [routerLink]="['/feedback']"
+          (click)="trackTap('feedback')"
         >
-          <div class="learn-card__icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#FF0000">
-              <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4L15.8 12z"/>
-            </svg>
+          <div class="learn-card__icon learn-card__icon--feedback">
+            <ion-icon name="chatbubble-ellipses"></ion-icon>
           </div>
           <div class="learn-card__body">
-            <div class="learn-card__title">Piano & Keyboard Lessons</div>
-            <div class="learn-card__sub">Learn in Telugu on YouTube</div>
-            <div class="learn-card__note">1 new class added every week</div>
+            <div class="learn-card__title">Give Feedback</div>
+            <div class="learn-card__sub">Share your thoughts</div>
           </div>
           <div class="learn-card__arrow">&#8250;</div>
         </a>
@@ -116,7 +111,7 @@ export class HomePage {
 
   readonly authService = inject(AuthService);
   readonly analytics = inject(AnalyticsService);
-  private readonly _icons = (() => addIcons({ mic, sparkles, musicalNotes }))();
+  private readonly _icons = (() => addIcons({ chatbubbleEllipses, mic, sparkles }))();
 
   get greeting(): string {
     const h = new Date().getHours();
@@ -131,18 +126,5 @@ export class HomePage {
     // Standard GA4 select_content + a CTA tap for funnel attribution
     this.analytics.logSelectContent({ content_type: 'home_quick_action', content_id: target });
     this.analytics.logCtaTap(`home_${target}`);
-  }
-
-  openLearnChannel(event: Event): void {
-    event.preventDefault();
-    this.trackTap('learn_youtube');
-    const url = 'https://www.youtube.com/channel/UCscdHfW7R88s20FnWsBiy4A?sub_confirmation=1';
-    if (Capacitor.isNativePlatform()) {
-      import('@capacitor/browser').then(({ Browser }) => {
-        Browser.open({ url }).catch(() => window.open(url, '_blank'));
-      });
-    } else {
-      window.open(url, '_blank', 'noopener');
-    }
   }
 }

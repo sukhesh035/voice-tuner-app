@@ -71,6 +71,15 @@ export interface SessionsResponse {
   nextCursor: string | null;
 }
 
+export type FeedbackCategory = 'comment' | 'suggestion' | 'problem';
+
+export interface FeedbackPayload {
+  name?:    string;
+  category: FeedbackCategory;
+  rating:   number;        // 1–5 stars
+  message:  string;
+}
+
 // ── Service ──────────────────────────────────────────────────────────────────
 
 @Injectable({ providedIn: 'root' })
@@ -144,6 +153,13 @@ export class ApiService {
   deleteDeviceToken(token: string): Promise<{ deleted: boolean }> {
     return firstValueFrom(
       this.http.post<{ deleted: boolean }>(`${this.base}/api/users/me/device-token/remove`, { token })
+    );
+  }
+
+  /** Submit in-app feedback. Public — no auth required. */
+  addFeedback(payload: FeedbackPayload): Promise<{ feedbackId: string; createdAt: string }> {
+    return firstValueFrom(
+      this.http.post<{ feedbackId: string; createdAt: string }>(`${this.base}/api/feedback`, payload)
     );
   }
 
