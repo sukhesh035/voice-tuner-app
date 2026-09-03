@@ -23,8 +23,8 @@ jobs:
     env:
       AWS_REGION: us-east-1
       STAGE:      dev
-      STACK_NAME: sruti-dev
-      LAMBDA_PREFIX: sruti-dev
+      STACK_NAME: swara-dev
+      LAMBDA_PREFIX: swara-dev
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
@@ -58,7 +58,7 @@ jobs:
       - name: Build Lambda bundle
         run: pnpm build:api
 
-      # ── 6. Update Lambda function code (sruti-dev stack already exists) ───────
+      # ── 6. Update Lambda function code (swara-dev stack already exists) ──────
       #   We skip CDK deploy to avoid recreating resources. Each Lambda handler
       #   is a separate JS file — zip and upload each one individually.
       #   Infrastructure changes must be applied manually via CDK.

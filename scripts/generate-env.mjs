@@ -24,8 +24,8 @@ if (!['dev', 'prod'].includes(stage)) {
   process.exit(1);
 }
 
-// Dev still lives in the original sruti-dev stack (stack names are immutable).
-const stackName = stage === 'dev' ? 'sruti-dev' : `swara-${stage}`;
+// Both stages live in swara-* stacks (dev migrated from legacy sruti-dev).
+const stackName = `swara-${stage}`;
 const region    = process.env['AWS_REGION'] ?? 'us-east-1';
 
 console.log(`\n📦 Reading CloudFormation outputs from stack: ${stackName} (${region})\n`);
@@ -90,7 +90,7 @@ export const environment = {
     identityPoolId:   '${out['IdentityPoolId']}',
   },
   s3: {
-    bucket:  '${isProd ? 'swara-prod-audio-assets-use1' : 'sruti-dev-audio-assets-use1'}',
+    bucket:  '${isProd ? 'swara-prod-audio-assets-use1' : 'swara-dev-audio-assets-use1'}',
     region:  '${region}',
     baseUrl: '${out['AudioCdnUrl']}',
   },
