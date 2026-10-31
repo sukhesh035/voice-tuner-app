@@ -262,21 +262,11 @@ function buildIndianScaleSet(scale: ScaleDefinition): Set<IndianNote> {
           </div>
         </div>
 
-        <!-- Start / Stop Button -->
+        <!-- Listening indicator -->
         <div class="mic-section">
-          @if (singMode === 'free') {
-          <button
-            class="sing-btn"
-            [class.is-active]="isActive"
-            (click)="toggleMic()"
-          >
-            {{ isActive ? 'Stop Singing' : 'Start Singing' }}
-          </button>
-          } @else {
           <div class="guided-hint">
-            {{ isActive ? 'Listening...' : 'Select a note to start listening' }}
+            {{ isActive ? 'Listening...' : (singMode === 'guided' ? 'Select a note to start listening' : 'Starting microphone…') }}
           </div>
-          }
 
           @if (micError) {
           <div class="mic-error">{{ micError }}</div>
@@ -403,10 +393,13 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
   onSingModeChange(mode: 'free' | 'guided'): void {
     this.singMode = mode;
     this.analytics.logSelectContent({ content_type: 'sing_mode', content_id: mode });
-    // Stop any active listening when switching modes so the mic never leaks
-    // from one mode into the other.
-    this.stopListening();
     this.targetNote = null;
+    // Free flow auto-listens; guided waits for the user to tap a note.
+    if (mode === 'free') {
+      void this.startListening();
+    } else {
+      this.stopListening();
+    }
     this.cdr.markForCheck();
   }
 
@@ -439,6 +432,10 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
       this.micPermDenied = false;
       this.cdr.markForCheck();
     }
+    // Free flow auto-listens on entry; guided waits for a note tap.
+    if (this.singMode === 'free') {
+      await this.startListening();
+    }
   }
 
   // Stop mic/pitch detection when user navigates away from this tab.
@@ -462,16 +459,6 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
     this.scaleNoteSet = buildIndianScaleSet(this.selectedScale);
     this.detectedNotes.clear();
     this.analytics.logEvent('scale_selected', { scale_id: this.selectedScale.id });
-    this.cdr.markForCheck();
-  }
-
-  // ── Mic toggle ───────────────────────────────────────────
-  async toggleMic(): Promise<void> {
-    if (this.isActive) {
-      this.stopListening();
-    } else {
-      await this.startListening();
-    }
     this.cdr.markForCheck();
   }
 
@@ -517,6 +504,7 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
 
   /** Start the mic + pitch detection (shared by free-flow start and guided note selection). */
   private async startListening(): Promise<void> {
+    if (this.isActive) return;
     try {
       // On Android, proactively request mic permission so the native
       // RECORD_AUDIO dialog appears before getUserMedia is called.
