@@ -93,6 +93,7 @@
     "@aws-sdk/lib-dynamodb": "^3.1008.0",
     "@aws-sdk/s3-request-presigner": "^3.1009.0",
     "@aws-sdk/util-dynamodb": "^3.996.2",
+    "@capacitor-community/keep-awake": "7.1.0",
     "@capacitor-firebase/analytics": "^7.5.0",
     "@capacitor-firebase/crashlytics": "^7.5.0",
     "@capacitor-firebase/messaging": "7.5.0",

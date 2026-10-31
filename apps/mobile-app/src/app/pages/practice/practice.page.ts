@@ -22,6 +22,7 @@ import { ApiService } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { PerformanceService } from '../../core/services/performance.service';
 import { AuthService } from '@voice-tuner/auth';
+import { KeepAwake } from '@capacitor-community/keep-awake';
 
 /**
  * Phases of whole-raga practice:
@@ -955,6 +956,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
 
   async startSession(): Promise<void> {
     this.sessionActive = true;
+    void KeepAwake.keepAwake().catch(() => {});
     this.lastResult    = null;
     this.notePool      = [];
     this.analytics.logEvent('practice_started', { mode: this.selectedMode });
@@ -1059,6 +1061,7 @@ export class PracticePage implements OnInit, OnDestroy, ViewWillLeave {
     }
 
     this.sessionActive   = false;
+    void KeepAwake.allowSleep().catch(() => {});
     const durationSeconds = this.selectedMode === 'raga'
         ? Math.round((Date.now() - this.ragaSessionStart) / 1000)
         : Math.round((Date.now() - this.earSessionStart) / 1000);
