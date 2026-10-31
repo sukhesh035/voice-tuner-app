@@ -11,8 +11,8 @@
 // ── Pitch Meter ───────────────────────────────────────────
 .pitch-meter-container {
   position: relative;
-  width: 220px;
-  height: 220px;
+  width: 180px;
+  height: 180px;
   margin: 0 auto;
 }
 
@@ -338,38 +338,6 @@
   padding: $spacing-1 $spacing-4;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-}
-
-.sing-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 160px;
-  height: 52px;
-  border-radius: $radius-full;
-  border: 2px solid var(--swara-border);
-  background: var(--swara-bg-card);
-  background-clip: padding-box;
-  color: var(--swara-text-secondary);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  -webkit-tap-highlight-color: transparent;
-  padding: 0 $spacing-6;
-  font-size: 16px;
-  font-weight: 700;
-  font-family: var(--swara-font-display);
-  letter-spacing: 0.02em;
-
-  &.is-active {
-    background: var(--swara-gradient-primary);
-    background-clip: padding-box;
-    border-color: transparent;
-    color: white;
-    box-shadow: 0 8px 32px rgba(var(--swara-primary-rgb), 0.55);
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-
-  &:active { transform: scale(0.96); }
 }
 
 // ── Stats Row ─────────────────────────────────────────────
