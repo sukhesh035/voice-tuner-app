@@ -9,6 +9,7 @@ import {
 } from '@ionic/angular/standalone';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { TanpuraPlayerService, MusicalKey } from '@voice-tuner/tanpura-player';
+import { KeepAwake } from '@capacitor-community/keep-awake';
 
 const BEAT_FLASH_MS = 100;
 
@@ -277,6 +278,7 @@ export class MetronomePage implements OnInit, OnDestroy, ViewWillLeave {
   toggleDrone(): void {
     const on = !this.droneOn();
     this.droneOn.set(on);
+    this.syncKeepAwake();
     this.analytics.logEvent('drone_toggled', { on, source: 'metronome' });
     if (on) {
       this.tanpura.setKey(this.droneKey());
@@ -327,6 +329,7 @@ export class MetronomePage implements OnInit, OnDestroy, ViewWillLeave {
     this.sessionStartAt = Date.now();
     this.analytics.logCtaTap('metronome_start', { bpm: this.bpm() });
     this.scheduleTick();
+    this.syncKeepAwake();
   }
 
   private stop(): void {
@@ -335,6 +338,7 @@ export class MetronomePage implements OnInit, OnDestroy, ViewWillLeave {
     this.isPlaying.set(false);
     this.beatActive.set(false);
     this.analytics.logCtaTap('metronome_stop', { bpm: this.bpm(), duration_seconds: durationSeconds });
+    this.syncKeepAwake();
     if (this.timerId !== null) {
       clearInterval(this.timerId);
       this.timerId = null;
@@ -369,22 +373,38 @@ export class MetronomePage implements OnInit, OnDestroy, ViewWillLeave {
 
   private playClick(): void {
     if (!this.audioCtx) return;
-    const osc = this.audioCtx.createOscillator();
-    const gain = this.audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
-    osc.type = 'sine';
-    osc.frequency.value = 1000;
-    gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.02);
-    osc.start(this.audioCtx.currentTime);
-    osc.stop(this.audioCtx.currentTime + 0.02);
+    const ctx = this.audioCtx;
+    const duration = 0.04; // 40ms click
+    const frameCount = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, frameCount, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    // White noise with a fast exponential decay = a short, loud "tick".
+    for (let i = 0; i < frameCount; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / frameCount, 3);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const gain = ctx.createGain();
+    gain.gain.value = 1.0;
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start();
+  }
+
+  /** Keep the screen on while the metronome or drone is running; let it sleep otherwise. */
+  private syncKeepAwake(): void {
+    if (this.isPlaying() || this.droneOn()) {
+      void KeepAwake.keepAwake().catch(() => {});
+    } else {
+      void KeepAwake.allowSleep().catch(() => {});
+    }
   }
 
   ionViewWillLeave(): void {
     this.stop();
     this.tanpura.stop();
     this.droneOn.set(false);
+    this.syncKeepAwake();
   }
 
   ngOnDestroy(): void {
@@ -392,6 +412,8 @@ export class MetronomePage implements OnInit, OnDestroy, ViewWillLeave {
     this.tanpuraSub = null;
     this.stop();
     this.tanpura.stop();
+    this.droneOn.set(false);
+    this.syncKeepAwake();
     this.audioCtx?.close();
     this.audioCtx = null;
   }

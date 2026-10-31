@@ -17,6 +17,7 @@ import { ApiService } from '../../core/services/api.service';
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { AuthService } from '@voice-tuner/auth';
 import { PermissionsService } from '../../core/services/permissions.service';
+import { KeepAwake } from '@capacitor-community/keep-awake';
 
 // ── Types ─────────────────────────────────────────────────
 export type WesternNote = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
@@ -483,6 +484,7 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
     this.isActive = false;
     this.micError = null;
     this.micPermDenied = false;
+    void KeepAwake.allowSleep().catch(() => {});
     this.analytics.logEvent('mic_stopped', {
       duration_seconds: Math.round(stats.sessionDuration),
       stability_score:  Math.round(stats.stabilityScore),
@@ -535,6 +537,7 @@ export class SingPage implements OnInit, OnDestroy, ViewWillEnter, ViewWillLeave
       this.isActive = true;
       this.micError = null;
       this.micPermDenied = false;
+      void KeepAwake.keepAwake().catch(() => {});
       this.analytics.logEvent('mic_started');
       this.analytics.logCtaTap('sing_start');
     } catch (err: any) {

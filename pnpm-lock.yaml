@@ -100,6 +100,9 @@ importers:
       '@aws-sdk/util-dynamodb':
         specifier: ^3.996.2
         version: 3.996.2(@aws-sdk/client-dynamodb@3.1008.0)
+      '@capacitor-community/keep-awake':
+        specifier: 7.1.0
+        version: 7.1.0(@capacitor/core@7.6.0)
       '@capacitor-firebase/analytics':
         specifier: ^7.5.0
         version: 7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)
@@ -1805,6 +1808,11 @@ packages:
 
   '@bufbuild/protobuf@2.11.0':
     resolution: {integrity: sha512-sBXGT13cpmPR5BMgHE6UEEfEaShh5Ror6rfN3yEK5si7QVrtZg8LEPQb0VVhiLRUslD2yLnXtnRzG035J/mZXQ==}
+
+  '@capacitor-community/keep-awake@7.1.0':
+    resolution: {integrity: sha512-4Hj6OKnBd/DAOeiMnqBy74tg1rwC+qLYWQbWJmysMZm2e2nptz43hxaKu22Xlyyw5O71CwwskLCM0skDFMPpQQ==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
 
   '@capacitor-firebase/analytics@7.5.0':
     resolution: {integrity: sha512-PxMTltu0wa7uT/tpXEPos8mentU4kDoU7yJeSzLIeO6ysB2Qp7N2/4GamKP1ITpZ0OvUuU7fjG5zqAQj5xX2jg==}
@@ -14097,6 +14105,10 @@ snapshots:
   '@bcoe/v8-coverage@0.2.3': {}
 
   '@bufbuild/protobuf@2.11.0': {}
+
+  '@capacitor-community/keep-awake@7.1.0(@capacitor/core@7.6.0)':
+    dependencies:
+      '@capacitor/core': 7.6.0
 
   '@capacitor-firebase/analytics@7.5.0(@capacitor/core@7.6.0)(firebase@11.10.0)':
     dependencies:
