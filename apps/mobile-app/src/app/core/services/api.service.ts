@@ -75,6 +75,7 @@ export type FeedbackCategory = 'comment' | 'suggestion' | 'problem';
 
 export interface FeedbackPayload {
   name?:    string;
+  email:    string;
   category: FeedbackCategory;
   rating:   number;        // 1–5 stars
   message:  string;

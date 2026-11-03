@@ -227,6 +227,7 @@ export async function handler(event: APIGatewayProxyEventV2): Promise<APIGateway
       const feedback = rows
         .map((f) => ({
           feedbackId: String(f.feedbackId ?? ''),
+          email: String(f.email ?? ''),
           name: f.name != null ? String(f.name) : '',
           category: String(f.category ?? ''),
           rating: Number(f.rating ?? 0),
