@@ -18,6 +18,8 @@ const CATEGORIES = ['comment', 'suggestion', 'problem'];
 
 const NAME_MAX    = 80;
 const MESSAGE_MAX = 2000;
+const EMAIL_MAX   = 254;
+const EMAIL_RE    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function cleanName(raw: unknown): string | null {
   if (raw === undefined || raw === null) return '';
@@ -25,6 +27,13 @@ function cleanName(raw: unknown): string | null {
   const name = raw.trim();
   if (name.length > NAME_MAX) return null;
   return name;
+}
+
+function cleanEmail(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  const email = raw.trim();
+  if (email.length < 3 || email.length > EMAIL_MAX) return null;
+  return EMAIL_RE.test(email) ? email : null;
 }
 
 export const handler = async (
@@ -60,12 +69,15 @@ export const handler = async (
       const name = cleanName(body['name']);
       if (name === null) return badRequest(`name must be at most ${NAME_MAX} characters`);
 
+      const email = cleanEmail(body['email']);
+      if (email === null) return badRequest('email is required and must be a valid email address');
+
       const feedbackId = randomUUID();
       const createdAt  = new Date().toISOString();
 
       await ddb.send(new PutCommand({
         TableName: FEEDBACK_TABLE,
-        Item: { feedbackId, name, category, rating, message, createdAt },
+        Item: { feedbackId, email, name, category, rating, message, createdAt },
       }));
 
       return created({ feedbackId, createdAt });

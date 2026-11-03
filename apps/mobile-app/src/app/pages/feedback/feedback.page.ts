@@ -100,6 +100,21 @@ const RATING_HINTS = ['', 'Needs work', 'Could be better', 'Good', 'Great', 'Exc
               />
             </div>
 
+            <!-- Email (required) -->
+            <div class="fb-group">
+              <label class="fb-label" for="fb-email">Email (required)</label>
+              <input
+                id="fb-email"
+                class="fb-input"
+                type="email"
+                [(ngModel)]="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                inputmode="email"
+                maxlength="254"
+              />
+            </div>
+
             <!-- Message -->
             <div class="fb-group">
               <label class="fb-label" for="fb-message">Message</label>
@@ -152,23 +167,29 @@ export class FeedbackPage implements OnInit {
   category: FeedbackCategory = 'comment';
   rating: number | null = null;
   name = '';
+  email = '';
   message = '';
   submitting = false;
   submitted = false;
   errorMsg: string | null = null;
 
   ngOnInit(): void {
-    const userName = this.authService.currentUser?.name;
-    if (userName) this.name = userName;
+    const user = this.authService.currentUser;
+    if (user?.name) this.name = user.name;
+    if (user?.email) this.email = user.email;
   }
 
   get ratingHint(): string {
     return this.rating ? RATING_HINTS[this.rating] : '';
   }
 
-  /** Submit is enabled only when a rating is chosen and the message has real content. */
+  get emailValid(): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim());
+  }
+
+  /** Submit is enabled only when rating is set, message has content, and email is valid. */
   get canSubmit(): boolean {
-    return this.rating !== null && this.message.trim().length > 0 && !this.submitting;
+    return this.rating !== null && this.message.trim().length > 0 && this.emailValid && !this.submitting;
   }
 
   setCategory(category: FeedbackCategory): void {
@@ -183,6 +204,7 @@ export class FeedbackPage implements OnInit {
     if (!this.canSubmit) return;
     const payload: FeedbackPayload = {
       name: this.name.trim() || undefined,
+      email: this.email.trim(),
       category: this.category,
       rating: this.rating as number,
       message: this.message.trim(),

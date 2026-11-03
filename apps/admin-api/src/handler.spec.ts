@@ -285,9 +285,9 @@ describe('admin-api handler', () => {
   it('GET /feedback returns mapped rows newest first', async () => {
     send.mockResolvedValue({
       Items: [
-        { feedbackId: 'f1', name: 'A', category: 'suggestion', rating: 4, message: 'old', createdAt: '2026-01-01T00:00:00.000Z' },
-        { feedbackId: 'f2', name: '', category: 'comment', rating: 5, message: 'new', createdAt: '2026-01-03T00:00:00.000Z' },
-        { feedbackId: 'f3', name: 'C', category: 'problem', rating: 1, message: 'mid', createdAt: '2026-01-02T00:00:00.000Z' },
+        { feedbackId: 'f1', email: 'a@test.com', name: 'A', category: 'suggestion', rating: 4, message: 'old', createdAt: '2026-01-01T00:00:00.000Z' },
+        { feedbackId: 'f2', email: 'b@test.com', name: '', category: 'comment', rating: 5, message: 'new', createdAt: '2026-01-03T00:00:00.000Z' },
+        { feedbackId: 'f3', email: 'c@test.com', name: 'C', category: 'problem', rating: 1, message: 'mid', createdAt: '2026-01-02T00:00:00.000Z' },
       ],
     });
     const res = await handler(event('GET', '/feedback'));
@@ -296,7 +296,7 @@ describe('admin-api handler', () => {
     expect(body.total).toBe(3);
     expect(body.feedback.map((f: any) => f.feedbackId)).toEqual(['f2', 'f3', 'f1']);
     expect(body.feedback[0]).toEqual({
-      feedbackId: 'f2', name: '', category: 'comment', rating: 5, message: 'new', createdAt: '2026-01-03T00:00:00.000Z',
+      feedbackId: 'f2', email: 'b@test.com', name: '', category: 'comment', rating: 5, message: 'new', createdAt: '2026-01-03T00:00:00.000Z',
     });
   });
 
