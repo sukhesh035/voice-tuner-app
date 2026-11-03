@@ -10,6 +10,7 @@ import {
 import { AnalyticsService } from '../../core/services/analytics.service';
 import { TanpuraPlayerService, MusicalKey } from '@voice-tuner/tanpura-player';
 import { KeepAwake } from '@capacitor-community/keep-awake';
+import { SilentModeNoticeComponent } from '../../shared/components/silent-mode-notice/silent-mode-notice.component';
 
 const BEAT_FLASH_MS = 100;
 
@@ -44,6 +45,7 @@ const DRONE_STRING_LABELS = ['Sa', 'Pa', 'Sa'];
     IonContent, IonHeader, IonTitle, IonToolbar,
     IonRange, IonSelect, IonSelectOption,
     IonSegment, IonSegmentButton, IonLabel,
+    SilentModeNoticeComponent,
   ],
   template: `
     <ion-header class="ion-no-border">
@@ -54,6 +56,8 @@ const DRONE_STRING_LABELS = ['Sa', 'Pa', 'Sa'];
 
     <ion-content>
       <div class="metronome-page">
+
+        <app-silent-mode-notice />
 
         <!-- Mode Tabs -->
         <ion-segment

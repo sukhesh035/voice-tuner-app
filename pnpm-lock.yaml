@@ -144,6 +144,9 @@ importers:
       '@capacitor/status-bar':
         specifier: ^7.0.0
         version: 7.0.5(@capacitor/core@7.6.10)
+      '@capgo/capacitor-mute':
+        specifier: 7.3.19
+        version: 7.3.19(@capacitor/core@7.6.10)
       '@capgo/capacitor-updater':
         specifier: ^7.43.3
         version: 7.43.3(@capacitor/core@7.6.10)
@@ -1908,6 +1911,11 @@ packages:
 
   '@capacitor/status-bar@7.0.5':
     resolution: {integrity: sha512-d0DI/Usy4RrNiV5xfnypXNRLmWYMixC2yAUAwe6sCQQ0HF7oskDf4RpCxcZqbxnpc4H4A0qqiOSltfJLFAYshg==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+
+  '@capgo/capacitor-mute@7.3.19':
+    resolution: {integrity: sha512-Uy3rOHgrBLyMMSB+LCMbbXcY91ubiumVCjHZU87oFq0UN66o5F9AC3KiiGu3Q/DlsvYkeE71itoNclQzldOLaQ==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
 
@@ -14232,6 +14240,10 @@ snapshots:
       '@capacitor/core': 7.6.10
 
   '@capacitor/status-bar@7.0.5(@capacitor/core@7.6.10)':
+    dependencies:
+      '@capacitor/core': 7.6.10
+
+  '@capgo/capacitor-mute@7.3.19(@capacitor/core@7.6.10)':
     dependencies:
       '@capacitor/core': 7.6.10
 

@@ -23,6 +23,7 @@ import { AnalyticsService } from '../../core/services/analytics.service';
 import { PerformanceService } from '../../core/services/performance.service';
 import { AuthService } from '@voice-tuner/auth';
 import { KeepAwake } from '@capacitor-community/keep-awake';
+import { SilentModeNoticeComponent } from '../../shared/components/silent-mode-notice/silent-mode-notice.component';
 
 /**
  * Phases of whole-raga practice:
@@ -176,7 +177,8 @@ function buildFeedback(
     FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonSegment, IonSegmentButton, IonLabel,
-    AsyncPipe, DecimalPipe
+    AsyncPipe, DecimalPipe,
+    SilentModeNoticeComponent,
   ],
   template: `
     <ion-header>
@@ -187,6 +189,8 @@ function buildFeedback(
 
     <ion-content>
       <div class="practice-page">
+
+        <app-silent-mode-notice />
 
         <!-- Mode Selector -->
         <ion-segment [ngModel]="selectedMode" (ngModelChange)="onModeChange($event)" class="mode-segment">

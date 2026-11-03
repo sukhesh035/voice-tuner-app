@@ -109,6 +109,7 @@
     "@capacitor/ios": "^7.6.9",
     "@capacitor/keyboard": "^7.0.0",
     "@capacitor/status-bar": "^7.0.0",
+    "@capgo/capacitor-mute": "7.3.19",
     "@capgo/capacitor-updater": "^7.43.3",
     "@ionic/angular": "^8.0.0",
     "@ionic/angular-toolkit": "^12.0.0",
