@@ -6,18 +6,19 @@
  *  - event.request.userAttributes.email
  *  - event.request.code   — the one-time code, KMS-encrypted with the CMK
  *
- * We decrypt the code, pick a template, then send via Amazon SES (free tier).
+ * We decrypt the code, pick a template, then send it through the Resend API.
  *
  * Required env vars:
- *  SES_FROM_EMAIL — verified address on the SES domain identity to send from
- *  KMS_KEY_ID     — ARN/ID of the CMK used by Cognito to encrypt the code
+ *  EMAIL_FROM            — verified Resend sender address
+ *  RESEND_API_KEY_PARAM  — SSM SecureString holding the Resend API key
+ *  KMS_KEY_ID            — ARN/ID of the CMK used by Cognito to encrypt the code
  */
 
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { buildClient, CommitmentPolicy, KmsKeyringNode } from '@aws-crypto/client-node';
 import { createHash } from 'crypto';
 
-const ses = new SESClient({});
+const ssm = new SSMClient({});
 const { decrypt } = buildClient(CommitmentPolicy.FORBID_ENCRYPT_ALLOW_DECRYPT);
 
 interface CognitoCustomEmailSenderEvent {
@@ -43,15 +44,37 @@ interface EmailPayload {
   html:    string;
 }
 
+let resendApiKey: string | undefined;
+
+async function getResendApiKey(): Promise<string> {
+  if (!resendApiKey) {
+    const res = await ssm.send(new GetParameterCommand({
+      Name:           process.env['RESEND_API_KEY_PARAM']!,
+      WithDecryption: true,
+    }));
+    resendApiKey = res.Parameter?.Value;
+  }
+  if (!resendApiKey) throw new Error('Resend API key is not configured');
+  return resendApiKey;
+}
+
 async function sendEmail(payload: EmailPayload): Promise<void> {
-  await ses.send(new SendEmailCommand({
-    Source: `"Swara" <${process.env['SES_FROM_EMAIL']!}>`,
-    Destination: { ToAddresses: [payload.to] },
-    Message: {
-      Subject: { Data: payload.subject },
-      Body:    { Html: { Data: payload.html } },
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      Authorization:  `Bearer ${await getResendApiKey()}`,
+      'Content-Type': 'application/json',
     },
-  }));
+    body: JSON.stringify({
+      from:    `Swara <${process.env['EMAIL_FROM']!}>`,
+      to:      [payload.to],
+      subject: payload.subject,
+      html:    payload.html,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`Resend send failed (${res.status}): ${await res.text()}`);
+  }
 }
 
 function buildVerificationEmail(email: string, code: string): EmailPayload {

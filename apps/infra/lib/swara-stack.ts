@@ -14,7 +14,6 @@ import * as iam     from 'aws-cdk-lib/aws-iam';
 import * as events  from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as kms     from 'aws-cdk-lib/aws-kms';
-import * as ses     from 'aws-cdk-lib/aws-ses';
 import * as ssm     from 'aws-cdk-lib/aws-ssm';
 
 export interface SwaraStackProps extends cdk.StackProps {
@@ -44,17 +43,20 @@ export class SwaraStack extends cdk.Stack {
 
     const distDir = path.join(__dirname, '../../../dist/apps/backend-api');
 
-    // SES verified domain identity to send auth emails from. The identity is
-    // account-wide (created + verified manually once); import it rather than
-    // creating it, since both dev and prod stacks share the same domain.
-    const emailIdentity = ses.EmailIdentity.fromEmailIdentityName(
+    // Resend API key, stored as a SecureString parameter encrypted with the
+    // Cognito CMK. Created once out-of-band; both stages share the domain.
+    // Re-encrypt the parameter if the CMK is ever replaced.
+    const resendApiKeyParam = ssm.StringParameter.fromSecureStringParameterAttributes(
       this,
-      'EmailIdentity',
-      emailFrom.slice(emailFrom.indexOf('@') + 1),
+      'ResendApiKey',
+      {
+        parameterName: `/swara-${stage}/resend-api-key`,
+        encryptionKey: emailCmk,
+      },
     );
 
     // Custom Email Sender Lambda — receives Cognito email events and sends
-    // them via Amazon SES so we can use branded, styled emails.
+    // them via Resend so we can use branded, styled emails.
     const customEmailSenderFn = new lambda.Function(this, 'CustomEmailSenderFn', {
       functionName: `${prefix}-custom-email-sender`,
       runtime:      lambda.Runtime.NODEJS_22_X,
@@ -63,14 +65,16 @@ export class SwaraStack extends cdk.Stack {
       code:         lambda.Code.fromAsset(distDir),
       timeout:      cdk.Duration.seconds(15),
       environment: {
-        SES_FROM_EMAIL: emailFrom,
-        KMS_KEY_ID:     emailCmk.keyArn,
+        EMAIL_FROM:           emailFrom,
+        RESEND_API_KEY_PARAM: `/swara-${stage}/resend-api-key`,
+        KMS_KEY_ID:           emailCmk.keyArn,
       },
     });
 
-    emailIdentity.grantSendEmail(customEmailSenderFn);
+    resendApiKeyParam.grantRead(customEmailSenderFn);
 
-    // Allow the Lambda to decrypt codes that Cognito encrypted with the CMK
+    // Allow the Lambda to decrypt codes that Cognito encrypted with the CMK,
+    // plus the Resend key stored under the same key.
     emailCmk.grantDecrypt(customEmailSenderFn);
 
     // Allow Cognito to invoke the custom email sender Lambda
