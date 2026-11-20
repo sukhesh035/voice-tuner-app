@@ -122,10 +122,10 @@ jobs:
             --stack-name "$STACK_NAME" \
             --query "Stacks[0].Outputs[?OutputKey=='AdminServiceTokenUrl'].OutputValue" \
             --output text)
-          CLIENT_SECRET=$(aws ssm get-parameter \
-            --name "/swara-prod/cognito/admin-service-client-secret" \
-            --with-decryption \
-            --query Parameter.Value \
+          CLIENT_SECRET=$(aws cognito-idp describe-user-pool-client \
+            --user-pool-id "${{ secrets.SWARA_USER_POOL_ID }}" \
+            --client-id "$CLIENT_ID" \
+            --query UserPoolClient.ClientSecret \
             --output text)
           aws ssm put-parameter --name "/admin/prod/swara-admin-client-id" --value "$CLIENT_ID" --type String --overwrite
           aws ssm put-parameter --name "/admin/prod/swara-admin-client-secret" --value "$CLIENT_SECRET" --type SecureString --overwrite

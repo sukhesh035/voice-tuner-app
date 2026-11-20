@@ -132,16 +132,12 @@ export class SwaraStack extends cdk.Stack {
       },
     });
 
-    // Stack-owned params; the deploy workflow copies them to the admin console's
-    // /admin/<stage>/* namespace (which is pre-existing, so CDK can't own it).
+    // The deploy workflow reads the client secret via DescribeUserPoolClient and
+    // writes both values to the admin console's /admin/<stage>/* SSM namespace
+    // (pre-existing, so CDK can't own those params).
     new ssm.StringParameter(this, 'AdminServiceClientIdParam', {
       parameterName: `/swara-${stage}/cognito/admin-service-client-id`,
       stringValue:   adminServiceClient.userPoolClientId,
-    });
-    new ssm.StringParameter(this, 'AdminServiceClientSecretParam', {
-      parameterName: `/swara-${stage}/cognito/admin-service-client-secret`,
-      stringValue:   adminServiceClient.userPoolClientSecret.unsafeUnwrap(),
-      type:          ssm.ParameterType.SECURE_STRING,
     });
 
     const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
