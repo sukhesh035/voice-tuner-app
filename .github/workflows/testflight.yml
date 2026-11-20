@@ -12,7 +12,7 @@ concurrency:
 jobs:
   build-and-upload:
     name: Build & Upload to TestFlight
-    runs-on: macos-26
+    runs-on: xcode-27
 
     environment: prod
 
@@ -33,21 +33,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.2.2
 
-      # ── 2. Select Xcode 26.3 ─────────────────────────────────────────────
-      #   Pin to Xcode 26.3 — matches local dev and is a known-good stable
-      #   release. Xcode 26.4 on this runner has broken iOS destinations.
+      # ── 2. Select Xcode 27 ───────────────────────────────────────────────
+      #   App Store uploads must use the iOS 27 SDK from April 2027.
+      #   The xcode-27 runner image ships Xcode 27.2; fall back to any 27.x.
       - name: Select Xcode
         run: |
           echo "── Available Xcode versions ──"
           ls -d /Applications/Xcode*.app 2>/dev/null || true
 
-          # Pin to 26.3 — try common naming patterns on GHA runners
-          if [ -d "/Applications/Xcode_26.3.app" ]; then
-            XCODE="/Applications/Xcode_26.3.app"
-          elif [ -d "/Applications/Xcode_26.3.0.app" ]; then
-            XCODE="/Applications/Xcode_26.3.0.app"
-          else
-            echo "::error::Xcode 26.3 not found on runner"
+          XCODE=""
+          for CANDIDATE in \
+            /Applications/Xcode_27.2.app \
+            /Applications/Xcode_27.2.0.app \
+            /Applications/Xcode_27.1.app \
+            /Applications/Xcode_27.0.app; do
+            if [ -d "$CANDIDATE" ]; then
+              XCODE="$CANDIDATE"
+              break
+            fi
+          done
+          if [ -z "$XCODE" ]; then
+            XCODE=$(ls -d /Applications/Xcode_27*.app 2>/dev/null | tail -1)
+          fi
+          if [ -z "$XCODE" ]; then
+            echo "::error::Xcode 27 not found on runner"
             exit 1
           fi
           echo "Selecting: $XCODE"
