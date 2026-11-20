@@ -12,7 +12,7 @@
  * Must be run from the workspace root.
  */
 
-import { readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -51,6 +51,41 @@ if (appGradle.includes(applyPlugin)) {
   );
   writeFileSync(appGradlePath, appGradle, 'utf8');
   console.log('✓ Applied Crashlytics plugin in app/build.gradle');
+}
+
+// ── 2a. app/build.gradle — enable R8 minification for release ───────────────
+// Play flags AABs whose DEX obfuscation is below 25%. Capacitor generates
+// minifyEnabled false, so enable R8 + the optimized default rules.
+appGradle = readFileSync(appGradlePath, 'utf8');
+const r8Patched = appGradle
+  .replace(/minifyEnabled\s+false/g, 'minifyEnabled true')
+  .replace(/proguard-android\.txt/g, 'proguard-android-optimize.txt');
+
+if (r8Patched !== appGradle) {
+  writeFileSync(appGradlePath, r8Patched, 'utf8');
+  console.log('✓ Enabled R8 minification in app/build.gradle');
+} else {
+  console.log('✓ R8 minification already enabled in app/build.gradle');
+}
+
+// ── 2b. app/proguard-rules.pro — keep the Capacitor WebView bridge ──────────
+// @JavascriptInterface methods are invoked from JS by name. R8 must not
+// rename/remove them.
+const proguardPath = resolve(androidDir, 'app/proguard-rules.pro');
+let proguard = existsSync(proguardPath) ? readFileSync(proguardPath, 'utf8') : '';
+
+if (!proguard.includes('@android.webkit.JavascriptInterface')) {
+  proguard = `${proguard.trimEnd()}
+
+# Capacitor's WebView bridge calls these methods from JavaScript by name.
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+`;
+  writeFileSync(proguardPath, proguard, 'utf8');
+  console.log('✓ Added JavascriptInterface keep rule to proguard-rules.pro');
+} else {
+  console.log('✓ JavascriptInterface keep rule already present');
 }
 
 // ── 3. app/build.gradle — set versionCode and versionName ───────────────────
