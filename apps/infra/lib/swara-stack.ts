@@ -488,7 +488,7 @@ export class SwaraStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'UserPoolId',          { value: userPool.userPoolId });
     new cdk.CfnOutput(this, 'UserPoolClientId',    { value: userPoolClient.userPoolClientId });
     new cdk.CfnOutput(this, 'AdminServiceClientId', { value: adminServiceClient.userPoolClientId });
-    new cdk.CfnOutput(this, 'AdminServiceTokenUrl', { value: `https://${adminServiceDomain.domainName}/oauth2/token` });
+    new cdk.CfnOutput(this, 'AdminServiceTokenUrl', { value: `https://${prefix}-admin-service.auth.${this.region}.amazoncognito.com/oauth2/token` });
     new cdk.CfnOutput(this, 'IdentityPoolId',      { value: identityPool.ref });
     new cdk.CfnOutput(this, 'AudioCdnUrl',         { value: `https://${audioCdn.distributionDomainName}` });
     new cdk.CfnOutput(this, 'WebUrl',              { value: `https://${webCdn.distributionDomainName}` });
