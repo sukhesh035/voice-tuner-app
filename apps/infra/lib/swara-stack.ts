@@ -109,6 +109,41 @@ export class SwaraStack extends cdk.Stack {
       preventUserExistenceErrors: true,
     });
 
+    // ─── Admin console service-to-service auth (OAuth client credentials) ────
+    // The admin console reads swara data through its own API. It exchanges a
+    // non-expiring client id/secret for a short-lived access token, so there is
+    // no human token to expire or password to drift.
+    const adminApiResourceServer = userPool.addResourceServer('AdminApiResourceServer', {
+      identifier: 'admin-api',
+      scopes: [{ scopeName: 'read', scopeDescription: 'Read swara admin data' }],
+    });
+    const adminServiceDomain = userPool.addDomain('AdminServiceDomain', {
+      cognitoDomain: { domainPrefix: `${prefix}-admin-service` },
+    });
+    const adminServiceClient = userPool.addClient('AdminServiceClient', {
+      userPoolClientName: `${prefix}-admin-service`,
+      generateSecret:    true,
+      oAuth: {
+        flows:  { clientCredentials: true },
+        scopes: [cognito.OAuthScope.resourceServer(adminApiResourceServer, {
+          scopeName:        'read',
+          scopeDescription: 'Read swara admin data',
+        })],
+      },
+    });
+
+    // Stack-owned params; the deploy workflow copies them to the admin console's
+    // /admin/<stage>/* namespace (which is pre-existing, so CDK can't own it).
+    new ssm.StringParameter(this, 'AdminServiceClientIdParam', {
+      parameterName: `/swara-${stage}/cognito/admin-service-client-id`,
+      stringValue:   adminServiceClient.userPoolClientId,
+    });
+    new ssm.StringParameter(this, 'AdminServiceClientSecretParam', {
+      parameterName: `/swara-${stage}/cognito/admin-service-client-secret`,
+      stringValue:   adminServiceClient.userPoolClientSecret.unsafeUnwrap(),
+      type:          ssm.ParameterType.SECURE_STRING,
+    });
+
     const identityPool = new cognito.CfnIdentityPool(this, 'IdentityPool', {
       identityPoolName:         `${prefix}_identity`,
       allowUnauthenticatedIdentities: true,
@@ -456,6 +491,8 @@ export class SwaraStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiUrl',              { value: api.apiEndpoint });
     new cdk.CfnOutput(this, 'UserPoolId',          { value: userPool.userPoolId });
     new cdk.CfnOutput(this, 'UserPoolClientId',    { value: userPoolClient.userPoolClientId });
+    new cdk.CfnOutput(this, 'AdminServiceClientId', { value: adminServiceClient.userPoolClientId });
+    new cdk.CfnOutput(this, 'AdminServiceTokenUrl', { value: `https://${adminServiceDomain.domainName}/oauth2/token` });
     new cdk.CfnOutput(this, 'IdentityPoolId',      { value: identityPool.ref });
     new cdk.CfnOutput(this, 'AudioCdnUrl',         { value: `https://${audioCdn.distributionDomainName}` });
     new cdk.CfnOutput(this, 'WebUrl',              { value: `https://${webCdn.distributionDomainName}` });
