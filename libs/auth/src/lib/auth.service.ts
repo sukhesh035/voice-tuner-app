@@ -27,6 +27,7 @@ export class AuthService {
   // ── Internal signals ────────────────────────────────────────────────────────
   private readonly _user                = signal<AppUser | null>(null);
   private readonly _pendingConfirmation = signal<string | null>(null);
+  private readonly _pendingReset        = signal<string | null>(null);
   private readonly _initialized         = signal<boolean>(false);
 
   /** Ephemeral in-memory password held only during the signup → verify-email flow.
@@ -94,7 +95,8 @@ export class AuthService {
       const session = await fetchAuthSession({ forceRefresh: false });
       const user = await getCurrentUser();
       const emailVerified = session.tokens?.idToken?.payload['email_verified'] === true;
-      this._pendingConfirmation.set(null);
+      this.clearPendingConfirmation();
+      this.clearPendingReset();
       this._user.set({ id: user.userId, email, name: email.split('@')[0], emailVerified });
     }
   }
@@ -111,6 +113,7 @@ export class AuthService {
       options: { userAttributes: { email } },
     });
     if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
+      this.clearPendingReset();
       this._pendingConfirmation.set(email);
       localStorage.setItem('pendingConfirmationEmail', email);
       // Hold the password in memory so verify-email page doesn't need to pass it via router state
@@ -122,22 +125,30 @@ export class AuthService {
     return 'DONE';
   }
 
-  /** Confirm email verification code after sign-up. Then sign the user in. */
-  async confirmSignUp(email: string, code: string): Promise<void> {
+  /**
+   * Confirm email verification code after sign-up.
+   * Returns true when the user was also signed in. After an app restart the
+   * signup password is gone (it is deliberately never persisted), so the
+   * account is verified but the caller must send the user to the login page.
+   */
+  async confirmSignUp(email: string, code: string): Promise<boolean> {
     const password = this.pendingPassword ?? '';
     this.pendingPassword = null; // clear immediately — single use
     await amplifyConfirmSignUp({ username: email, confirmationCode: code });
-    this._pendingConfirmation.set(null);
-    localStorage.removeItem('pendingConfirmationEmail');
-    if (password) {
+    this.clearPendingConfirmation();
+    if (!password) return false;
+    try {
       await this.signIn(email, password);
+      return true;
+    } catch {
+      return false; // verified, but auto-login failed — let the user sign in
     }
   }
 
   async signOut(): Promise<void> {
     await amplifySignOut();
-    this._pendingConfirmation.set(null);
-    localStorage.removeItem('pendingConfirmationEmail');
+    this.clearPendingConfirmation();
+    this.clearPendingReset();
     this._user.set(null);
   }
 
@@ -146,11 +157,33 @@ export class AuthService {
     return this._pendingConfirmation() ?? localStorage.getItem('pendingConfirmationEmail');
   }
 
+  /** Returns the email of an interrupted password reset, if any. */
+  getPendingResetEmail(): string | null {
+    return this._pendingReset() ?? localStorage.getItem('pendingPasswordResetEmail');
+  }
+
+  /** Which auth page should be restored when the app restarts mid-flow. */
+  getPendingAuthTarget(): 'verify-email' | 'reset-password' | null {
+    if (this.getPendingResetEmail()) return 'reset-password';
+    if (this.getPendingEmail()) return 'verify-email';
+    return null;
+  }
+
+  clearPendingConfirmation(): void {
+    this._pendingConfirmation.set(null);
+    localStorage.removeItem('pendingConfirmationEmail');
+  }
+
+  clearPendingReset(): void {
+    this._pendingReset.set(null);
+    localStorage.removeItem('pendingPasswordResetEmail');
+  }
+
   /** Delete the current Cognito user account permanently. */
   async deleteAccount(): Promise<void> {
     await amplifyDeleteUser();
-    this._pendingConfirmation.set(null);
-    localStorage.removeItem('pendingConfirmationEmail');
+    this.clearPendingConfirmation();
+    this.clearPendingReset();
     this._user.set(null);
   }
 
@@ -166,6 +199,7 @@ export class AuthService {
   async resendConfirmation(email: string): Promise<void> {
     await resendSignUpCode({ username: email });
     // Persist so verify-email page can recover the email after an app switch
+    this.clearPendingReset();
     this._pendingConfirmation.set(email);
     localStorage.setItem('pendingConfirmationEmail', email);
   }
@@ -173,10 +207,15 @@ export class AuthService {
   /** Trigger Cognito to send a password-reset code to the user's email. */
   async resetPassword(email: string): Promise<void> {
     await amplifyResetPassword({ username: email });
+    // Persist so the reset page survives an app switch / webview reload.
+    this.clearPendingConfirmation();
+    this._pendingReset.set(email);
+    localStorage.setItem('pendingPasswordResetEmail', email);
   }
 
   /** Complete the forgot-password flow with the code + new password. */
   async confirmResetPassword(email: string, code: string, newPassword: string): Promise<void> {
     await amplifyConfirmResetPassword({ username: email, confirmationCode: code, newPassword });
+    this.clearPendingReset();
   }
 }

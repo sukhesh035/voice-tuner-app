@@ -42,6 +42,12 @@ export class VerifyEmailPage implements OnInit {
     this.resolveEmail();
   }
 
+  /** Route change (back to login / after success) abandons the flow.
+   *  A webview reload does not fire this, so the pending email survives. */
+  ionViewWillLeave(): void {
+    this.authService.clearPendingConfirmation();
+  }
+
   private resolveEmail(): void {
     const nav = this.router.getCurrentNavigation();
     const state = nav?.extras?.state as { email?: string } | undefined;
@@ -67,10 +73,15 @@ export class VerifyEmailPage implements OnInit {
     this.successMsg = '';
     this.cdr.markForCheck();
     try {
-      await this.authService.confirmSignUp(this.email, this.code.trim());
+      const signedIn = await this.authService.confirmSignUp(this.email, this.code.trim());
       this.api.getProfile().catch(() => {});
       this.analytics.logEvent('email_verified');
-      await this.router.navigate(['/home'], { replaceUrl: true });
+      // After a webview reload the signup password is gone, so the account is
+      // verified but not signed in. Send the user to login instead of home.
+      await this.router.navigate([signedIn ? '/home' : '/login'], {
+        replaceUrl: true,
+        state: signedIn ? undefined : { verifiedEmail: this.email },
+      });
     } catch (err: any) {
       this.errorMsg = this.mapError(err);
       this.analytics.logEvent('email_verify_error', { error: err.name ?? 'unknown' });

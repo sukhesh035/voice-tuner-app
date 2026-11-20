@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { ThemeService } from './core/services/theme.service';
 import { AuthService } from '@voice-tuner/auth';
@@ -32,6 +33,7 @@ export class AppComponent implements OnInit {
   private readonly permissions     = inject(PermissionsService);
   private readonly featureTour     = inject(FeatureTourService);
   private readonly modalCtrl       = inject(ModalController);
+  private readonly router          = inject(Router);
 
   ngOnInit(): void {
     this.themeService.initialize();
@@ -43,6 +45,17 @@ export class AppComponent implements OnInit {
     // blocks the whole app from rendering.
     const timeout = new Promise<void>(resolve => setTimeout(resolve, AUTH_INIT_TIMEOUT_MS));
     Promise.race([this.authService.initialize(), timeout]).then(async () => {
+      // Returning from Gmail can reload the webview, which resets the router
+      // to '/'. Restore an interrupted email-verification or password-reset
+      // flow instead of dropping the user on the home page.
+      if (!this.authService.currentUser) {
+        const pendingAuth = this.authService.getPendingAuthTarget();
+        if (pendingAuth) {
+          await this.router.navigate([pendingAuth], { replaceUrl: true });
+          return;
+        }
+      }
+
       if (this.authService.currentUser) {
         try {
           // Ensure user record exists in DynamoDB after session restore

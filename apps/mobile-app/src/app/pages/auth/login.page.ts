@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -19,7 +19,7 @@ import { AnalyticsService } from '../../core/services/analytics.service';
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
 })
-export class LoginPage {
+export class LoginPage implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly api         = inject(ApiService);
   private readonly router      = inject(Router);
@@ -35,6 +35,18 @@ export class LoginPage {
   errorMsg  = '';
   successMsg = '';
   unconfirmedEmail = '';
+
+  ngOnInit(): void {
+    // Set by verify-email when the account was confirmed after a webview
+    // reload, where the signup password is no longer available.
+    const state = this.router.getCurrentNavigation()?.extras?.state as
+      { verifiedEmail?: string } | undefined;
+    if (state?.verifiedEmail) {
+      this.email = state.verifiedEmail;
+      this.successMsg = 'Email verified. Please sign in.';
+      this.cdr.markForCheck();
+    }
+  }
 
   async signIn(): Promise<void> {
     this.isLoading        = true;
