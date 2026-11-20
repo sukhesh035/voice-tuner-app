@@ -9,7 +9,7 @@
  * We decrypt the code, pick a template, then send via Amazon SES (free tier).
  *
  * Required env vars:
- *  SES_FROM_EMAIL — verified SES identity (email address) to send from
+ *  SES_FROM_EMAIL — verified address on the SES domain identity to send from
  *  KMS_KEY_ID     — ARN/ID of the CMK used by Cognito to encrypt the code
  */
 
