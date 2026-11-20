@@ -38,11 +38,18 @@ export class ResetPasswordPage implements OnInit {
   ngOnInit(): void {
     const nav = this.router.getCurrentNavigation();
     const state = nav?.extras?.state as { email?: string } | undefined;
-    this.email = state?.email ?? '';
+    // Fallback survives an app switch / webview reload.
+    this.email = state?.email ?? this.authService.getPendingResetEmail() ?? '';
 
     if (!this.email) {
       this.router.navigate(['/login'], { replaceUrl: true });
     }
+  }
+
+  /** Route change (back to login) abandons the reset flow.
+   *  A webview reload does not fire this, so the pending email survives. */
+  ionViewWillLeave(): void {
+    this.authService.clearPendingReset();
   }
 
   async submit(): Promise<void> {
