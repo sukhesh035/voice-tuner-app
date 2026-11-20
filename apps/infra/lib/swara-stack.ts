@@ -120,7 +120,7 @@ export class SwaraStack extends cdk.Stack {
     const adminServiceDomain = userPool.addDomain('AdminServiceDomain', {
       cognitoDomain: { domainPrefix: `${prefix}-admin-service` },
     });
-    const adminServiceClient = userPool.addClient('AdminServiceClient', {
+    const adminServiceClient = userPool.addClient('AdminServiceClientV2', {
       userPoolClientName: `${prefix}-admin-service`,
       generateSecret:    true,
       oAuth: {
